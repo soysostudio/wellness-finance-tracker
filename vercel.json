@@ -1,0 +1,7 @@
+{
+  "functions": {
+    "app/api/webhooks/twilio/route.ts": {
+      "maxDuration": 60
+    }
+  }
+}
