@@ -28,7 +28,7 @@ export default function LoginPage() {
 
     if (error) {
       setState("error");
-      setErrorMsg("No pudimos enviarte el enlace. Intenta de nuevo.");
+      setErrorMsg(error.message || "No pudimos enviarte el enlace. Intenta de nuevo.");
     } else {
       setState("sent");
     }
