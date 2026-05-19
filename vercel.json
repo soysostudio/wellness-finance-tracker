@@ -2,6 +2,15 @@
   "functions": {
     "app/api/webhooks/twilio/route.ts": {
       "maxDuration": 60
+    },
+    "app/api/cron/reminders/route.ts": {
+      "maxDuration": 60
     }
-  }
+  },
+  "crons": [
+    {
+      "path": "/api/cron/reminders",
+      "schedule": "0 * * * *"
+    }
+  ]
 }

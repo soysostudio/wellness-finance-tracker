@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import { ProfileForm } from "@/components/dashboard/profile-form";
+import { RemindersForm } from "@/components/dashboard/reminders-form";
 
 export const revalidate = 0;
 
@@ -14,6 +15,15 @@ export default async function SettingsPage() {
     .select("full_name, phone_number, currency, timezone, monthly_income")
     .eq("id", user.id)
     .single();
+
+  const { data: reminders } = await supabase
+    .from("reminders")
+    .select("id, reminder_type, is_active")
+    .eq("user_id", user.id)
+    .in("reminder_type", ["daily_summary", "weekly_summary"]);
+
+  const dailyReminder = reminders?.find((r) => r.reminder_type === "daily_summary");
+  const weeklyReminder = reminders?.find((r) => r.reminder_type === "weekly_summary");
 
   return (
     <div className="p-6 md:p-8 max-w-2xl mx-auto space-y-6">
@@ -47,6 +57,18 @@ export default async function SettingsPage() {
           Luca te reconoce por este número. Si cambiás de número, actualízalo arriba.
         </p>
       </div>
+
+      <RemindersForm
+        userId={user.id}
+        active={{
+          daily: dailyReminder?.is_active ?? false,
+          weekly: weeklyReminder?.is_active ?? false,
+        }}
+        reminderIds={{
+          daily: dailyReminder?.id ?? null,
+          weekly: weeklyReminder?.id ?? null,
+        }}
+      />
 
       <div className="bg-card rounded-2xl p-5 space-y-2">
         <h2 className="text-xs uppercase tracking-widest font-semibold text-muted-foreground">
