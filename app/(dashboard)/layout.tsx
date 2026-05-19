@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { SidebarNav } from "@/components/dashboard/sidebar-nav";
+import { MobileNav } from "@/components/dashboard/mobile-nav";
 import { PhoneLinker } from "@/components/dashboard/phone-linker";
 
 export default async function DashboardLayout({
@@ -36,7 +37,7 @@ export default async function DashboardLayout({
 
       {/* Main */}
       <main className="flex-1 overflow-auto">
-        {/* Phone linker: runs client-side after auth redirect */}
+        <MobileNav userName={profile?.full_name ?? user.email ?? ""} />
         <PhoneLinker userId={user.id} hasPhone={!!profile?.phone_number} />
         {children}
       </main>
