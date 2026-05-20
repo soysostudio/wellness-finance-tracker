@@ -25,12 +25,12 @@ export default async function DashboardLayout({
   return (
     <div className="flex min-h-screen">
       {/* Sidebar */}
-      <aside className="hidden md:flex w-60 flex-col border-r border-border bg-card shrink-0">
-        <div className="px-6 py-5 border-b border-border">
-          <span className="text-xl font-black tracking-tight">Luca</span>
+      <aside className="hidden md:flex w-56 flex-col border-r border-[#1A1A1A]/8 bg-[#F5F6F8] shrink-0">
+        <div className="px-6 py-5 border-b border-[#1A1A1A]/8">
+          <span className="font-serif text-xl font-normal tracking-tight">Luca</span>
         </div>
         <SidebarNav />
-        <div className="mt-auto px-4 py-4 text-xs text-muted-foreground truncate">
+        <div className="mt-auto px-4 py-4 text-xs text-[#1A1A1A]/40 truncate">
           {profile?.full_name ?? user.email}
         </div>
       </aside>

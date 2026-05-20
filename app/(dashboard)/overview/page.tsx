@@ -99,28 +99,16 @@ export default async function OverviewPage() {
         <p className="text-sm text-muted-foreground uppercase tracking-widest font-medium">
           {monthName} {year}
         </p>
-        <h1 className="text-4xl md:text-5xl font-black mt-1">
+        <h1 className="font-serif text-4xl md:text-5xl font-normal mt-1">
           Hola, {firstName} 👋
         </h1>
       </div>
 
       {/* Summary cards */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <SummaryCard
-          label="Gastos del mes"
-          value={formatCOP(overview.totalExpenses)}
-          accent="#E76F51"
-        />
-        <SummaryCard
-          label="Ingresos del mes"
-          value={formatCOP(overview.totalIncome)}
-          accent="#2A9D8F"
-        />
-        <SummaryCard
-          label="Balance neto"
-          value={formatCOP(overview.net)}
-          accent={overview.net >= 0 ? "#2A9D8F" : "#E76F51"}
-        />
+        <SummaryCard label="Gastos del mes"  value={formatCOP(overview.totalExpenses)} bg="#FFB0FF" />
+        <SummaryCard label="Ingresos del mes" value={formatCOP(overview.totalIncome)}   bg="#ADDEFF" />
+        <SummaryCard label="Balance neto"     value={formatCOP(overview.net)}           bg={overview.net >= 0 ? "#FEFF6E" : "#FFB0FF"} />
       </div>
 
       {/* Category breakdown — editorial bold blocks */}
@@ -214,21 +202,13 @@ export default async function OverviewPage() {
   );
 }
 
-function SummaryCard({
-  label,
-  value,
-  accent,
-}: {
-  label: string;
-  value: string;
-  accent: string;
-}) {
+function SummaryCard({ label, value, bg }: { label: string; value: string; bg: string }) {
   return (
-    <div className="bg-card rounded-2xl p-5 space-y-1">
-      <p className="text-xs uppercase tracking-widest text-muted-foreground font-medium">
+    <div className="rounded-2xl p-5 space-y-1" style={{ backgroundColor: bg }}>
+      <p className="text-xs uppercase tracking-widest font-medium text-[#1A1A1A]/50">
         {label}
       </p>
-      <p className="text-2xl font-black" style={{ color: accent }}>
+      <p className="font-serif text-2xl font-normal text-[#1A1A1A]">
         {value}
       </p>
     </div>

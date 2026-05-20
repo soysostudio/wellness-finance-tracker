@@ -71,8 +71,8 @@ export function MobileNav({ userName }: { userName: string }) {
                 className={cn(
                   "flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-medium transition-colors",
                   active
-                    ? "bg-foreground text-background"
-                    : "text-muted-foreground hover:text-foreground hover:bg-muted"
+                    ? "bg-[#FEFF6E] text-[#1A1A1A] font-semibold"
+                    : "text-[#1A1A1A]/50 hover:text-[#1A1A1A] hover:bg-[#FEF3D6]"
                 )}
               >
                 <span className="text-base">{item.emoji}</span>

@@ -140,4 +140,13 @@
   html {
     @apply font-sans;
   }
+  h1, h2, h3 {
+    font-family: var(--font-serif);
+  }
 }
+
+/* Luca brand palette utilities */
+.luca-yellow  { background-color: #FEFF6E; }
+.luca-blue    { background-color: #ADDEFF; }
+.luca-pink    { background-color: #FFB0FF; }
+.luca-cream   { background-color: #FEF3D6; }
