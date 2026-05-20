@@ -58,11 +58,11 @@ export default function SignupPage() {
     return (
       <div className="space-y-6">
         <div>
-          <p className="text-[10px] uppercase tracking-widest text-[#1A1A1A]/40 mb-1">Listo</p>
-          <h1 className="font-serif text-4xl font-normal text-[#1A1A1A]">Revisa tu correo</h1>
+          <p className="text-[10px] uppercase tracking-widest text-foreground/40 mb-1">Listo</p>
+          <h1 className="font-serif text-4xl font-normal text-foreground">Revisa tu correo</h1>
         </div>
-        <p className="text-[#1A1A1A]/55 text-sm leading-relaxed">
-          Te enviamos un enlace a <span className="text-[#1A1A1A] font-medium">{email}</span>.
+        <p className="text-foreground/55 text-sm leading-relaxed">
+          Te enviamos un enlace a <span className="text-foreground font-medium">{email}</span>.
           Haz clic en él para activar tu cuenta.
         </p>
         <div className="rounded-2xl p-5 space-y-3" style={{ backgroundColor: "#FEFF6E" }}>
@@ -74,7 +74,7 @@ export default function SignupPage() {
         </div>
         <button
           onClick={() => setStep("form")}
-          className="text-xs text-[#1A1A1A]/40 hover:text-[#1A1A1A] transition-colors underline underline-offset-4"
+          className="text-xs text-foreground/40 hover:text-foreground transition-colors underline underline-offset-4"
         >
           Usar otro correo
         </button>
@@ -85,9 +85,9 @@ export default function SignupPage() {
   return (
     <div className="space-y-8">
       <div>
-        <p className="text-[10px] uppercase tracking-widest text-[#1A1A1A]/40 mb-1">Gratis para siempre</p>
-        <h1 className="font-serif text-4xl font-normal text-[#1A1A1A]">Crea tu cuenta</h1>
-        <p className="text-sm text-[#1A1A1A]/50 mt-1">Sin contraseñas, en 2 minutos.</p>
+        <p className="text-[10px] uppercase tracking-widest text-foreground/40 mb-1">Gratis para siempre</p>
+        <h1 className="font-serif text-4xl font-normal text-foreground">Crea tu cuenta</h1>
+        <p className="text-sm text-foreground/50 mt-1">Sin contraseñas, en 2 minutos.</p>
       </div>
 
       <form onSubmit={handleSignup} className="space-y-3">
@@ -112,7 +112,7 @@ export default function SignupPage() {
             value={phone}
             onChange={(e) => setPhone(e.target.value)}
           />
-          <p className="text-xs text-[#1A1A1A]/40 px-1">
+          <p className="text-xs text-foreground/40 px-1">
             Con este número Luca te reconocerá en WhatsApp
           </p>
         </div>
@@ -124,15 +124,15 @@ export default function SignupPage() {
         <button
           type="submit"
           disabled={loading}
-          className="w-full h-12 rounded-full bg-[#1A1A1A] text-[#F7F3EC] text-sm font-medium hover:opacity-80 transition-opacity disabled:opacity-50 mt-1"
+          className="w-full h-12 rounded-full bg-foreground text-background text-sm font-medium hover:opacity-80 transition-opacity disabled:opacity-50 mt-1"
         >
           {loading ? "Creando cuenta..." : "Crear cuenta gratis"}
         </button>
       </form>
 
-      <p className="text-center text-sm text-[#1A1A1A]/40">
+      <p className="text-center text-sm text-foreground/40">
         ¿Ya tienes cuenta?{" "}
-        <Link href="/login" className="text-[#1A1A1A] underline underline-offset-4 hover:opacity-60 transition-opacity">
+        <Link href="/login" className="text-foreground underline underline-offset-4 hover:opacity-60 transition-opacity">
           Inicia sesión
         </Link>
       </p>
@@ -144,7 +144,7 @@ function AuthInput(props: React.InputHTMLAttributes<HTMLInputElement>) {
   return (
     <input
       {...props}
-      className="w-full h-12 px-4 rounded-2xl bg-white border border-[#1A1A1A]/8 text-sm text-[#1A1A1A] placeholder-[#1A1A1A]/30 outline-none focus:border-[#1A1A1A]/30 transition-colors"
+      className="w-full h-12 px-4 rounded-2xl bg-white border border-foreground/8 text-sm text-foreground placeholder-[#1A1A1A]/30 outline-none focus:border-foreground/30 transition-colors"
     />
   );
 }

@@ -23,11 +23,11 @@ export default async function CategoriesPage() {
 
       {/* Header */}
       <AnimateIn>
-        <p className="text-[10px] uppercase tracking-widest text-[#1A1A1A]/40">Clasificación</p>
-        <h1 className="font-serif text-4xl md:text-5xl font-normal mt-1 text-[#1A1A1A]">
+        <p className="text-[10px] uppercase tracking-widest text-foreground/40">Clasificación</p>
+        <h1 className="font-serif text-4xl md:text-5xl font-normal mt-1 text-foreground">
           Categorías
         </h1>
-        <p className="text-sm text-[#1A1A1A]/40 mt-2 leading-relaxed">
+        <p className="text-sm text-foreground/40 mt-2 leading-relaxed">
           Luca usa estas categorías para clasificar tus gastos automáticamente
         </p>
       </AnimateIn>
@@ -35,7 +35,7 @@ export default async function CategoriesPage() {
       {/* Custom categories */}
       <section className="space-y-4">
         <AnimateIn>
-          <p className="text-[10px] uppercase tracking-widest text-[#1A1A1A]/40">Mis categorías</p>
+          <p className="text-[10px] uppercase tracking-widest text-foreground/40">Mis categorías</p>
         </AnimateIn>
 
         <AnimateIn delay={40}>
@@ -64,7 +64,7 @@ export default async function CategoriesPage() {
         )}
 
         {(!customCategories || customCategories.length === 0) && (
-          <p className="text-sm text-[#1A1A1A]/40 py-2">
+          <p className="text-sm text-foreground/40 py-2">
             Aún no tienes categorías personalizadas.
           </p>
         )}
@@ -73,7 +73,7 @@ export default async function CategoriesPage() {
       {/* System categories */}
       <section className="space-y-4">
         <AnimateIn>
-          <p className="text-[10px] uppercase tracking-widest text-[#1A1A1A]/40">Categorías del sistema</p>
+          <p className="text-[10px] uppercase tracking-widest text-foreground/40">Categorías del sistema</p>
         </AnimateIn>
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
           {SYSTEM_CATEGORIES.map((cat, i) => (

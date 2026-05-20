@@ -29,8 +29,8 @@ export default async function TransactionsPage() {
 
       {/* Header */}
       <AnimateIn>
-        <p className="text-[10px] uppercase tracking-widest text-[#1A1A1A]/40">Historial</p>
-        <h1 className="font-serif text-4xl md:text-5xl font-normal mt-1 text-[#1A1A1A]">
+        <p className="text-[10px] uppercase tracking-widest text-foreground/40">Historial</p>
+        <h1 className="font-serif text-4xl md:text-5xl font-normal mt-1 text-foreground">
           Transacciones
         </h1>
       </AnimateIn>
@@ -77,7 +77,7 @@ export default async function TransactionsPage() {
               return (
                 <div
                   key={t.id}
-                  className="flex items-center gap-4 px-4 py-3 rounded-2xl bg-card border border-[#1A1A1A]/5 hover:border-[#1A1A1A]/10 transition-colors"
+                  className="flex items-center gap-4 px-4 py-3 rounded-2xl bg-card border border-foreground/5 hover:border-foreground/10 transition-colors"
                 >
                   <div
                     className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0"
@@ -86,12 +86,11 @@ export default async function TransactionsPage() {
                     <CategoryIcon slug={slug} size={16} strokeWidth={1.5} style={{ color }} />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-[#1A1A1A] capitalize truncate">{label}</p>
-                    <p className="text-xs text-[#1A1A1A]/40 mt-0.5">{date}</p>
+                    <p className="text-sm font-medium text-foreground capitalize truncate">{label}</p>
+                    <p className="text-xs text-foreground/40 mt-0.5">{date}</p>
                   </div>
                   <p
-                    className="font-serif text-sm font-normal shrink-0"
-                    style={{ color: isExpense ? "#1A1A1A" : "#2A9D8F" }}
+                    className={`font-serif text-sm font-normal shrink-0 ${isExpense ? "text-foreground" : "text-[#2A9D8F]"}`}
                   >
                     {isExpense ? "−" : "+"}{formatCOP(t.amount)}
                   </p>
@@ -109,9 +108,9 @@ function EmptyState({ emoji, title, body, example }: { emoji: string; title: str
   return (
     <div className="text-center py-20 space-y-4">
       <p className="text-5xl">{emoji}</p>
-      <p className="font-serif text-2xl font-normal text-[#1A1A1A]">{title}</p>
-      <p className="text-[#1A1A1A]/50 text-sm max-w-xs mx-auto leading-relaxed">{body}</p>
-      <p className="text-sm font-mono bg-[#FEFF6E] rounded-xl px-4 py-2 inline-block text-[#1A1A1A]">
+      <p className="font-serif text-2xl font-normal text-foreground">{title}</p>
+      <p className="text-foreground/50 text-sm max-w-xs mx-auto leading-relaxed">{body}</p>
+      <p className="text-sm font-mono bg-[#FEFF6E] rounded-xl px-4 py-2 inline-block text-foreground">
         &quot;{example}&quot;
       </p>
     </div>

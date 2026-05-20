@@ -24,8 +24,8 @@ export default async function GoalsPage() {
 
       {/* Header */}
       <AnimateIn>
-        <p className="text-[10px] uppercase tracking-widest text-[#1A1A1A]/40">Objetivos</p>
-        <h1 className="font-serif text-4xl md:text-5xl font-normal mt-1 text-[#1A1A1A]">
+        <p className="text-[10px] uppercase tracking-widest text-foreground/40">Objetivos</p>
+        <h1 className="font-serif text-4xl md:text-5xl font-normal mt-1 text-foreground">
           Metas
         </h1>
       </AnimateIn>
@@ -34,8 +34,8 @@ export default async function GoalsPage() {
         <AnimateIn>
           <div className="text-center py-20 space-y-4">
             <p className="text-5xl">🏆</p>
-            <p className="font-serif text-2xl font-normal text-[#1A1A1A]">Sin metas aún</p>
-            <p className="text-[#1A1A1A]/50 text-sm max-w-xs mx-auto leading-relaxed">
+            <p className="font-serif text-2xl font-normal text-foreground">Sin metas aún</p>
+            <p className="text-foreground/50 text-sm max-w-xs mx-auto leading-relaxed">
               Dile a Luca en WhatsApp qué quieres ahorrar
             </p>
             <p className="text-sm font-mono bg-[#FEFF6E] rounded-xl px-4 py-2 inline-block text-[#1A1A1A]">
@@ -50,7 +50,7 @@ export default async function GoalsPage() {
           {active.length > 0 && (
             <section className="space-y-3">
               <AnimateIn>
-                <p className="text-[10px] uppercase tracking-widest text-[#1A1A1A]/40">Activas</p>
+                <p className="text-[10px] uppercase tracking-widest text-foreground/40">Activas</p>
               </AnimateIn>
               {active.map((goal, i) => {
                 const pct      = Math.min(Math.round((goal.current_amount / goal.target_amount) * 100), 100);
@@ -61,14 +61,14 @@ export default async function GoalsPage() {
 
                 return (
                   <AnimateIn key={goal.id} delay={i * 70}>
-                    <div className="bg-card border border-[#1A1A1A]/5 rounded-2xl p-5 space-y-4">
+                    <div className="bg-card border border-foreground/5 rounded-2xl p-5 space-y-4">
                       <div className="flex items-start justify-between gap-3">
                         <div>
-                          <p className="text-base font-medium text-[#1A1A1A]">
+                          <p className="text-base font-medium text-foreground">
                             {goal.icon ?? "🎯"} {goal.name}
                           </p>
                           {goal.description && (
-                            <p className="text-xs text-[#1A1A1A]/40 mt-0.5">{goal.description}</p>
+                            <p className="text-xs text-foreground/40 mt-0.5">{goal.description}</p>
                           )}
                         </div>
                         <span
@@ -86,7 +86,7 @@ export default async function GoalsPage() {
                             style={{ width: `${pct}%`, backgroundColor: goal.color ?? "#1A1A1A" }}
                           />
                         </div>
-                        <div className="flex justify-between text-xs text-[#1A1A1A]/40">
+                        <div className="flex justify-between text-xs text-foreground/40">
                           <span>{formatCOP(goal.current_amount)} ahorrado</span>
                           <span>meta {formatCOP(goal.target_amount)}</span>
                         </div>
@@ -94,13 +94,13 @@ export default async function GoalsPage() {
 
                       <div className="flex gap-6">
                         <div>
-                          <p className="text-[10px] uppercase tracking-widest text-[#1A1A1A]/40">Falta</p>
-                          <p className="font-serif text-lg font-normal text-[#1A1A1A] mt-0.5">{formatCOP(remaining)}</p>
+                          <p className="text-[10px] uppercase tracking-widest text-foreground/40">Falta</p>
+                          <p className="font-serif text-lg font-normal text-foreground mt-0.5">{formatCOP(remaining)}</p>
                         </div>
                         {daysLeft !== null && (
                           <div>
-                            <p className="text-[10px] uppercase tracking-widest text-[#1A1A1A]/40">Días restantes</p>
-                            <p className="font-serif text-lg font-normal text-[#1A1A1A] mt-0.5">
+                            <p className="text-[10px] uppercase tracking-widest text-foreground/40">Días restantes</p>
+                            <p className="font-serif text-lg font-normal text-foreground mt-0.5">
                               {daysLeft > 0 ? daysLeft : "Vencida"}
                             </p>
                           </div>
@@ -117,15 +117,15 @@ export default async function GoalsPage() {
           {completed.length > 0 && (
             <section className="space-y-3">
               <AnimateIn>
-                <p className="text-[10px] uppercase tracking-widest text-[#1A1A1A]/40">Completadas</p>
+                <p className="text-[10px] uppercase tracking-widest text-foreground/40">Completadas</p>
               </AnimateIn>
               {completed.map((goal, i) => (
                 <AnimateIn key={goal.id} delay={i * 60}>
-                  <div className="bg-card border border-[#1A1A1A]/5 rounded-2xl p-4 flex items-center gap-4 opacity-60">
+                  <div className="bg-card border border-foreground/5 rounded-2xl p-4 flex items-center gap-4 opacity-60">
                     <span className="text-xl">{goal.icon ?? "✅"}</span>
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-[#1A1A1A] truncate">{goal.name}</p>
-                      <p className="text-xs text-[#1A1A1A]/40 mt-0.5">{formatCOP(goal.target_amount)} — completada</p>
+                      <p className="text-sm font-medium text-foreground truncate">{goal.name}</p>
+                      <p className="text-xs text-foreground/40 mt-0.5">{formatCOP(goal.target_amount)} — completada</p>
                     </div>
                   </div>
                 </AnimateIn>

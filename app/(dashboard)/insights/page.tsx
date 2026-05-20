@@ -69,8 +69,8 @@ export default async function InsightsPage() {
 
       {/* Header */}
       <AnimateIn>
-        <p className="text-[10px] uppercase tracking-widest text-[#1A1A1A]/40 capitalize">{monthName}</p>
-        <h1 className="font-serif text-4xl md:text-5xl font-normal mt-1 text-[#1A1A1A]">
+        <p className="text-[10px] uppercase tracking-widest text-foreground/40 capitalize">{monthName}</p>
+        <h1 className="font-serif text-4xl md:text-5xl font-normal mt-1 text-foreground">
           Insights de Luca
         </h1>
       </AnimateIn>
@@ -79,8 +79,8 @@ export default async function InsightsPage() {
         <AnimateIn>
           <div className="text-center py-20 space-y-4">
             <p className="text-5xl">✨</p>
-            <p className="font-serif text-2xl font-normal text-[#1A1A1A]">Sin datos suficientes aún</p>
-            <p className="text-[#1A1A1A]/50 text-sm max-w-xs mx-auto leading-relaxed">
+            <p className="font-serif text-2xl font-normal text-foreground">Sin datos suficientes aún</p>
+            <p className="text-foreground/50 text-sm max-w-xs mx-auto leading-relaxed">
               Registra algunos gastos y Luca generará tus insights automáticamente.
             </p>
           </div>
@@ -110,10 +110,10 @@ export default async function InsightsPage() {
 
           {/* Daily avg + sparkline */}
           <AnimateIn delay={80}>
-            <div className="bg-card border border-[#1A1A1A]/5 rounded-2xl p-5 flex items-center justify-between gap-4">
+            <div className="bg-card border border-foreground/5 rounded-2xl p-5 flex items-center justify-between gap-4">
               <div>
-                <p className="text-[10px] uppercase tracking-widest text-[#1A1A1A]/40">Gasto promedio por día</p>
-                <p className="font-serif text-3xl font-normal text-[#1A1A1A] mt-1">{formatCOP(avgDaily)}</p>
+                <p className="text-[10px] uppercase tracking-widest text-foreground/40">Gasto promedio por día</p>
+                <p className="font-serif text-3xl font-normal text-foreground mt-1">{formatCOP(avgDaily)}</p>
               </div>
               <div className="flex items-end gap-1 h-12 shrink-0">
                 {dailyValues.slice(-14).map((v, i) => (
@@ -135,7 +135,7 @@ export default async function InsightsPage() {
           {categories.length > 0 && (
             <section>
               <AnimateIn>
-                <p className="text-[10px] uppercase tracking-widest text-[#1A1A1A]/40 mb-4">
+                <p className="text-[10px] uppercase tracking-widest text-foreground/40 mb-4">
                   Gastos por categoría
                 </p>
               </AnimateIn>
@@ -146,11 +146,11 @@ export default async function InsightsPage() {
                     <AnimateIn key={cat.slug} delay={i * 50}>
                       <div className="space-y-1.5">
                         <div className="flex items-center justify-between">
-                          <span className="flex items-center gap-2 text-sm font-medium text-[#1A1A1A]">
+                          <span className="flex items-center gap-2 text-sm font-medium text-foreground">
                             <CategoryIcon slug={cat.slug} size={15} strokeWidth={1.5} style={{ color: cat.color }} />
                             <span>{cat.name}</span>
                           </span>
-                          <span className="font-serif text-sm font-normal text-[#1A1A1A]">
+                          <span className="font-serif text-sm font-normal text-foreground">
                             {formatCOP(cat.total)}
                           </span>
                         </div>
@@ -160,7 +160,7 @@ export default async function InsightsPage() {
                             style={{ width: `${pct}%`, backgroundColor: cat.color + "CC" }}
                           />
                         </div>
-                        <p className="text-xs text-[#1A1A1A]/40 text-right">{pct}% del total</p>
+                        <p className="text-xs text-foreground/40 text-right">{pct}% del total</p>
                       </div>
                     </AnimateIn>
                   );

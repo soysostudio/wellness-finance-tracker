@@ -97,17 +97,17 @@ export default async function OverviewPage() {
 
       {/* ── Header ─────────────────────────────────── */}
       <AnimateIn>
-        <p className="text-xs text-[#1A1A1A]/40 uppercase tracking-widest">
+        <p className="text-xs text-foreground/40 uppercase tracking-widest">
           {monthName} {year}
         </p>
-        <h1 className="font-serif text-4xl md:text-5xl font-normal mt-1 text-[#1A1A1A]">
+        <h1 className="font-serif text-4xl md:text-5xl font-normal mt-1 text-foreground">
           Hola, {firstName} 👋
         </h1>
       </AnimateIn>
 
       {/* ── Summary stats ──────────────────────────── */}
       <AnimateIn>
-        <div className="grid grid-cols-3 gap-6 py-6 border-t border-b border-[#1A1A1A]/8">
+        <div className="grid grid-cols-3 gap-6 py-6 border-t border-b border-foreground/8">
           <StatBlock label="Gastos del mes"   value={formatCOP(overview.totalExpenses)} />
           <StatBlock label="Ingresos del mes" value={formatCOP(overview.totalIncome)} />
           <StatBlock
@@ -152,7 +152,7 @@ export default async function OverviewPage() {
             <SectionLabel>Últimas transacciones</SectionLabel>
             <a
               href="/transactions"
-              className="text-xs text-[#1A1A1A]/40 hover:text-[#1A1A1A] transition-colors underline underline-offset-4"
+              className="text-xs text-foreground/40 hover:text-foreground transition-colors underline underline-offset-4"
             >
               Ver todas
             </a>
@@ -177,18 +177,18 @@ export default async function OverviewPage() {
               );
               return (
                 <AnimateIn key={goal.id} delay={i * 80}>
-                  <div className="bg-card rounded-2xl p-5 space-y-3 border border-[#1A1A1A]/5">
+                  <div className="bg-card rounded-2xl p-5 space-y-3 border border-foreground/5">
                     <div className="flex justify-between items-baseline">
-                      <p className="text-sm font-medium text-[#1A1A1A]">{goal.name}</p>
-                      <p className="text-xs text-[#1A1A1A]/40">{pct}%</p>
+                      <p className="text-sm font-medium text-foreground">{goal.name}</p>
+                      <p className="text-xs text-foreground/40">{pct}%</p>
                     </div>
                     <div className="h-1.5 bg-[#1A1A1A]/8 rounded-full overflow-hidden">
                       <div
-                        className="h-full rounded-full bg-[#1A1A1A] transition-all duration-700"
+                        className="h-full rounded-full bg-foreground transition-all duration-700"
                         style={{ width: `${pct}%` }}
                       />
                     </div>
-                    <div className="flex justify-between text-xs text-[#1A1A1A]/40">
+                    <div className="flex justify-between text-xs text-foreground/40">
                       <span>{formatCOP(goal.current_amount)}</span>
                       <span>{formatCOP(goal.target_amount)}</span>
                     </div>
@@ -205,13 +205,13 @@ export default async function OverviewPage() {
         <AnimateIn>
           <div className="text-center py-16 space-y-4">
             <p className="text-5xl">💬</p>
-            <p className="font-serif text-2xl font-normal text-[#1A1A1A]">
+            <p className="font-serif text-2xl font-normal text-foreground">
               Sin movimientos este mes
             </p>
-            <p className="text-[#1A1A1A]/50 text-sm max-w-xs mx-auto leading-relaxed">
+            <p className="text-foreground/50 text-sm max-w-xs mx-auto leading-relaxed">
               Cuéntale a Luca tu primer gasto por WhatsApp y aparecerá aquí al instante.
             </p>
-            <p className="text-sm font-mono bg-[#FEFF6E] rounded-xl px-4 py-2 inline-block text-[#1A1A1A]">
+            <p className="text-sm font-mono bg-[#FEFF6E] rounded-xl px-4 py-2 inline-block text-foreground">
               &quot;gasté 45 mil en Rappi&quot;
             </p>
           </div>
@@ -226,8 +226,8 @@ export default async function OverviewPage() {
 function StatBlock({ label, value, muted }: { label: string; value: string; muted?: boolean }) {
   return (
     <div className="space-y-1.5">
-      <p className="text-[10px] uppercase tracking-widest text-[#1A1A1A]/40">{label}</p>
-      <p className={`font-serif text-xl md:text-2xl font-normal ${muted ? "text-[#E8673C]" : "text-[#1A1A1A]"}`}>
+      <p className="text-[10px] uppercase tracking-widest text-foreground/40">{label}</p>
+      <p className={`font-serif text-xl md:text-2xl font-normal ${muted ? "text-[#E8673C]" : "text-foreground"}`}>
         {value}
       </p>
     </div>
@@ -236,7 +236,7 @@ function StatBlock({ label, value, muted }: { label: string; value: string; mute
 
 function SectionLabel({ children, className }: { children: React.ReactNode; className?: string }) {
   return (
-    <p className={`text-[10px] uppercase tracking-widest text-[#1A1A1A]/40 font-medium ${className ?? ""}`}>
+    <p className={`text-[10px] uppercase tracking-widest text-foreground/40 font-medium ${className ?? ""}`}>
       {children}
     </p>
   );

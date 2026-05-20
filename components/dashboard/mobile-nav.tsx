@@ -38,7 +38,7 @@ export function MobileNav({ userName }: { userName: string }) {
         <span className="font-serif text-lg font-normal tracking-tight">Luca</span>
         <button
           onClick={() => setOpen(true)}
-          className="p-2 rounded-lg hover:bg-muted transition-colors text-[#1A1A1A]/50"
+          className="p-2 rounded-lg hover:bg-muted transition-colors text-foreground/50"
           aria-label="Abrir menú"
         >
           <Menu size={20} strokeWidth={1.5} />
@@ -62,7 +62,7 @@ export function MobileNav({ userName }: { userName: string }) {
           <span className="font-serif text-xl font-normal tracking-tight">Luca</span>
           <button
             onClick={() => setOpen(false)}
-            className="p-1.5 rounded-lg hover:bg-muted transition-colors text-[#1A1A1A]/40"
+            className="p-1.5 rounded-lg hover:bg-muted transition-colors text-foreground/40"
           >
             <X size={18} strokeWidth={1.5} />
           </button>
@@ -79,8 +79,8 @@ export function MobileNav({ userName }: { userName: string }) {
                 className={cn(
                   "flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-medium transition-colors",
                   active
-                    ? "bg-[#FEFF6E] text-[#1A1A1A]"
-                    : "text-[#1A1A1A]/40 hover:text-[#1A1A1A] hover:bg-[#FEF3D6]"
+                    ? "bg-[#FEFF6E] text-[#1A1A1A] dark:bg-[#FEFF6E]/20 dark:text-foreground"
+                    : "text-foreground/40 hover:text-foreground hover:bg-foreground/6"
                 )}
               >
                 <Icon
@@ -94,7 +94,7 @@ export function MobileNav({ userName }: { userName: string }) {
           })}
         </nav>
 
-        <div className="px-4 py-4 border-t border-border text-xs text-[#1A1A1A]/40 truncate">
+        <div className="px-4 py-4 border-t border-border text-xs text-foreground/40 truncate">
           {userName}
         </div>
       </div>

@@ -3,7 +3,7 @@ import type OpenAI from 'openai';
 import { getOpenAIClient } from './client';
 import { COMPRESSION_PROMPT } from './prompts';
 
-const MAX_RECENT_MESSAGES = 20;
+const MAX_RECENT_MESSAGES = 8;
 const COMPRESSION_THRESHOLD = 20;
 
 export interface ConversationContext {
@@ -14,18 +14,19 @@ export async function buildContextWindow(
   conversationId: string,
   supabase: AdminClient
 ): Promise<ConversationContext> {
-  const { data: conversation } = await supabase
-    .from('conversations')
-    .select('context_summary')
-    .eq('id', conversationId)
-    .single();
-
-  const { data: recentMessages } = await supabase
-    .from('messages')
-    .select('direction, body, created_at')
-    .eq('conversation_id', conversationId)
-    .order('created_at', { ascending: false })
-    .limit(MAX_RECENT_MESSAGES);
+  const [{ data: conversation }, { data: recentMessages }] = await Promise.all([
+    supabase
+      .from('conversations')
+      .select('context_summary')
+      .eq('id', conversationId)
+      .single(),
+    supabase
+      .from('messages')
+      .select('direction, body, created_at')
+      .eq('conversation_id', conversationId)
+      .order('created_at', { ascending: false })
+      .limit(MAX_RECENT_MESSAGES),
+  ]);
 
   const messages: OpenAI.ChatCompletionMessageParam[] = [];
 
@@ -72,7 +73,7 @@ export async function compressConversationIfNeeded(
 
   const openai = getOpenAIClient();
   const response = await openai.chat.completions.create({
-    model: 'gpt-4o',
+    model: 'gpt-4o-mini',
     temperature: 0.2,
     max_tokens: 200,
     messages: [

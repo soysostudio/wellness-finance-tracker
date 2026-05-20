@@ -45,7 +45,7 @@ export function RecentTransactions({ transactions }: RecentTransactionsProps) {
         return (
           <div
             key={tx.id ?? i}
-            className="flex items-center gap-3 bg-card rounded-xl px-4 py-3 border border-[#1A1A1A]/5"
+            className="flex items-center gap-3 bg-card rounded-xl px-4 py-3 border border-foreground/5"
           >
             <div
               className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0"
@@ -54,8 +54,8 @@ export function RecentTransactions({ transactions }: RecentTransactionsProps) {
               <CategoryIcon slug={slug} size={16} strokeWidth={1.5} style={{ color }} />
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium text-[#1A1A1A] truncate capitalize">{label}</p>
-              <p className="text-xs text-[#1A1A1A]/40 mt-0.5">{date}</p>
+              <p className="text-sm font-medium text-foreground truncate capitalize">{label}</p>
+              <p className="text-xs text-foreground/40 mt-0.5">{date}</p>
             </div>
             <p
               className="font-serif text-sm font-normal shrink-0"

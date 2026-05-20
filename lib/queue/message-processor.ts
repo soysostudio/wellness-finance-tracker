@@ -41,10 +41,13 @@ export async function processIncomingMessage(payload: TwilioWebhookPayload): Pro
 
   if (existingConv) {
     conversationId = existingConv.id;
-    await supabase
-      .from('conversations')
-      .update({ last_message_at: new Date().toISOString() })
-      .eq('id', conversationId);
+    // fire-and-forget — don't block on timestamp update
+    void Promise.resolve(
+      supabase
+        .from('conversations')
+        .update({ last_message_at: new Date().toISOString() })
+        .eq('id', conversationId)
+    ).catch(console.error);
   } else {
     const { data: newConv } = await supabase
       .from('conversations')
@@ -165,29 +168,31 @@ export async function processIncomingMessage(payload: TwilioWebhookPayload): Pro
         replyText = result.reply_draft;
     }
 
-    // Update intent on saved message
+    // Update intent on saved message (fire-and-forget — doesn't affect reply)
     if (savedMessage?.id) {
-      await supabase
-        .from('messages')
-        .update({ intent: result.intent, processed_at: new Date().toISOString() })
-        .eq('id', savedMessage.id);
+      void Promise.resolve(
+        supabase
+          .from('messages')
+          .update({ intent: result.intent, processed_at: new Date().toISOString() })
+          .eq('id', savedMessage.id)
+      ).catch(console.error);
     }
   } catch (err) {
     console.error('[message-processor] AI error:', err);
     replyText = 'Uy, tuve un problema procesando eso. ¿Me lo repites? 😅';
   }
 
-  // 6. Save outbound message
-  await supabase.from('messages').insert({
-    conversation_id: conversationId,
-    user_id: user.id,
-    direction: 'outbound',
-    body: replyText,
-    processed_at: new Date().toISOString(),
-  });
-
-  // 7. Send WhatsApp reply
-  await sendWhatsAppMessage(payload.From, replyText);
+  // 6. Save outbound message + send WhatsApp reply in parallel
+  await Promise.all([
+    supabase.from('messages').insert({
+      conversation_id: conversationId,
+      user_id: user.id,
+      direction: 'outbound',
+      body: replyText,
+      processed_at: new Date().toISOString(),
+    }),
+    sendWhatsAppMessage(payload.From, replyText),
+  ]);
 
   // 8. Compress conversation if needed (fire-and-forget)
   compressConversationIfNeeded(conversationId, supabase).catch(console.error);

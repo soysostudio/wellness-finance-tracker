@@ -47,16 +47,16 @@ const TESTIMONIALS = [
 
 export default function LandingPage() {
   return (
-    <main className="min-h-screen bg-[#F5F6F8] text-[#1A1A1A]" style={{ fontFamily: "var(--font-sans)" }}>
+    <main className="min-h-screen bg-background text-foreground" style={{ fontFamily: "var(--font-sans)" }}>
 
       {/* Nav */}
       <nav className="flex items-center justify-between px-8 md:px-16 py-6 max-w-7xl mx-auto">
         <span className="text-base font-semibold tracking-tight">Luca</span>
         <div className="flex items-center gap-6">
-          <Link href="/login" className="text-sm text-[#1A1A1A]/50 hover:text-[#1A1A1A] transition-colors">
+          <Link href="/login" className="text-sm text-foreground/50 hover:text-foreground transition-colors">
             Iniciar sesión
           </Link>
-          <Link href="/signup" className="bg-[#1A1A1A] text-[#F7F3EC] text-sm font-medium px-5 py-2 rounded-full hover:opacity-80 transition-opacity">
+          <Link href="/signup" className="bg-foreground text-background text-sm font-medium px-5 py-2 rounded-full hover:opacity-80 transition-opacity">
             Empieza gratis
           </Link>
         </div>
@@ -65,25 +65,25 @@ export default function LandingPage() {
       {/* ── Hero ──────────────────────────────────────── */}
       <section className="px-8 md:px-16 pt-16 pb-24 max-w-7xl mx-auto grid md:grid-cols-2 gap-12 items-center">
         <AnimateIn className="space-y-7">
-          <h1 className="font-serif text-5xl md:text-6xl leading-[1.1] font-normal text-[#1A1A1A]">
+          <h1 className="font-serif text-5xl md:text-6xl leading-[1.1] font-normal text-foreground">
             Maneja tu plata<br />
             <span style={{ background: "linear-gradient(to top, #FEFF6E 80%, transparent 80%)" }}>por WhatsApp.</span>
           </h1>
-          <p className="text-[#1A1A1A]/55 text-lg leading-relaxed max-w-md">
+          <p className="text-foreground/55 text-lg leading-relaxed max-w-md">
             Escríbele a Luca como le escribes a un amigo.
             Él registra tus gastos, controla tus presupuestos
             y te ayuda a ahorrar — sin apps complicadas.
           </p>
           <div className="flex items-center gap-4 pt-1">
-            <Link href="/signup" className="bg-[#1A1A1A] text-[#F7F3EC] font-medium px-7 py-3 rounded-full text-sm hover:opacity-80 transition-opacity">
+            <Link href="/signup" className="bg-foreground text-background font-medium px-7 py-3 rounded-full text-sm hover:opacity-80 transition-opacity">
               Crear cuenta gratis
             </Link>
-            <a href="#como-funciona" className="text-sm text-[#1A1A1A]/50 hover:text-[#1A1A1A] transition-colors flex items-center gap-1.5">
+            <a href="#como-funciona" className="text-sm text-foreground/50 hover:text-foreground transition-colors flex items-center gap-1.5">
               Ver cómo funciona
               <span>↓</span>
             </a>
           </div>
-          <p className="text-xs text-[#1A1A1A]/35">Gratis para siempre · Sin contraseñas · 2 minutos para empezar</p>
+          <p className="text-xs text-foreground/35">Gratis para siempre · Sin contraseñas · 2 minutos para empezar</p>
         </AnimateIn>
 
         {/* Chat mockup */}
@@ -91,7 +91,7 @@ export default function LandingPage() {
           <div className="w-full max-w-sm">
             <div className="relative">
               <div className="absolute -top-4 -right-4 w-full h-full rounded-3xl" style={{ backgroundColor: "#FFB0FF", opacity: 0.5 }} />
-              <div className="relative bg-white rounded-3xl shadow-lg overflow-hidden">
+              <div className="relative bg-card rounded-3xl shadow-lg overflow-hidden">
                 <div className="px-4 py-3 flex items-center gap-3" style={{ backgroundColor: "#075E54" }}>
                   <div className="w-8 h-8 rounded-full flex items-center justify-center text-white text-sm font-semibold" style={{ backgroundColor: "#25D366" }}>L</div>
                   <div>
@@ -116,8 +116,8 @@ export default function LandingPage() {
       {/* ── Capabilities ──────────────────────────────── */}
       <section id="como-funciona" className="px-8 md:px-16 py-20 max-w-7xl mx-auto">
         <AnimateIn>
-          <p className="text-xs text-[#1A1A1A]/40 uppercase tracking-widest mb-3">Lo que hace Luca</p>
-          <h2 className="font-serif text-3xl md:text-4xl font-normal mb-14 text-[#1A1A1A]">
+          <p className="text-xs text-foreground/40 uppercase tracking-widest mb-3">Lo que hace Luca</p>
+          <h2 className="font-serif text-3xl md:text-4xl font-normal mb-14 text-foreground">
             Todo lo que necesitas,<br />sin la complejidad.
           </h2>
         </AnimateIn>
@@ -125,10 +125,10 @@ export default function LandingPage() {
           {CAPABILITIES.map(({ Icon, t, d }, i) => (
             <AnimateIn key={t} delay={i * 80} className="space-y-4">
               <div className="w-10 h-10 rounded-xl bg-[#1A1A1A]/5 flex items-center justify-center">
-                <Icon size={18} strokeWidth={1.5} className="text-[#1A1A1A]/60" />
+                <Icon size={18} strokeWidth={1.5} className="text-foreground/60" />
               </div>
-              <p className="font-medium text-sm text-[#1A1A1A]">{t}</p>
-              <p className="text-[#1A1A1A]/50 text-sm leading-relaxed">{d}</p>
+              <p className="font-medium text-sm text-foreground">{t}</p>
+              <p className="text-foreground/50 text-sm leading-relaxed">{d}</p>
             </AnimateIn>
           ))}
         </div>
@@ -159,20 +159,20 @@ export default function LandingPage() {
       {/* ── Testimonials ──────────────────────────────── */}
       <section className="px-8 md:px-16 py-20 max-w-7xl mx-auto">
         <AnimateIn>
-          <p className="text-xs text-[#1A1A1A]/40 uppercase tracking-widest mb-3">Personas reales</p>
-          <h2 className="font-serif text-3xl md:text-4xl font-normal mb-12 text-[#1A1A1A]">
+          <p className="text-xs text-foreground/40 uppercase tracking-widest mb-3">Personas reales</p>
+          <h2 className="font-serif text-3xl md:text-4xl font-normal mb-12 text-foreground">
             Lo que dicen quienes<br />ya usan Luca.
           </h2>
         </AnimateIn>
         <div className="grid md:grid-cols-3 gap-6">
           {TESTIMONIALS.map(({ q, name, role, accent }, i) => (
             <AnimateIn key={name} delay={i * 80}>
-              <div className="bg-white rounded-2xl p-7 space-y-5 h-full">
+              <div className="bg-card rounded-2xl p-7 space-y-5 h-full">
                 <div className="w-6 h-0.5 rounded-full" style={{ backgroundColor: accent }} />
-                <p className="text-[#1A1A1A]/65 text-sm leading-relaxed">"{q}"</p>
+                <p className="text-foreground/65 text-sm leading-relaxed">"{q}"</p>
                 <div>
                   <p className="text-sm font-medium">{name}</p>
-                  <p className="text-xs text-[#1A1A1A]/40 mt-0.5">{role}</p>
+                  <p className="text-xs text-foreground/40 mt-0.5">{role}</p>
                 </div>
               </div>
             </AnimateIn>
@@ -183,29 +183,29 @@ export default function LandingPage() {
       {/* ── CTA ───────────────────────────────────────── */}
       <section className="px-8 md:px-16 py-24 max-w-3xl mx-auto text-center">
         <AnimateIn className="space-y-6">
-          <h2 className="font-serif text-4xl md:text-5xl font-normal leading-snug text-[#1A1A1A]">
+          <h2 className="font-serif text-4xl md:text-5xl font-normal leading-snug text-foreground">
             Tu plata, finalmente<br />
             <span style={{ background: "linear-gradient(to top, #FFB0FF 80%, transparent 80%)" }}>organizada.</span>
           </h2>
-          <p className="text-[#1A1A1A]/50 leading-relaxed">
+          <p className="text-foreground/50 leading-relaxed">
             Únete gratis en 2 minutos. Sin contraseñas, sin apps, sin complicaciones.
           </p>
           <div className="pt-2">
-            <Link href="/signup" className="inline-block bg-[#1A1A1A] text-[#F7F3EC] font-medium px-10 py-3.5 rounded-full text-sm hover:opacity-80 transition-opacity">
+            <Link href="/signup" className="inline-block bg-foreground text-background font-medium px-10 py-3.5 rounded-full text-sm hover:opacity-80 transition-opacity">
               Crear mi cuenta gratis
             </Link>
           </div>
-          <p className="text-xs text-[#1A1A1A]/30">Gratis para siempre · Sin tarjeta de crédito</p>
+          <p className="text-xs text-foreground/30">Gratis para siempre · Sin tarjeta de crédito</p>
         </AnimateIn>
       </section>
 
       {/* Footer */}
-      <footer className="border-t border-[#1A1A1A]/8 px-8 md:px-16 py-8 max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
-        <span className="text-sm font-semibold text-[#1A1A1A]">Luca</span>
-        <p className="text-xs text-[#1A1A1A]/35">Finanzas personales para Colombia 🇨🇴</p>
-        <div className="flex gap-6 text-xs text-[#1A1A1A]/40">
-          <Link href="/login" className="hover:text-[#1A1A1A] transition-colors">Iniciar sesión</Link>
-          <Link href="/signup" className="hover:text-[#1A1A1A] transition-colors">Registrarse</Link>
+      <footer className="border-t border-foreground/8 px-8 md:px-16 py-8 max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
+        <span className="text-sm font-semibold text-foreground">Luca</span>
+        <p className="text-xs text-foreground/35">Finanzas personales para Colombia 🇨🇴</p>
+        <div className="flex gap-6 text-xs text-foreground/40">
+          <Link href="/login" className="hover:text-foreground transition-colors">Iniciar sesión</Link>
+          <Link href="/signup" className="hover:text-foreground transition-colors">Registrarse</Link>
         </div>
       </footer>
 
@@ -217,9 +217,9 @@ function ChatBubble({ from, text, time }: { from: "user" | "luca"; text: string;
   const isUser = from === "user";
   return (
     <div className={`flex ${isUser ? "justify-end" : "justify-start"}`}>
-      <div className={`max-w-[85%] rounded-2xl px-3.5 py-2.5 text-xs shadow-sm ${isUser ? "bg-[#DCF8C6]" : "bg-white"}`}>
-        <p className="leading-snug text-[#1A1A1A]">{text}</p>
-        <p className="text-right mt-1 text-[10px] text-[#1A1A1A]/40">{time}</p>
+      <div className={`max-w-[85%] rounded-2xl px-3.5 py-2.5 text-xs shadow-sm ${isUser ? "bg-[#DCF8C6]" : "bg-card"}`}>
+        <p className="leading-snug text-foreground">{text}</p>
+        <p className="text-right mt-1 text-[10px] text-foreground/40">{time}</p>
       </div>
     </div>
   );

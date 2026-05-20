@@ -31,8 +31,8 @@ export default async function SettingsPage() {
 
       {/* Header */}
       <AnimateIn>
-        <p className="text-[10px] uppercase tracking-widest text-[#1A1A1A]/40">Preferencias</p>
-        <h1 className="font-serif text-4xl md:text-5xl font-normal mt-1 text-[#1A1A1A]">
+        <p className="text-[10px] uppercase tracking-widest text-foreground/40">Preferencias</p>
+        <h1 className="font-serif text-4xl md:text-5xl font-normal mt-1 text-foreground">
           Configuración
         </h1>
       </AnimateIn>
@@ -51,17 +51,17 @@ export default async function SettingsPage() {
 
       {/* WhatsApp */}
       <AnimateIn delay={100}>
-        <div className="bg-card border border-[#1A1A1A]/5 rounded-2xl p-5 space-y-3">
-          <p className="text-[10px] uppercase tracking-widest text-[#1A1A1A]/40">WhatsApp</p>
+        <div className="bg-card border border-foreground/5 rounded-2xl p-5 space-y-3">
+          <p className="text-[10px] uppercase tracking-widest text-foreground/40">WhatsApp</p>
           <div className="flex items-center justify-between text-sm">
-            <span className="text-[#1A1A1A]/50">Número vinculado</span>
-            <span className="font-medium text-[#1A1A1A]">
+            <span className="text-foreground/50">Número vinculado</span>
+            <span className="font-medium text-foreground">
               {profile?.phone_number ?? (
                 <span className="text-destructive text-xs">No vinculado</span>
               )}
             </span>
           </div>
-          <p className="text-xs text-[#1A1A1A]/40 leading-relaxed">
+          <p className="text-xs text-foreground/40 leading-relaxed">
             Luca te reconoce por este número. Si cambias de número, actualízalo arriba.
           </p>
         </div>
@@ -84,15 +84,15 @@ export default async function SettingsPage() {
 
       {/* Account */}
       <AnimateIn delay={180}>
-        <div className="bg-card border border-[#1A1A1A]/5 rounded-2xl p-5 space-y-3">
-          <p className="text-[10px] uppercase tracking-widest text-[#1A1A1A]/40">Cuenta</p>
+        <div className="bg-card border border-foreground/5 rounded-2xl p-5 space-y-3">
+          <p className="text-[10px] uppercase tracking-widest text-foreground/40">Cuenta</p>
           <div className="flex items-center justify-between text-sm">
-            <span className="text-[#1A1A1A]/50">Correo</span>
-            <span className="font-medium text-[#1A1A1A]">{user.email}</span>
+            <span className="text-foreground/50">Correo</span>
+            <span className="font-medium text-foreground">{user.email}</span>
           </div>
           <div className="flex items-center justify-between text-sm">
-            <span className="text-[#1A1A1A]/50">ID de usuario</span>
-            <span className="font-mono text-xs text-[#1A1A1A]/40">{user.id.slice(0, 8)}…</span>
+            <span className="text-foreground/50">ID de usuario</span>
+            <span className="font-mono text-xs text-foreground/40">{user.id.slice(0, 8)}…</span>
           </div>
         </div>
       </AnimateIn>

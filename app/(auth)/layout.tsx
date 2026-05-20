@@ -2,10 +2,10 @@ import Link from "next/link";
 
 export default function AuthLayout({ children }: { children: React.ReactNode }) {
   return (
-    <main className="min-h-screen bg-[#F5F6F8] flex flex-col">
+    <main className="min-h-screen bg-background flex flex-col">
       {/* Nav */}
       <nav className="px-8 py-6">
-        <Link href="/" className="text-sm font-semibold text-[#1A1A1A] tracking-tight">
+        <Link href="/" className="text-sm font-semibold text-foreground tracking-tight">
           Luca
         </Link>
       </nav>

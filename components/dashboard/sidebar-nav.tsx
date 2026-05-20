@@ -38,8 +38,8 @@ export function SidebarNav() {
             className={cn(
               "flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors",
               active
-                ? "bg-[#FEFF6E] text-[#1A1A1A]"
-                : "text-[#1A1A1A]/40 hover:text-[#1A1A1A] hover:bg-[#FEF3D6]"
+                ? "bg-[#FEFF6E] text-[#1A1A1A] dark:bg-[#FEFF6E]/20 dark:text-foreground"
+                : "text-foreground/40 hover:text-foreground hover:bg-foreground/6"
             )}
           >
             <Icon

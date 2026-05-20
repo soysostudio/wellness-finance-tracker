@@ -41,8 +41,8 @@ export default async function BudgetsPage() {
 
       {/* Header */}
       <AnimateIn>
-        <p className="text-[10px] uppercase tracking-widest text-[#1A1A1A]/40">Este mes</p>
-        <h1 className="font-serif text-4xl md:text-5xl font-normal mt-1 text-[#1A1A1A]">
+        <p className="text-[10px] uppercase tracking-widest text-foreground/40">Este mes</p>
+        <h1 className="font-serif text-4xl md:text-5xl font-normal mt-1 text-foreground">
           Presupuestos
         </h1>
       </AnimateIn>
@@ -51,8 +51,8 @@ export default async function BudgetsPage() {
         <AnimateIn>
           <div className="text-center py-20 space-y-4">
             <p className="text-5xl">🎯</p>
-            <p className="font-serif text-2xl font-normal text-[#1A1A1A]">Sin presupuestos aún</p>
-            <p className="text-[#1A1A1A]/50 text-sm max-w-xs mx-auto leading-relaxed">
+            <p className="font-serif text-2xl font-normal text-foreground">Sin presupuestos aún</p>
+            <p className="text-foreground/50 text-sm max-w-xs mx-auto leading-relaxed">
               Dile a Luca qué límite quieres para cada categoría
             </p>
             <p className="text-sm font-mono bg-[#FEFF6E] rounded-xl px-4 py-2 inline-block text-[#1A1A1A]">
@@ -78,7 +78,7 @@ export default async function BudgetsPage() {
 
             return (
               <AnimateIn key={budget.id} delay={i * 70}>
-                <div className="bg-card border border-[#1A1A1A]/5 rounded-2xl p-5 space-y-4">
+                <div className="bg-card border border-foreground/5 rounded-2xl p-5 space-y-4">
                   <div className="flex items-center gap-3">
                     <div
                       className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0"
@@ -87,12 +87,12 @@ export default async function BudgetsPage() {
                       <CategoryIcon slug={slug} size={16} strokeWidth={1.5} style={{ color }} />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-[#1A1A1A]">{cat?.name ?? "Categoría"}</p>
-                      <p className="text-xs text-[#1A1A1A]/40 capitalize">{budget.period}</p>
+                      <p className="text-sm font-medium text-foreground">{cat?.name ?? "Categoría"}</p>
+                      <p className="text-xs text-foreground/40 capitalize">{budget.period}</p>
                     </div>
                     <div className="text-right shrink-0">
-                      <p className="font-serif text-xl font-normal text-[#1A1A1A]">{pct}%</p>
-                      <p className="text-[10px] text-[#1A1A1A]/40 uppercase tracking-widest">usado</p>
+                      <p className="font-serif text-xl font-normal text-foreground">{pct}%</p>
+                      <p className="text-[10px] text-foreground/40 uppercase tracking-widest">usado</p>
                     </div>
                   </div>
 
@@ -103,7 +103,7 @@ export default async function BudgetsPage() {
                         style={{ width: `${pct}%`, backgroundColor: barColor }}
                       />
                     </div>
-                    <div className="flex justify-between text-xs text-[#1A1A1A]/40">
+                    <div className="flex justify-between text-xs text-foreground/40">
                       <span>{formatCOP(spent)} gastado</span>
                       <span>límite {formatCOP(budget.amount_limit)}</span>
                     </div>
@@ -118,7 +118,7 @@ export default async function BudgetsPage() {
                       ⚠️ Quedan {formatCOP(remaining)} — cerca del límite
                     </p>
                   ) : (
-                    <p className="text-xs text-[#1A1A1A]/40">
+                    <p className="text-xs text-foreground/40">
                       {formatCOP(remaining)} disponibles
                     </p>
                   )}
