@@ -22,7 +22,7 @@ export default function LandingPage() {
         <div className="space-y-7">
           <h1 className="font-serif text-5xl md:text-6xl leading-[1.1] font-normal text-[#1A1A1A]">
             Maneja tu plata<br />
-            <span style={{ color: "#1A1A1A", background: "#FEFF6E", padding: "0 4px", borderRadius: "4px" }}>por WhatsApp.</span>
+            <span style={{ textDecorationLine: "underline", textDecorationColor: "#FEFF6E", textDecorationThickness: "3px", textUnderlineOffset: "6px" }}>por WhatsApp.</span>
           </h1>
           <p className="text-[#1A1A1A]/55 text-lg leading-relaxed max-w-md">
             Escríbele a Luca como le escribes a un amigo.
@@ -141,7 +141,7 @@ export default function LandingPage() {
       <section className="px-8 md:px-16 py-24 max-w-3xl mx-auto text-center space-y-6">
         <h2 className="font-serif text-4xl md:text-5xl font-normal leading-snug text-[#1A1A1A]">
           Tu plata, finalmente<br />
-          <span style={{ background: "#FFB0FF", padding: "0 4px", borderRadius: "4px" }}>organizada.</span>
+          <span style={{ textDecorationLine: "underline", textDecorationColor: "#FFB0FF", textDecorationThickness: "3px", textUnderlineOffset: "6px" }}>organizada.</span>
         </h2>
         <p className="text-[#1A1A1A]/50 leading-relaxed">
           Únete gratis en 2 minutos. Sin contraseñas, sin apps, sin complicaciones.
