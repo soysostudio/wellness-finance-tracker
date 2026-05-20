@@ -3,16 +3,14 @@
 import { useState } from "react";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 
-type Step = "form" | "phone" | "sent" | "error";
+type Step = "form" | "sent";
 
 export default function SignupPage() {
-  const [step, setStep] = useState<Step>("form");
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
-  const [phone, setPhone] = useState("");
+  const [step, setStep]       = useState<Step>("form");
+  const [name, setName]       = useState("");
+  const [email, setEmail]     = useState("");
+  const [phone, setPhone]     = useState("");
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
 
@@ -22,8 +20,6 @@ export default function SignupPage() {
     setErrorMsg("");
 
     const supabase = createClient();
-
-    // Sign up with OTP (magic link)
     const { error: signupError } = await supabase.auth.signInWithOtp({
       email,
       options: {
@@ -38,11 +34,7 @@ export default function SignupPage() {
       return;
     }
 
-    // If phone provided, save it (we'll persist after email confirmed)
-    if (phone) {
-      localStorage.setItem("luca_pending_phone", formatPhone(phone));
-    }
-
+    if (phone) localStorage.setItem("luca_pending_phone", formatPhone(phone));
     setLoading(false);
     setStep("sent");
   }
@@ -56,83 +48,95 @@ export default function SignupPage() {
 
   if (step === "sent") {
     return (
-      <div className="text-center space-y-3">
-        <div className="text-4xl">🎉</div>
-        <h2 className="text-xl font-bold">¡Casi listo!</h2>
-        <p className="text-muted-foreground text-sm">
-          Te enviamos un enlace a <strong>{email}</strong>.
-          Haz clic en el enlace para activar tu cuenta y empezar con Luca.
-        </p>
-        <div className="mt-6 p-4 bg-muted rounded-2xl text-sm space-y-2 text-left">
-          <p className="font-semibold">Después de confirmar tu correo:</p>
-          <p>1. Agrega este número a WhatsApp: <strong>+57 300 000 0000</strong></p>
-          <p>2. Escríbele "Hola" a Luca</p>
-          <p>3. Luca te guiará por el resto 💪</p>
+      <div className="space-y-6">
+        <div>
+          <p className="text-[10px] uppercase tracking-widest text-[#1A1A1A]/40 mb-1">Listo</p>
+          <h1 className="font-serif text-4xl font-normal text-[#1A1A1A]">Revisa tu correo</h1>
         </div>
+        <p className="text-[#1A1A1A]/55 text-sm leading-relaxed">
+          Te enviamos un enlace a <span className="text-[#1A1A1A] font-medium">{email}</span>.
+          Haz clic en él para activar tu cuenta.
+        </p>
+        <div className="rounded-2xl p-5 space-y-3" style={{ backgroundColor: "#FEFF6E" }}>
+          <p className="text-[10px] uppercase tracking-widest text-[#1A1A1A]/50">Próximo paso</p>
+          <p className="text-sm text-[#1A1A1A]/70 leading-relaxed">
+            Después de confirmar, escríbele <strong className="text-[#1A1A1A]">"Hola"</strong> a Luca
+            en WhatsApp y él te guiará por el resto.
+          </p>
+        </div>
+        <button
+          onClick={() => setStep("form")}
+          className="text-xs text-[#1A1A1A]/40 hover:text-[#1A1A1A] transition-colors underline underline-offset-4"
+        >
+          Usar otro correo
+        </button>
       </div>
     );
   }
 
   return (
-    <form onSubmit={handleSignup} className="space-y-4">
-      <div className="space-y-1">
-        <h1 className="text-2xl font-black">Crea tu cuenta</h1>
-        <p className="text-muted-foreground text-sm">
-          Gratis para siempre. Sin contraseñas.
-        </p>
+    <div className="space-y-8">
+      <div>
+        <p className="text-[10px] uppercase tracking-widest text-[#1A1A1A]/40 mb-1">Gratis para siempre</p>
+        <h1 className="font-serif text-4xl font-normal text-[#1A1A1A]">Crea tu cuenta</h1>
+        <p className="text-sm text-[#1A1A1A]/50 mt-1">Sin contraseñas, en 2 minutos.</p>
       </div>
 
-      <div className="space-y-3">
-        <Input
+      <form onSubmit={handleSignup} className="space-y-3">
+        <AuthInput
           placeholder="Tu nombre"
           value={name}
           onChange={(e) => setName(e.target.value)}
           required
-          className="h-12"
         />
-
-        <Input
+        <AuthInput
           type="email"
           placeholder="tu@correo.com"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           required
           autoComplete="email"
-          className="h-12"
         />
-
-        <div className="space-y-1">
-          <Input
+        <div className="space-y-1.5">
+          <AuthInput
             type="tel"
-            placeholder="Tu número de WhatsApp (ej: 300 123 4567)"
+            placeholder="WhatsApp (ej: 300 123 4567)"
             value={phone}
             onChange={(e) => setPhone(e.target.value)}
-            className="h-12"
           />
-          <p className="text-xs text-muted-foreground px-1">
+          <p className="text-xs text-[#1A1A1A]/40 px-1">
             Con este número Luca te reconocerá en WhatsApp
           </p>
         </div>
 
         {errorMsg && (
-          <p className="text-sm text-destructive">{errorMsg}</p>
+          <p className="text-xs text-red-500 px-1">{errorMsg}</p>
         )}
 
-        <Button
+        <button
           type="submit"
-          className="w-full h-12 font-bold"
           disabled={loading}
+          className="w-full h-12 rounded-full bg-[#1A1A1A] text-[#F7F3EC] text-sm font-medium hover:opacity-80 transition-opacity disabled:opacity-50 mt-1"
         >
           {loading ? "Creando cuenta..." : "Crear cuenta gratis"}
-        </Button>
-      </div>
+        </button>
+      </form>
 
-      <p className="text-center text-sm text-muted-foreground">
+      <p className="text-center text-sm text-[#1A1A1A]/40">
         ¿Ya tienes cuenta?{" "}
-        <Link href="/login" className="font-semibold text-foreground underline underline-offset-4">
+        <Link href="/login" className="text-[#1A1A1A] underline underline-offset-4 hover:opacity-60 transition-opacity">
           Inicia sesión
         </Link>
       </p>
-    </form>
+    </div>
+  );
+}
+
+function AuthInput(props: React.InputHTMLAttributes<HTMLInputElement>) {
+  return (
+    <input
+      {...props}
+      className="w-full h-12 px-4 rounded-2xl bg-white border border-[#1A1A1A]/8 text-sm text-[#1A1A1A] placeholder-[#1A1A1A]/30 outline-none focus:border-[#1A1A1A]/30 transition-colors"
+    />
   );
 }

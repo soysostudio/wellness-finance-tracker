@@ -1,13 +1,20 @@
+import Link from "next/link";
+
 export default function AuthLayout({ children }: { children: React.ReactNode }) {
   return (
-    <main className="min-h-screen flex items-center justify-center bg-background px-4">
-      <div className="w-full max-w-sm">
-        {/* Luca wordmark */}
-        <div className="mb-8 text-center">
-          <span className="text-3xl font-black tracking-tight">Luca</span>
-          <p className="text-sm text-muted-foreground mt-1">Tu asistente de finanzas</p>
+    <main className="min-h-screen bg-[#F5F6F8] flex flex-col">
+      {/* Nav */}
+      <nav className="px-8 py-6">
+        <Link href="/" className="text-sm font-semibold text-[#1A1A1A] tracking-tight">
+          Luca
+        </Link>
+      </nav>
+
+      {/* Content */}
+      <div className="flex-1 flex items-center justify-center px-6 pb-16">
+        <div className="w-full max-w-sm">
+          {children}
         </div>
-        {children}
       </div>
     </main>
   );

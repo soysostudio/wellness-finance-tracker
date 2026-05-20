@@ -3,14 +3,12 @@
 import { useState } from "react";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 
 type State = "idle" | "loading" | "sent" | "error";
 
 export default function LoginPage() {
-  const [email, setEmail] = useState("");
-  const [state, setState] = useState<State>("idle");
+  const [email, setEmail]     = useState("");
+  const [state, setState]     = useState<State>("idle");
   const [errorMsg, setErrorMsg] = useState("");
 
   async function handleSubmit(e: React.FormEvent) {
@@ -36,16 +34,19 @@ export default function LoginPage() {
 
   if (state === "sent") {
     return (
-      <div className="text-center space-y-3">
-        <div className="text-4xl">📬</div>
-        <h2 className="text-xl font-bold">Revisa tu correo</h2>
-        <p className="text-muted-foreground text-sm">
-          Te enviamos un enlace mágico a <strong>{email}</strong>.
-          Haz clic en el enlace para entrar.
+      <div className="space-y-6">
+        <div>
+          <p className="text-[10px] uppercase tracking-widest text-[#1A1A1A]/40 mb-1">Listo</p>
+          <h1 className="font-serif text-4xl font-normal text-[#1A1A1A]">Revisa tu correo</h1>
+        </div>
+        <p className="text-[#1A1A1A]/55 text-sm leading-relaxed">
+          Te enviamos un enlace mágico a{" "}
+          <span className="text-[#1A1A1A] font-medium">{email}</span>.
+          Haz clic en él para entrar.
         </p>
         <button
           onClick={() => setState("idle")}
-          className="text-sm text-muted-foreground underline underline-offset-4 mt-4"
+          className="text-xs text-[#1A1A1A]/40 hover:text-[#1A1A1A] transition-colors underline underline-offset-4"
         >
           Usar otro correo
         </button>
@@ -54,44 +55,43 @@ export default function LoginPage() {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
-      <div className="space-y-1">
-        <h1 className="text-2xl font-black">Bienvenido de vuelta</h1>
-        <p className="text-muted-foreground text-sm">
-          Te enviamos un enlace mágico — sin contraseñas.
-        </p>
+    <div className="space-y-8">
+      <div>
+        <p className="text-[10px] uppercase tracking-widest text-[#1A1A1A]/40 mb-1">Bienvenido</p>
+        <h1 className="font-serif text-4xl font-normal text-[#1A1A1A]">Inicia sesión</h1>
+        <p className="text-sm text-[#1A1A1A]/50 mt-1">Te enviamos un enlace — sin contraseñas.</p>
       </div>
 
-      <div className="space-y-3">
-        <Input
+      <form onSubmit={handleSubmit} className="space-y-3">
+        <input
           type="email"
           placeholder="tu@correo.com"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           required
           autoComplete="email"
-          className="h-12"
+          className="w-full h-12 px-4 rounded-2xl bg-white border border-[#1A1A1A]/8 text-sm text-[#1A1A1A] placeholder-[#1A1A1A]/30 outline-none focus:border-[#1A1A1A]/30 transition-colors"
         />
 
         {state === "error" && (
-          <p className="text-sm text-destructive">{errorMsg}</p>
+          <p className="text-xs text-red-500 px-1">{errorMsg}</p>
         )}
 
-        <Button
+        <button
           type="submit"
-          className="w-full h-12 font-bold"
           disabled={state === "loading"}
+          className="w-full h-12 rounded-full bg-[#1A1A1A] text-[#F7F3EC] text-sm font-medium hover:opacity-80 transition-opacity disabled:opacity-50"
         >
           {state === "loading" ? "Enviando..." : "Enviar enlace mágico"}
-        </Button>
-      </div>
+        </button>
+      </form>
 
-      <p className="text-center text-sm text-muted-foreground">
+      <p className="text-center text-sm text-[#1A1A1A]/40">
         ¿No tienes cuenta?{" "}
-        <Link href="/signup" className="font-semibold text-foreground underline underline-offset-4">
+        <Link href="/signup" className="text-[#1A1A1A] underline underline-offset-4 hover:opacity-60 transition-opacity">
           Regístrate gratis
         </Link>
       </p>
-    </form>
+    </div>
   );
 }
