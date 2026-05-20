@@ -33,7 +33,7 @@ export default function SignupPage() {
     });
 
     if (signupError) {
-      setErrorMsg("No pudimos crear tu cuenta. Intenta de nuevo.");
+      setErrorMsg(signupError.message || "No pudimos crear tu cuenta. Intenta de nuevo.");
       setLoading(false);
       return;
     }
