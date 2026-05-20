@@ -2,7 +2,7 @@ import Link from "next/link";
 
 export default function LandingPage() {
   return (
-    <main className="min-h-screen bg-[#F7F3EC] text-[#1A1A1A]" style={{ fontFamily: "var(--font-sans)" }}>
+    <main className="min-h-screen bg-[#F5F6F8] text-[#1A1A1A]" style={{ fontFamily: "var(--font-sans)" }}>
 
       {/* Nav */}
       <nav className="flex items-center justify-between px-8 md:px-16 py-6 max-w-7xl mx-auto">
@@ -22,7 +22,7 @@ export default function LandingPage() {
         <div className="space-y-7">
           <h1 className="font-serif text-5xl md:text-6xl leading-[1.1] font-normal text-[#1A1A1A]">
             Maneja tu plata<br />
-            <span style={{ color: "#2A9D8F" }}>por WhatsApp.</span>
+            <span style={{ color: "#1A1A1A", background: "#FEFF6E", padding: "0 4px", borderRadius: "4px" }}>por WhatsApp.</span>
           </h1>
           <p className="text-[#1A1A1A]/55 text-lg leading-relaxed max-w-md">
             Escríbele a Luca como le escribes a un amigo.
@@ -46,7 +46,7 @@ export default function LandingPage() {
           <div className="w-full max-w-sm">
             {/* Decorative block behind */}
             <div className="relative">
-              <div className="absolute -top-4 -right-4 w-full h-full rounded-3xl" style={{ backgroundColor: "#F4A261", opacity: 0.3 }} />
+              <div className="absolute -top-4 -right-4 w-full h-full rounded-3xl" style={{ backgroundColor: "#FFB0FF", opacity: 0.5 }} />
               <div className="relative bg-white rounded-3xl shadow-lg overflow-hidden">
                 <div className="px-4 py-3 flex items-center gap-3" style={{ backgroundColor: "#075E54" }}>
                   <div className="w-8 h-8 rounded-full flex items-center justify-center text-white text-sm font-semibold" style={{ backgroundColor: "#25D366" }}>L</div>
@@ -95,18 +95,18 @@ export default function LandingPage() {
       <section className="px-8 md:px-16 py-16 max-w-7xl mx-auto">
         <div className="grid md:grid-cols-3 gap-4">
           {[
-            { n: "01", color: "#F4A261", t: "Escríbele a Luca", d: "«gasté 45 mil en Rappi» o «pagué el arriendo». Luca entiende cómo hablas tú, no al revés.", emoji: "💬" },
-            { n: "02", color: "#2A9D8F", t: "Luca lo clasifica", d: "En segundos organiza el gasto, actualiza tu presupuesto y te confirma. Powered by IA.", emoji: "⚡", dark: true },
-            { n: "03", color: "#E9C46A", t: "Revisa tu dashboard", d: "Todo en tiempo real. Gastos, metas, categorías y insights semanales directo al WhatsApp.", emoji: "📈" },
+            { n: "01", color: "#FEFF6E", t: "Escríbele a Luca", d: "«gasté 45 mil en Rappi» o «pagué el arriendo». Luca entiende cómo hablas tú, no al revés.", emoji: "💬" },
+            { n: "02", color: "#ADDEFF", t: "Luca lo clasifica", d: "En segundos organiza el gasto, actualiza tu presupuesto y te confirma. Powered by IA.", emoji: "⚡" },
+            { n: "03", color: "#FFB0FF", t: "Revisa tu dashboard", d: "Todo en tiempo real. Gastos, metas, categorías y insights semanales directo al WhatsApp.", emoji: "📈" },
           ].map((s) => (
             <div key={s.n} className="rounded-2xl p-8 flex flex-col gap-6" style={{ backgroundColor: s.color }}>
               <div className="flex justify-between items-start">
                 <span className="text-2xl">{s.emoji}</span>
-                <span className="font-serif text-5xl font-normal" style={{ color: s.dark ? "rgba(255,255,255,0.2)" : "rgba(0,0,0,0.15)" }}>{s.n}</span>
+                <span className="font-serif text-5xl font-normal" style={{ color: "rgba(0,0,0,0.12)" }}>{s.n}</span>
               </div>
               <div>
-                <p className="font-medium text-base mb-2" style={{ color: s.dark ? "#fff" : "#1A1A1A" }}>{s.t}</p>
-                <p className="text-sm leading-relaxed" style={{ color: s.dark ? "rgba(255,255,255,0.7)" : "rgba(0,0,0,0.6)" }}>{s.d}</p>
+                <p className="font-medium text-base mb-2 text-[#1A1A1A]">{s.t}</p>
+                <p className="text-sm leading-relaxed text-[#1A1A1A]/60">{s.d}</p>
               </div>
             </div>
           ))}
@@ -121,9 +121,9 @@ export default function LandingPage() {
         </h2>
         <div className="grid md:grid-cols-3 gap-6">
           {[
-            { q: "Llevaba años queriendo organizar mis finanzas pero todas las apps me aburrían. Con Luca simplemente le escribo y ya. Llevo 3 meses sin perder el hilo.", name: "Valentina M.", role: "Diseñadora, Bogotá", accent: "#CDB4DB" },
-            { q: "Me di cuenta que gastaba 800 mil al mes en comida sin saberlo. En la primera semana ya lo tenía claro. Ese mes ahorré 300 mil.", name: "Sebastián R.", role: "Freelance, Medellín", accent: "#A8DADC" },
-            { q: "Lo que más me gusta es que no tengo que abrir ninguna app. Le escribo por WhatsApp cuando gasto y él hace todo. Cero esfuerzo.", name: "Camila T.", role: "Estudiante, Cali", accent: "#F4A261" },
+            { q: "Llevaba años queriendo organizar mis finanzas pero todas las apps me aburrían. Con Luca simplemente le escribo y ya. Llevo 3 meses sin perder el hilo.", name: "Valentina M.", role: "Diseñadora, Bogotá", accent: "#FFB0FF" },
+            { q: "Me di cuenta que gastaba 800 mil al mes en comida sin saberlo. En la primera semana ya lo tenía claro. Ese mes ahorré 300 mil.", name: "Sebastián R.", role: "Freelance, Medellín", accent: "#ADDEFF" },
+            { q: "Lo que más me gusta es que no tengo que abrir ninguna app. Le escribo por WhatsApp cuando gasto y él hace todo. Cero esfuerzo.", name: "Camila T.", role: "Estudiante, Cali", accent: "#FEFF6E" },
           ].map((t) => (
             <div key={t.name} className="bg-white rounded-2xl p-7 space-y-5">
               <div className="w-6 h-0.5 rounded-full" style={{ backgroundColor: t.accent }} />
@@ -141,7 +141,7 @@ export default function LandingPage() {
       <section className="px-8 md:px-16 py-24 max-w-3xl mx-auto text-center space-y-6">
         <h2 className="font-serif text-4xl md:text-5xl font-normal leading-snug text-[#1A1A1A]">
           Tu plata, finalmente<br />
-          <span style={{ color: "#2A9D8F" }}>organizada.</span>
+          <span style={{ background: "#FFB0FF", padding: "0 4px", borderRadius: "4px" }}>organizada.</span>
         </h2>
         <p className="text-[#1A1A1A]/50 leading-relaxed">
           Únete gratis en 2 minutos. Sin contraseñas, sin apps, sin complicaciones.
