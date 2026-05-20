@@ -20,11 +20,18 @@ export default function SignupPage() {
     setErrorMsg("");
 
     const supabase = createClient();
+    const formattedPhone = phone ? formatPhone(phone) : null;
+
     const { error: signupError } = await supabase.auth.signInWithOtp({
       email,
       options: {
         emailRedirectTo: `${process.env.NEXT_PUBLIC_BASE_URL}/api/auth/callback`,
-        data: { full_name: name },
+        // Store name + phone in metadata so callback can persist them server-side
+        // regardless of which browser/device opens the magic link
+        data: {
+          full_name: name,
+          ...(formattedPhone ? { phone_number: formattedPhone } : {}),
+        },
       },
     });
 
@@ -34,7 +41,8 @@ export default function SignupPage() {
       return;
     }
 
-    if (phone) localStorage.setItem("luca_pending_phone", formatPhone(phone));
+    // localStorage as fallback for same-browser flow
+    if (formattedPhone) localStorage.setItem("luca_pending_phone", formattedPhone);
     setLoading(false);
     setStep("sent");
   }
