@@ -3,6 +3,7 @@ import { formatCOP } from "@/lib/utils/currency";
 import { getCategoryIcon, getCategoryColor } from "@/lib/utils/categories";
 import { getCurrentMonthRange } from "@/lib/utils/dates";
 import { redirect } from "next/navigation";
+import { AnimateIn } from "@/components/ui/animate-in";
 
 export const revalidate = 0;
 
@@ -22,149 +23,168 @@ export default async function InsightsPage() {
     .order("occurred_at", { ascending: true });
 
   const expenses = (transactions ?? []).filter((t) => t.transaction_type === "expense");
-  const income = (transactions ?? []).filter((t) => t.transaction_type === "income");
+  const income   = (transactions ?? []).filter((t) => t.transaction_type === "income");
 
   const totalExpenses = expenses.reduce((s, t) => s + t.amount, 0);
-  const totalIncome = income.reduce((s, t) => s + t.amount, 0);
-  const savingsRate = totalIncome > 0 ? Math.round(((totalIncome - totalExpenses) / totalIncome) * 100) : 0;
+  const totalIncome   = income.reduce((s, t) => s + t.amount, 0);
+  const savingsRate   = totalIncome > 0
+    ? Math.round(((totalIncome - totalExpenses) / totalIncome) * 100)
+    : 0;
 
-  // Spending by category
   const byCat: Record<string, { name: string; slug: string; color: string; icon: string; total: number }> = {};
   for (const t of expenses) {
-    const cat = Array.isArray(t.categories) ? t.categories[0] : t.categories;
+    const cat  = Array.isArray(t.categories) ? t.categories[0] : t.categories;
     const slug = cat?.slug ?? "otros";
     if (!byCat[slug]) {
       byCat[slug] = {
-        name: cat?.name ?? "Otros",
+        name:  cat?.name  ?? "Otros",
         slug,
         color: cat?.color ?? getCategoryColor(slug),
-        icon: cat?.icon ?? getCategoryIcon(slug),
+        icon:  cat?.icon  ?? getCategoryIcon(slug),
         total: 0,
       };
     }
     byCat[slug].total += t.amount;
   }
-  const categories = Object.values(byCat).sort((a, b) => b.total - a.total);
+  const categories  = Object.values(byCat).sort((a, b) => b.total - a.total);
   const topCategory = categories[0];
 
-  // Daily spending for sparkline
   const dailyMap: Record<string, number> = {};
   for (const t of expenses) {
     const day = t.occurred_at.slice(0, 10);
     dailyMap[day] = (dailyMap[day] ?? 0) + t.amount;
   }
   const dailyValues = Object.values(dailyMap);
-  const maxDaily = Math.max(...dailyValues, 1);
-
-  const avgDaily = dailyValues.length > 0
+  const maxDaily    = Math.max(...dailyValues, 1);
+  const avgDaily    = dailyValues.length > 0
     ? Math.round(dailyValues.reduce((s, v) => s + v, 0) / dailyValues.length)
     : 0;
 
-  const now = new Date();
+  const now       = new Date();
   const monthName = now.toLocaleDateString("es-CO", { month: "long", year: "numeric" });
 
   return (
     <div className="p-6 md:p-8 max-w-4xl mx-auto space-y-8">
-      <div>
-        <p className="text-xs uppercase tracking-widest text-muted-foreground font-medium capitalize">{monthName}</p>
-        <h1 className="text-3xl font-black mt-1">Insights de Luca</h1>
-      </div>
+
+      {/* Header */}
+      <AnimateIn>
+        <p className="text-[10px] uppercase tracking-widest text-[#1A1A1A]/40 capitalize">{monthName}</p>
+        <h1 className="font-serif text-4xl md:text-5xl font-normal mt-1 text-[#1A1A1A]">
+          Insights de Luca
+        </h1>
+      </AnimateIn>
 
       {expenses.length === 0 ? (
-        <div className="text-center py-20 space-y-3">
-          <p className="text-5xl">✨</p>
-          <p className="font-semibold">Sin datos suficientes aún</p>
-          <p className="text-muted-foreground text-sm max-w-xs mx-auto">
-            Registra algunos gastos y Luca generará tus insights automáticamente.
-          </p>
-        </div>
+        <AnimateIn>
+          <div className="text-center py-20 space-y-4">
+            <p className="text-5xl">✨</p>
+            <p className="font-serif text-2xl font-normal text-[#1A1A1A]">Sin datos suficientes aún</p>
+            <p className="text-[#1A1A1A]/50 text-sm max-w-xs mx-auto leading-relaxed">
+              Registra algunos gastos y Luca generará tus insights automáticamente.
+            </p>
+          </div>
+        </AnimateIn>
       ) : (
         <div className="space-y-6">
+
           {/* Key metrics */}
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-            <MetricCard label="Gasto total" value={formatCOP(totalExpenses)} accent="#E76F51" />
-            <MetricCard label="Ingreso total" value={formatCOP(totalIncome)} accent="#2A9D8F" />
-            <MetricCard
-              label="Tasa de ahorro"
-              value={`${savingsRate}%`}
-              accent={savingsRate >= 20 ? "#2A9D8F" : savingsRate >= 10 ? "#F4A261" : "#E76F51"}
-            />
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+            {[
+              { label: "Gasto total",   value: formatCOP(totalExpenses), bg: "#FFB0FF" },
+              { label: "Ingreso total", value: formatCOP(totalIncome),   bg: "#ADDEFF" },
+              {
+                label: "Tasa de ahorro",
+                value: `${savingsRate}%`,
+                bg: savingsRate >= 20 ? "#FEFF6E" : savingsRate >= 10 ? "#FEF3D6" : "#FFB0FF",
+              },
+            ].map((m, i) => (
+              <AnimateIn key={m.label} delay={i * 70}>
+                <div className="rounded-2xl p-5 space-y-1.5 h-full" style={{ backgroundColor: m.bg }}>
+                  <p className="text-[10px] uppercase tracking-widest text-[#1A1A1A]/50">{m.label}</p>
+                  <p className="font-serif text-2xl font-normal text-[#1A1A1A]">{m.value}</p>
+                </div>
+              </AnimateIn>
+            ))}
           </div>
 
-          {/* Daily avg */}
-          <div className="bg-card rounded-2xl p-5 flex items-center justify-between">
-            <div>
-              <p className="text-xs uppercase tracking-widest text-muted-foreground font-medium">Gasto promedio por día</p>
-              <p className="text-2xl font-black mt-1">{formatCOP(avgDaily)}</p>
+          {/* Daily avg + sparkline */}
+          <AnimateIn delay={80}>
+            <div className="bg-card border border-[#1A1A1A]/5 rounded-2xl p-5 flex items-center justify-between gap-4">
+              <div>
+                <p className="text-[10px] uppercase tracking-widest text-[#1A1A1A]/40">Gasto promedio por día</p>
+                <p className="font-serif text-3xl font-normal text-[#1A1A1A] mt-1">{formatCOP(avgDaily)}</p>
+              </div>
+              <div className="flex items-end gap-1 h-12 shrink-0">
+                {dailyValues.slice(-14).map((v, i) => (
+                  <div
+                    key={i}
+                    className="w-2 rounded-sm"
+                    style={{
+                      height: `${Math.max(4, Math.round((v / maxDaily) * 48))}px`,
+                      backgroundColor: "#FFB0FF",
+                      opacity: 0.4 + (i / 14) * 0.6,
+                    }}
+                  />
+                ))}
+              </div>
             </div>
-            <div className="flex items-end gap-1 h-12">
-              {dailyValues.slice(-14).map((v, i) => (
-                <div
-                  key={i}
-                  className="w-2 rounded-sm"
-                  style={{
-                    height: `${Math.round((v / maxDaily) * 48)}px`,
-                    backgroundColor: "#E76F51",
-                    opacity: 0.4 + (i / 14) * 0.6,
-                  }}
-                />
-              ))}
-            </div>
-          </div>
+          </AnimateIn>
 
           {/* Category breakdown */}
           {categories.length > 0 && (
-            <section className="space-y-3">
-              <h2 className="text-xs uppercase tracking-widest font-semibold text-muted-foreground">
-                Gastos por categoría
-              </h2>
-              {categories.map((cat) => {
-                const pct = totalExpenses > 0 ? Math.round((cat.total / totalExpenses) * 100) : 0;
-                return (
-                  <div key={cat.slug} className="space-y-1">
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="flex items-center gap-2 font-medium">
-                        <span>{cat.icon}</span>
-                        <span>{cat.name}</span>
-                      </span>
-                      <span className="font-bold">{formatCOP(cat.total)}</span>
-                    </div>
-                    <div className="h-2 bg-muted rounded-full overflow-hidden">
-                      <div
-                        className="h-full rounded-full transition-all"
-                        style={{ width: `${pct}%`, backgroundColor: cat.color }}
-                      />
-                    </div>
-                    <p className="text-xs text-muted-foreground text-right">{pct}% del total</p>
-                  </div>
-                );
-              })}
+            <section>
+              <AnimateIn>
+                <p className="text-[10px] uppercase tracking-widest text-[#1A1A1A]/40 mb-4">
+                  Gastos por categoría
+                </p>
+              </AnimateIn>
+              <div className="space-y-4">
+                {categories.map((cat, i) => {
+                  const pct = totalExpenses > 0 ? Math.round((cat.total / totalExpenses) * 100) : 0;
+                  return (
+                    <AnimateIn key={cat.slug} delay={i * 50}>
+                      <div className="space-y-1.5">
+                        <div className="flex items-center justify-between">
+                          <span className="flex items-center gap-2 text-sm font-medium text-[#1A1A1A]">
+                            <span>{cat.icon}</span>
+                            <span>{cat.name}</span>
+                          </span>
+                          <span className="font-serif text-sm font-normal text-[#1A1A1A]">
+                            {formatCOP(cat.total)}
+                          </span>
+                        </div>
+                        <div className="h-1.5 bg-[#1A1A1A]/8 rounded-full overflow-hidden">
+                          <div
+                            className="h-full rounded-full transition-all duration-700"
+                            style={{ width: `${pct}%`, backgroundColor: cat.color + "CC" }}
+                          />
+                        </div>
+                        <p className="text-xs text-[#1A1A1A]/40 text-right">{pct}% del total</p>
+                      </div>
+                    </AnimateIn>
+                  );
+                })}
+              </div>
             </section>
           )}
 
           {/* Luca tip */}
           {topCategory && (
-            <div className="rounded-2xl p-5 space-y-1" style={{ backgroundColor: topCategory.color + "33" }}>
-              <p className="text-xs uppercase tracking-widest font-semibold text-foreground/60">Tip de Luca</p>
-              <p className="font-semibold text-sm">
-                Tu mayor gasto este mes es en <strong>{topCategory.name}</strong> con {formatCOP(topCategory.total)}.
-                {savingsRate < 20
-                  ? " Intenta reducirlo un 10% el próximo mes."
-                  : " ¡Vas muy bien con tus finanzas!"}
-              </p>
-            </div>
+            <AnimateIn>
+              <div className="rounded-2xl p-5 space-y-2" style={{ backgroundColor: "#FEFF6E" }}>
+                <p className="text-[10px] uppercase tracking-widest text-[#1A1A1A]/50">Tip de Luca ✨</p>
+                <p className="text-sm text-[#1A1A1A] leading-relaxed">
+                  Tu mayor gasto este mes es en <strong>{topCategory.name}</strong> con{" "}
+                  {formatCOP(topCategory.total)}.{" "}
+                  {savingsRate < 20
+                    ? "Intenta reducirlo un 10% el próximo mes."
+                    : "¡Vas muy bien con tus finanzas!"}
+                </p>
+              </div>
+            </AnimateIn>
           )}
         </div>
       )}
-    </div>
-  );
-}
-
-function MetricCard({ label, value, accent }: { label: string; value: string; accent: string }) {
-  return (
-    <div className="bg-card rounded-2xl p-4 space-y-1">
-      <p className="text-xs uppercase tracking-widest text-muted-foreground font-medium">{label}</p>
-      <p className="text-xl font-black" style={{ color: accent }}>{value}</p>
     </div>
   );
 }

@@ -2,6 +2,7 @@ import { createClient } from "@/lib/supabase/server";
 import { SYSTEM_CATEGORIES } from "@/lib/utils/categories";
 import { redirect } from "next/navigation";
 import { NewCategoryForm } from "@/components/dashboard/new-category-form";
+import { AnimateIn } from "@/components/ui/animate-in";
 
 export const revalidate = 0;
 
@@ -17,69 +18,78 @@ export default async function CategoriesPage() {
     .order("created_at", { ascending: false });
 
   return (
-    <div className="p-6 md:p-8 max-w-4xl mx-auto space-y-8">
-      <div>
-        <h1 className="text-3xl font-black">Categorías</h1>
-        <p className="text-muted-foreground text-sm mt-1">
+    <div className="p-6 md:p-8 max-w-4xl mx-auto space-y-10">
+
+      {/* Header */}
+      <AnimateIn>
+        <p className="text-[10px] uppercase tracking-widest text-[#1A1A1A]/40">Clasificación</p>
+        <h1 className="font-serif text-4xl md:text-5xl font-normal mt-1 text-[#1A1A1A]">
+          Categorías
+        </h1>
+        <p className="text-sm text-[#1A1A1A]/40 mt-2 leading-relaxed">
           Luca usa estas categorías para clasificar tus gastos automáticamente
         </p>
-      </div>
+      </AnimateIn>
 
       {/* Custom categories */}
       <section className="space-y-4">
-        <div className="flex items-center justify-between">
-          <h2 className="text-xs uppercase tracking-widest font-semibold text-muted-foreground">
-            Mis categorías
-          </h2>
-        </div>
+        <AnimateIn>
+          <p className="text-[10px] uppercase tracking-widest text-[#1A1A1A]/40">Mis categorías</p>
+        </AnimateIn>
 
-        <NewCategoryForm userId={user.id} />
+        <AnimateIn delay={40}>
+          <NewCategoryForm userId={user.id} />
+        </AnimateIn>
 
-        {customCategories && customCategories.length > 0 ? (
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mt-4">
-            {customCategories.map((cat) => (
-              <div
-                key={cat.id}
-                className="rounded-2xl p-4 flex flex-col gap-1"
-                style={{ backgroundColor: cat.color ?? "#BDC3C7" }}
-              >
-                <span className="text-2xl">{cat.icon ?? "📦"}</span>
-                <p className="text-xs font-semibold text-black/70 uppercase tracking-wide truncate">
-                  {cat.name}
-                </p>
-                <p className="text-xs text-black/50">
-                  {cat.is_income ? "Ingreso" : "Gasto"}
-                </p>
-              </div>
+        {customCategories && customCategories.length > 0 && (
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mt-2">
+            {customCategories.map((cat, i) => (
+              <AnimateIn key={cat.id} delay={i * 50}>
+                <div
+                  className="rounded-2xl p-4 flex flex-col gap-2 h-full"
+                  style={{ backgroundColor: (cat.color ?? "#BDC3C7") + "CC" }}
+                >
+                  <span className="text-xl">{cat.icon ?? "📦"}</span>
+                  <p className="text-[10px] text-[#1A1A1A]/50 uppercase tracking-widest truncate">
+                    {cat.name}
+                  </p>
+                  <p className="text-xs text-[#1A1A1A]/40">
+                    {cat.is_income ? "Ingreso" : "Gasto"}
+                  </p>
+                </div>
+              </AnimateIn>
             ))}
           </div>
-        ) : (
-          <p className="text-sm text-muted-foreground py-2">
+        )}
+
+        {(!customCategories || customCategories.length === 0) && (
+          <p className="text-sm text-[#1A1A1A]/40 py-2">
             Aún no tienes categorías personalizadas.
           </p>
         )}
       </section>
 
       {/* System categories */}
-      <section className="space-y-3">
-        <h2 className="text-xs uppercase tracking-widest font-semibold text-muted-foreground">
-          Categorías del sistema
-        </h2>
+      <section className="space-y-4">
+        <AnimateIn>
+          <p className="text-[10px] uppercase tracking-widest text-[#1A1A1A]/40">Categorías del sistema</p>
+        </AnimateIn>
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-          {SYSTEM_CATEGORIES.map((cat) => (
-            <div
-              key={cat.slug}
-              className="rounded-2xl p-4 flex flex-col gap-1"
-              style={{ backgroundColor: cat.color }}
-            >
-              <span className="text-2xl">{cat.icon}</span>
-              <p className="text-xs font-semibold text-black/70 uppercase tracking-wide truncate">
-                {cat.name}
-              </p>
-              <p className="text-xs text-black/50">
-                {cat.isIncome ? "Ingreso" : "Gasto"}
-              </p>
-            </div>
+          {SYSTEM_CATEGORIES.map((cat, i) => (
+            <AnimateIn key={cat.slug} delay={i * 40}>
+              <div
+                className="rounded-2xl p-4 flex flex-col gap-2 h-full"
+                style={{ backgroundColor: cat.color + "CC" }}
+              >
+                <span className="text-xl">{cat.icon}</span>
+                <p className="text-[10px] text-[#1A1A1A]/50 uppercase tracking-widest truncate">
+                  {cat.name}
+                </p>
+                <p className="text-xs text-[#1A1A1A]/40">
+                  {cat.isIncome ? "Ingreso" : "Gasto"}
+                </p>
+              </div>
+            </AnimateIn>
           ))}
         </div>
       </section>

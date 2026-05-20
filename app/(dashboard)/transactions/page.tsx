@@ -2,6 +2,7 @@ import { createClient } from "@/lib/supabase/server";
 import { formatCOP } from "@/lib/utils/currency";
 import { getCategoryIcon } from "@/lib/utils/categories";
 import { redirect } from "next/navigation";
+import { AnimateIn } from "@/components/ui/animate-in";
 
 export const revalidate = 0;
 
@@ -18,72 +19,100 @@ export default async function TransactionsPage() {
     .limit(100);
 
   const expenses = (transactions ?? []).filter((t) => t.transaction_type === "expense");
-  const income = (transactions ?? []).filter((t) => t.transaction_type === "income");
+  const income   = (transactions ?? []).filter((t) => t.transaction_type === "income");
   const totalExpenses = expenses.reduce((s, t) => s + t.amount, 0);
-  const totalIncome = income.reduce((s, t) => s + t.amount, 0);
+  const totalIncome   = income.reduce((s, t) => s + t.amount, 0);
 
   return (
-    <div className="p-6 md:p-8 max-w-4xl mx-auto space-y-6">
-      <div>
-        <h1 className="text-3xl font-black">Transacciones</h1>
-        <p className="text-muted-foreground text-sm mt-1">Historial completo de tus movimientos</p>
+    <div className="p-6 md:p-8 max-w-4xl mx-auto space-y-8">
+
+      {/* Header */}
+      <AnimateIn>
+        <p className="text-[10px] uppercase tracking-widest text-[#1A1A1A]/40">Historial</p>
+        <h1 className="font-serif text-4xl md:text-5xl font-normal mt-1 text-[#1A1A1A]">
+          Transacciones
+        </h1>
+      </AnimateIn>
+
+      {/* Summary cards */}
+      <div className="grid grid-cols-2 gap-3">
+        <AnimateIn delay={0}>
+          <div className="rounded-2xl p-5 space-y-1.5" style={{ backgroundColor: "#FFB0FF" }}>
+            <p className="text-[10px] uppercase tracking-widest text-[#1A1A1A]/50">Total gastos</p>
+            <p className="font-serif text-2xl font-normal text-[#1A1A1A]">{formatCOP(totalExpenses)}</p>
+          </div>
+        </AnimateIn>
+        <AnimateIn delay={80}>
+          <div className="rounded-2xl p-5 space-y-1.5" style={{ backgroundColor: "#ADDEFF" }}>
+            <p className="text-[10px] uppercase tracking-widest text-[#1A1A1A]/50">Total ingresos</p>
+            <p className="font-serif text-2xl font-normal text-[#1A1A1A]">{formatCOP(totalIncome)}</p>
+          </div>
+        </AnimateIn>
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
-        <div className="bg-card rounded-2xl p-4 space-y-1">
-          <p className="text-xs uppercase tracking-widest text-muted-foreground font-medium">Total gastos</p>
-          <p className="text-xl font-black" style={{ color: "#E76F51" }}>{formatCOP(totalExpenses)}</p>
-        </div>
-        <div className="bg-card rounded-2xl p-4 space-y-1">
-          <p className="text-xs uppercase tracking-widest text-muted-foreground font-medium">Total ingresos</p>
-          <p className="text-xl font-black" style={{ color: "#2A9D8F" }}>{formatCOP(totalIncome)}</p>
-        </div>
-      </div>
-
+      {/* List */}
       {!transactions?.length ? (
-        <div className="text-center py-20 space-y-3">
-          <p className="text-5xl">💬</p>
-          <p className="font-semibold">Sin transacciones aún</p>
-          <p className="text-muted-foreground text-sm">Cuéntale un gasto a Luca por WhatsApp</p>
-          <p className="text-sm font-mono bg-muted rounded-xl px-4 py-2 inline-block">&quot;gasté 30 mil en el mercado&quot;</p>
-        </div>
+        <AnimateIn>
+          <EmptyState
+            emoji="💬"
+            title="Sin transacciones aún"
+            body="Cuéntale un gasto a Luca por WhatsApp"
+            example='"gasté 30 mil en el mercado"'
+          />
+        </AnimateIn>
       ) : (
-        <div className="space-y-1">
-          {transactions.map((t) => {
-            const cat = Array.isArray(t.categories) ? t.categories[0] : t.categories;
-            const icon = cat?.icon ?? getCategoryIcon(cat?.slug ?? "otros");
-            const label = t.merchant || t.description || cat?.name || "Movimiento";
-            const isExpense = t.transaction_type === "expense";
-            const date = new Date(t.occurred_at).toLocaleDateString("es-CO", {
-              day: "numeric", month: "short",
-            });
+        <AnimateIn delay={60}>
+          <div className="space-y-1.5">
+            {transactions.map((t) => {
+              const cat      = Array.isArray(t.categories) ? t.categories[0] : t.categories;
+              const icon     = cat?.icon ?? getCategoryIcon(cat?.slug ?? "otros");
+              const color    = cat?.color ?? "#BDC3C7";
+              const label    = t.merchant || t.description || cat?.name || "Movimiento";
+              const isExpense = t.transaction_type === "expense";
+              const date     = new Date(t.occurred_at).toLocaleDateString("es-CO", {
+                day: "numeric", month: "short",
+              });
 
-            return (
-              <div
-                key={t.id}
-                className="flex items-center gap-4 p-4 rounded-2xl hover:bg-card transition-colors"
-              >
+              return (
                 <div
-                  className="w-10 h-10 rounded-full flex items-center justify-center text-lg shrink-0"
-                  style={{ backgroundColor: cat?.color ?? "#BDC3C7" }}
+                  key={t.id}
+                  className="flex items-center gap-4 px-4 py-3 rounded-2xl bg-card border border-[#1A1A1A]/5 hover:border-[#1A1A1A]/10 transition-colors"
                 >
-                  {icon}
+                  <div
+                    className="w-9 h-9 rounded-xl flex items-center justify-center text-base shrink-0"
+                    style={{ backgroundColor: color + "26" }}
+                  >
+                    {icon}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-[#1A1A1A] capitalize truncate">{label}</p>
+                    <p className="text-xs text-[#1A1A1A]/40 mt-0.5">{date}</p>
+                  </div>
+                  <p
+                    className="font-serif text-sm font-normal shrink-0"
+                    style={{ color: isExpense ? "#1A1A1A" : "#2A9D8F" }}
+                  >
+                    {isExpense ? "−" : "+"}{formatCOP(t.amount)}
+                  </p>
                 </div>
-                <div className="flex-1 min-w-0">
-                  <p className="font-semibold text-sm capitalize truncate">{label}</p>
-                  <p className="text-xs text-muted-foreground">{date}</p>
-                </div>
-                <p
-                  className="font-bold text-sm shrink-0"
-                  style={{ color: isExpense ? "#E76F51" : "#2A9D8F" }}
-                >
-                  {isExpense ? "-" : "+"}{formatCOP(t.amount)}
-                </p>
-              </div>
-            );
-          })}
-        </div>
+              );
+            })}
+          </div>
+        </AnimateIn>
       )}
+    </div>
+  );
+}
+
+function EmptyState({ emoji, title, body, example }: { emoji: string; title: string; body: string; example: string }) {
+  return (
+    <div className="text-center py-20 space-y-4">
+      <p className="text-5xl">{emoji}</p>
+      <p className="font-serif text-2xl font-normal text-[#1A1A1A]">{title}</p>
+      <p className="text-[#1A1A1A]/50 text-sm max-w-xs mx-auto leading-relaxed">{body}</p>
+      <p className="text-sm font-mono bg-[#FEFF6E] rounded-xl px-4 py-2 inline-block text-[#1A1A1A]">
+        &quot;{example}&quot;
+      </p>
     </div>
   );
 }
