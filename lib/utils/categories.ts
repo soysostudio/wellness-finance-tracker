@@ -8,12 +8,15 @@ export interface CategoryConfig {
   merchants?: string[];
 }
 
+// ── New brand-aligned palette ──────────────────────────────
+// sage #D4E8A0 · lavender #C8CAD8 · orange #E8673C · teal #4A7C6F · gold #F5C540
+
 export const SYSTEM_CATEGORIES: CategoryConfig[] = [
   {
     slug: 'comida',
     name: 'Comida y Restaurantes',
     icon: '🍔',
-    color: '#F4A261',
+    color: '#E8673C',   // warm orange
     isIncome: false,
     sortOrder: 1,
     merchants: ['rappi', 'domicilios', "mcdonald's", 'crepes', 'el corral', 'subway', 'burger king'],
@@ -22,7 +25,7 @@ export const SYSTEM_CATEGORIES: CategoryConfig[] = [
     slug: 'mercado',
     name: 'Mercado y Supermercado',
     icon: '🛒',
-    color: '#E9C46A',
+    color: '#F5C540',   // gold
     isIncome: false,
     sortOrder: 2,
     merchants: ['éxito', 'exito', 'jumbo', 'd1', 'ara', 'carulla', 'olímpica', 'olimpica'],
@@ -31,7 +34,7 @@ export const SYSTEM_CATEGORIES: CategoryConfig[] = [
     slug: 'transporte',
     name: 'Transporte',
     icon: '🚗',
-    color: '#457B9D',
+    color: '#4A7C6F',   // teal
     isIncome: false,
     sortOrder: 3,
     merchants: ['uber', 'indriver', 'didi', 'sitp', 'transmilenio', 'cabify', 'picap'],
@@ -40,7 +43,7 @@ export const SYSTEM_CATEGORIES: CategoryConfig[] = [
     slug: 'hogar',
     name: 'Hogar y Arriendo',
     icon: '🏠',
-    color: '#6D6875',
+    color: '#C8CAD8',   // lavender
     isIncome: false,
     sortOrder: 4,
     merchants: ['arriendo', 'administración', 'administracion'],
@@ -49,7 +52,7 @@ export const SYSTEM_CATEGORIES: CategoryConfig[] = [
     slug: 'servicios',
     name: 'Servicios Públicos',
     icon: '💡',
-    color: '#A8DADC',
+    color: '#D4E8A0',   // sage
     isIncome: false,
     sortOrder: 5,
     merchants: ['epm', 'etb', 'claro', 'movistar', 'tigo', 'gas natural', 'codensa'],
@@ -58,7 +61,7 @@ export const SYSTEM_CATEGORIES: CategoryConfig[] = [
     slug: 'entretenimiento',
     name: 'Entretenimiento',
     icon: '🎬',
-    color: '#E76F51',
+    color: '#E8673C',   // warm orange
     isIncome: false,
     sortOrder: 6,
     merchants: ['netflix', 'spotify', 'cinépolis', 'cinepolis', 'cine colombia', 'steam', 'disney'],
@@ -67,7 +70,7 @@ export const SYSTEM_CATEGORIES: CategoryConfig[] = [
     slug: 'salud',
     name: 'Salud y Bienestar',
     icon: '🏥',
-    color: '#81B29A',
+    color: '#D4E8A0',   // sage
     isIncome: false,
     sortOrder: 7,
     merchants: ['farmacia', 'droguería', 'drogueria', 'gym', 'smart fit'],
@@ -76,7 +79,7 @@ export const SYSTEM_CATEGORIES: CategoryConfig[] = [
     slug: 'educacion',
     name: 'Educación',
     icon: '📚',
-    color: '#264653',
+    color: '#4A7C6F',   // teal
     isIncome: false,
     sortOrder: 8,
     merchants: ['udemy', 'coursera', 'platzi'],
@@ -85,7 +88,7 @@ export const SYSTEM_CATEGORIES: CategoryConfig[] = [
     slug: 'compras',
     name: 'Compras y Ropa',
     icon: '🛍️',
-    color: '#CDB4DB',
+    color: '#C8CAD8',   // lavender
     isIncome: false,
     sortOrder: 9,
     merchants: ['falabella', 'zara', 'h&m', 'mercado libre', 'amazon'],
@@ -94,7 +97,7 @@ export const SYSTEM_CATEGORIES: CategoryConfig[] = [
     slug: 'ingreso',
     name: 'Ingresos',
     icon: '💰',
-    color: '#2A9D8F',
+    color: '#F5C540',   // gold
     isIncome: true,
     sortOrder: 10,
     merchants: ['nómina', 'nomina', 'salario', 'freelance'],
@@ -103,7 +106,7 @@ export const SYSTEM_CATEGORIES: CategoryConfig[] = [
     slug: 'otros',
     name: 'Otros',
     icon: '📦',
-    color: '#BDC3C7',
+    color: '#C8CAD8',   // lavender
     isIncome: false,
     sortOrder: 11,
   },

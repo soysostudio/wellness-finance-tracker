@@ -5,6 +5,7 @@ import { getCategoryColor, getCategoryIcon } from "@/lib/utils/categories";
 import { redirect } from "next/navigation";
 import { RecentTransactions } from "@/components/dashboard/transaction-list";
 import { AnimateIn } from "@/components/ui/animate-in";
+import { CategoryIcon } from "@/components/ui/category-icon";
 
 export const revalidate = 0;
 
@@ -134,7 +135,7 @@ export default async function OverviewPage() {
                   className="rounded-2xl p-4 flex flex-col gap-2 h-full"
                   style={{ backgroundColor: cat.color + "CC" }}
                 >
-                  <span className="text-xl">{cat.icon}</span>
+                  <CategoryIcon slug={cat.slug} size={18} strokeWidth={1.5} style={{ color: cat.color, filter: "brightness(0.6)" }} />
                   <p className="text-[10px] text-[#1A1A1A]/50 uppercase tracking-widest leading-none">
                     {cat.name}
                   </p>

@@ -1,6 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { formatCOP } from "@/lib/utils/currency";
-import { getCategoryIcon } from "@/lib/utils/categories";
+import { CategoryIcon } from "@/components/ui/category-icon";
 import { getCurrentMonthRange } from "@/lib/utils/dates";
 import { redirect } from "next/navigation";
 import { AnimateIn } from "@/components/ui/animate-in";
@@ -63,7 +63,7 @@ export default async function BudgetsPage() {
         <div className="space-y-3">
           {budgets.map((budget, i) => {
             const cat      = Array.isArray(budget.categories) ? budget.categories[0] : budget.categories;
-            const icon     = cat?.icon ?? getCategoryIcon(cat?.slug ?? "otros");
+            const slug     = cat?.slug ?? "otros";
             const color    = cat?.color ?? "#BDC3C7";
             const spent    = spentByCategory[budget.id] ?? 0;
             const pct      = Math.min(Math.round((spent / budget.amount_limit) * 100), 100);
@@ -80,10 +80,10 @@ export default async function BudgetsPage() {
                 <div className="bg-card border border-[#1A1A1A]/5 rounded-2xl p-5 space-y-4">
                   <div className="flex items-center gap-3">
                     <div
-                      className="w-9 h-9 rounded-xl flex items-center justify-center text-base shrink-0"
+                      className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0"
                       style={{ backgroundColor: color + "26" }}
                     >
-                      {icon}
+                      <CategoryIcon slug={slug} size={16} strokeWidth={1.5} style={{ color }} />
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-medium text-[#1A1A1A]">{cat?.name ?? "Categoría"}</p>

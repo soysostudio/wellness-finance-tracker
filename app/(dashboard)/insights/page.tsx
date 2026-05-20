@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { formatCOP } from "@/lib/utils/currency";
-import { getCategoryIcon, getCategoryColor } from "@/lib/utils/categories";
+import { getCategoryColor } from "@/lib/utils/categories";
+import { CategoryIcon } from "@/components/ui/category-icon";
 import { getCurrentMonthRange } from "@/lib/utils/dates";
 import { redirect } from "next/navigation";
 import { AnimateIn } from "@/components/ui/animate-in";
@@ -40,7 +41,7 @@ export default async function InsightsPage() {
         name:  cat?.name  ?? "Otros",
         slug,
         color: cat?.color ?? getCategoryColor(slug),
-        icon:  cat?.icon  ?? getCategoryIcon(slug),
+        icon:  "",
         total: 0,
       };
     }
@@ -146,7 +147,7 @@ export default async function InsightsPage() {
                       <div className="space-y-1.5">
                         <div className="flex items-center justify-between">
                           <span className="flex items-center gap-2 text-sm font-medium text-[#1A1A1A]">
-                            <span>{cat.icon}</span>
+                            <CategoryIcon slug={cat.slug} size={15} strokeWidth={1.5} style={{ color: cat.color }} />
                             <span>{cat.name}</span>
                           </span>
                           <span className="font-serif text-sm font-normal text-[#1A1A1A]">

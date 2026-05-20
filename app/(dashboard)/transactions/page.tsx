@@ -1,6 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { formatCOP } from "@/lib/utils/currency";
-import { getCategoryIcon } from "@/lib/utils/categories";
+import { CategoryIcon } from "@/components/ui/category-icon";
 import { redirect } from "next/navigation";
 import { AnimateIn } from "@/components/ui/animate-in";
 
@@ -65,8 +65,8 @@ export default async function TransactionsPage() {
           <div className="space-y-1.5">
             {transactions.map((t) => {
               const cat      = Array.isArray(t.categories) ? t.categories[0] : t.categories;
-              const icon     = cat?.icon ?? getCategoryIcon(cat?.slug ?? "otros");
               const color    = cat?.color ?? "#BDC3C7";
+              const slug     = cat?.slug ?? "otros";
               const label    = t.merchant || t.description || cat?.name || "Movimiento";
               const isExpense = t.transaction_type === "expense";
               const date     = new Date(t.occurred_at).toLocaleDateString("es-CO", {
@@ -79,10 +79,10 @@ export default async function TransactionsPage() {
                   className="flex items-center gap-4 px-4 py-3 rounded-2xl bg-card border border-[#1A1A1A]/5 hover:border-[#1A1A1A]/10 transition-colors"
                 >
                   <div
-                    className="w-9 h-9 rounded-xl flex items-center justify-center text-base shrink-0"
+                    className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0"
                     style={{ backgroundColor: color + "26" }}
                   >
-                    {icon}
+                    <CategoryIcon slug={slug} size={16} strokeWidth={1.5} style={{ color }} />
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium text-[#1A1A1A] capitalize truncate">{label}</p>

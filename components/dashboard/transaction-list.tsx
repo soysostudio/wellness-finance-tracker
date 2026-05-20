@@ -1,7 +1,8 @@
 "use client";
 
 import { formatCOP } from "@/lib/utils/currency";
-import { getCategoryColor, getCategoryIcon } from "@/lib/utils/categories";
+import { getCategoryColor } from "@/lib/utils/categories";
+import { CategoryIcon } from "@/components/ui/category-icon";
 import { formatInTimeZone } from "date-fns-tz";
 
 interface Transaction {
@@ -33,7 +34,6 @@ export function RecentTransactions({ transactions }: RecentTransactionsProps) {
         const cat = Array.isArray(tx.categories) ? tx.categories[0] : tx.categories;
         const slug = cat?.slug ?? "otros";
         const color = cat?.color ?? getCategoryColor(slug);
-        const icon = cat?.icon ?? getCategoryIcon(slug);
         const label = tx.merchant ?? tx.description ?? "Sin descripción";
         const isIncome = tx.transaction_type === "income";
         const date = formatInTimeZone(
@@ -48,10 +48,10 @@ export function RecentTransactions({ transactions }: RecentTransactionsProps) {
             className="flex items-center gap-3 bg-card rounded-xl px-4 py-3 border border-[#1A1A1A]/5"
           >
             <div
-              className="w-9 h-9 rounded-xl flex items-center justify-center text-base shrink-0"
+              className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0"
               style={{ backgroundColor: color + "26" }}
             >
-              {icon}
+              <CategoryIcon slug={slug} size={16} strokeWidth={1.5} style={{ color }} />
             </div>
             <div className="flex-1 min-w-0">
               <p className="text-sm font-medium text-[#1A1A1A] truncate capitalize">{label}</p>

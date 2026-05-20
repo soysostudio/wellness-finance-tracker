@@ -3,15 +3,25 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
+import {
+  LayoutDashboard,
+  CreditCard,
+  Target,
+  Trophy,
+  Sparkles,
+  Tag,
+  Settings,
+  type LucideIcon,
+} from "lucide-react";
 
-const NAV_ITEMS = [
-  { href: "/overview",      label: "Resumen",        emoji: "📊" },
-  { href: "/transactions",  label: "Transacciones",  emoji: "💳" },
-  { href: "/budgets",       label: "Presupuestos",   emoji: "🎯" },
-  { href: "/goals",         label: "Metas",          emoji: "🏆" },
-  { href: "/insights",      label: "Insights de Luca", emoji: "✨" },
-  { href: "/categories",    label: "Categorías",     emoji: "🏷️" },
-  { href: "/settings",      label: "Configuración",  emoji: "⚙️" },
+const NAV_ITEMS: { href: string; label: string; Icon: LucideIcon }[] = [
+  { href: "/overview",     label: "Resumen",          Icon: LayoutDashboard },
+  { href: "/transactions", label: "Transacciones",    Icon: CreditCard      },
+  { href: "/budgets",      label: "Presupuestos",     Icon: Target          },
+  { href: "/goals",        label: "Metas",            Icon: Trophy          },
+  { href: "/insights",     label: "Insights de Luca", Icon: Sparkles        },
+  { href: "/categories",   label: "Categorías",       Icon: Tag             },
+  { href: "/settings",     label: "Configuración",    Icon: Settings        },
 ];
 
 export function SidebarNav() {
@@ -19,21 +29,25 @@ export function SidebarNav() {
 
   return (
     <nav className="flex-1 px-3 py-4 space-y-0.5">
-      {NAV_ITEMS.map((item) => {
-        const active = pathname.startsWith(item.href);
+      {NAV_ITEMS.map(({ href, label, Icon }) => {
+        const active = pathname.startsWith(href);
         return (
           <Link
-            key={item.href}
-            href={item.href}
+            key={href}
+            href={href}
             className={cn(
               "flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors",
               active
-                ? "bg-[#FEFF6E] text-[#1A1A1A] font-semibold"
-                : "text-[#1A1A1A]/50 hover:text-[#1A1A1A] hover:bg-[#FEF3D6]"
+                ? "bg-[#FEFF6E] text-[#1A1A1A]"
+                : "text-[#1A1A1A]/40 hover:text-[#1A1A1A] hover:bg-[#FEF3D6]"
             )}
           >
-            <span className="text-base">{item.emoji}</span>
-            {item.label}
+            <Icon
+              size={16}
+              strokeWidth={active ? 2 : 1.5}
+              className="shrink-0"
+            />
+            {label}
           </Link>
         );
       })}

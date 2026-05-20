@@ -4,15 +4,27 @@ import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
+import {
+  LayoutDashboard,
+  CreditCard,
+  Target,
+  Trophy,
+  Sparkles,
+  Tag,
+  Settings,
+  Menu,
+  X,
+  type LucideIcon,
+} from "lucide-react";
 
-const NAV_ITEMS = [
-  { href: "/overview",     label: "Resumen",          emoji: "📊" },
-  { href: "/transactions", label: "Transacciones",    emoji: "💳" },
-  { href: "/budgets",      label: "Presupuestos",     emoji: "🎯" },
-  { href: "/goals",        label: "Metas",            emoji: "🏆" },
-  { href: "/insights",     label: "Insights de Luca", emoji: "✨" },
-  { href: "/categories",   label: "Categorías",       emoji: "🏷️" },
-  { href: "/settings",     label: "Configuración",    emoji: "⚙️" },
+const NAV_ITEMS: { href: string; label: string; Icon: LucideIcon }[] = [
+  { href: "/overview",     label: "Resumen",          Icon: LayoutDashboard },
+  { href: "/transactions", label: "Transacciones",    Icon: CreditCard      },
+  { href: "/budgets",      label: "Presupuestos",     Icon: Target          },
+  { href: "/goals",        label: "Metas",            Icon: Trophy          },
+  { href: "/insights",     label: "Insights de Luca", Icon: Sparkles        },
+  { href: "/categories",   label: "Categorías",       Icon: Tag             },
+  { href: "/settings",     label: "Configuración",    Icon: Settings        },
 ];
 
 export function MobileNav({ userName }: { userName: string }) {
@@ -23,22 +35,20 @@ export function MobileNav({ userName }: { userName: string }) {
     <>
       {/* Top bar */}
       <div className="md:hidden flex items-center justify-between px-4 py-3 border-b border-border bg-card sticky top-0 z-40">
-        <span className="text-lg font-black tracking-tight">Luca</span>
+        <span className="font-serif text-lg font-normal tracking-tight">Luca</span>
         <button
           onClick={() => setOpen(true)}
-          className="p-2 rounded-lg hover:bg-muted transition-colors"
+          className="p-2 rounded-lg hover:bg-muted transition-colors text-[#1A1A1A]/50"
           aria-label="Abrir menú"
         >
-          <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-            <path d="M2 5h16M2 10h16M2 15h16" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
-          </svg>
+          <Menu size={20} strokeWidth={1.5} />
         </button>
       </div>
 
       {/* Overlay */}
       {open && (
         <div
-          className="fixed inset-0 bg-black/50 z-50 md:hidden"
+          className="fixed inset-0 bg-black/30 z-50 md:hidden backdrop-blur-sm"
           onClick={() => setOpen(false)}
         />
       )}
@@ -49,40 +59,42 @@ export function MobileNav({ userName }: { userName: string }) {
         open ? "translate-x-0" : "-translate-x-full"
       )}>
         <div className="flex items-center justify-between px-6 py-5 border-b border-border">
-          <span className="text-xl font-black tracking-tight">Luca</span>
+          <span className="font-serif text-xl font-normal tracking-tight">Luca</span>
           <button
             onClick={() => setOpen(false)}
-            className="p-1.5 rounded-lg hover:bg-muted transition-colors text-muted-foreground"
+            className="p-1.5 rounded-lg hover:bg-muted transition-colors text-[#1A1A1A]/40"
           >
-            <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
-              <path d="M2 2l14 14M16 2L2 16" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
-            </svg>
+            <X size={18} strokeWidth={1.5} />
           </button>
         </div>
 
         <nav className="flex-1 px-3 py-4 space-y-0.5 overflow-y-auto">
-          {NAV_ITEMS.map((item) => {
-            const active = pathname.startsWith(item.href);
+          {NAV_ITEMS.map(({ href, label, Icon }) => {
+            const active = pathname.startsWith(href);
             return (
               <Link
-                key={item.href}
-                href={item.href}
+                key={href}
+                href={href}
                 onClick={() => setOpen(false)}
                 className={cn(
                   "flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-medium transition-colors",
                   active
-                    ? "bg-[#FEFF6E] text-[#1A1A1A] font-semibold"
-                    : "text-[#1A1A1A]/50 hover:text-[#1A1A1A] hover:bg-[#FEF3D6]"
+                    ? "bg-[#FEFF6E] text-[#1A1A1A]"
+                    : "text-[#1A1A1A]/40 hover:text-[#1A1A1A] hover:bg-[#FEF3D6]"
                 )}
               >
-                <span className="text-base">{item.emoji}</span>
-                {item.label}
+                <Icon
+                  size={16}
+                  strokeWidth={active ? 2 : 1.5}
+                  className="shrink-0"
+                />
+                {label}
               </Link>
             );
           })}
         </nav>
 
-        <div className="px-4 py-4 border-t border-border text-xs text-muted-foreground truncate">
+        <div className="px-4 py-4 border-t border-border text-xs text-[#1A1A1A]/40 truncate">
           {userName}
         </div>
       </div>

@@ -47,18 +47,25 @@
   --radius-3xl: calc(var(--radius) * 2.2);
   --radius-4xl: calc(var(--radius) * 2.6);
 
-  /* ── Luca category color palette ─────────────────── */
-  --color-cat-comida: #F4A261;
-  --color-cat-mercado: #E9C46A;
-  --color-cat-transporte: #457B9D;
-  --color-cat-hogar: #6D6875;
-  --color-cat-servicios: #A8DADC;
-  --color-cat-entretenimiento: #E76F51;
-  --color-cat-salud: #81B29A;
-  --color-cat-educacion: #264653;
-  --color-cat-compras: #CDB4DB;
-  --color-cat-ingreso: #2A9D8F;
-  --color-cat-otros: #BDC3C7;
+  /* ── Luca brand extended palette ─────────────────── */
+  --color-luca-sage:     #D4E8A0;
+  --color-luca-lavender: #C8CAD8;
+  --color-luca-orange:   #E8673C;
+  --color-luca-teal:     #4A7C6F;
+  --color-luca-gold:     #F5C540;
+
+  /* ── Category colors (aligned to new palette) ────── */
+  --color-cat-comida:          #E8673C;
+  --color-cat-mercado:         #F5C540;
+  --color-cat-transporte:      #4A7C6F;
+  --color-cat-hogar:           #C8CAD8;
+  --color-cat-servicios:       #D4E8A0;
+  --color-cat-entretenimiento: #E8673C;
+  --color-cat-salud:           #D4E8A0;
+  --color-cat-educacion:       #4A7C6F;
+  --color-cat-compras:         #C8CAD8;
+  --color-cat-ingreso:         #F5C540;
+  --color-cat-otros:           #C8CAD8;
 }
 
 :root {
