@@ -1,5 +1,49 @@
 import Link from "next/link";
+import {
+  MessageCircle,
+  BarChart3,
+  Target,
+  Trophy,
+  Zap,
+  TrendingUp,
+  type LucideIcon,
+} from "lucide-react";
 import { AnimateIn } from "@/components/ui/animate-in";
+
+/* ── Data ─────────────────────────────────────────────── */
+
+const CAPABILITIES: { Icon: LucideIcon; t: string; d: string }[] = [
+  { Icon: MessageCircle, t: "Lenguaje natural",       d: "Dile exactamente lo que gastaste, como se lo dirías a un amigo." },
+  { Icon: BarChart3,     t: "Dashboard en tiempo real", d: "Visualiza tus gastos por categoría, presupuestos y metas." },
+  { Icon: Target,        t: "Alertas de presupuesto",  d: "Te avisamos antes de que te pases. Tú decides el límite." },
+  { Icon: Trophy,        t: "Metas de ahorro",         d: "Define tus objetivos y Luca trackea tu progreso cada semana." },
+];
+
+const STEPS: { n: string; color: string; Icon: LucideIcon; t: string; d: string }[] = [
+  {
+    n: "01", color: "#FEFF6E", Icon: MessageCircle,
+    t: "Escríbele a Luca",
+    d: "«gasté 45 mil en Rappi» o «pagué el arriendo». Luca entiende cómo hablas tú, no al revés.",
+  },
+  {
+    n: "02", color: "#ADDEFF", Icon: Zap,
+    t: "Luca lo clasifica",
+    d: "En segundos organiza el gasto, actualiza tu presupuesto y te confirma. Powered by IA.",
+  },
+  {
+    n: "03", color: "#FFB0FF", Icon: TrendingUp,
+    t: "Revisa tu dashboard",
+    d: "Todo en tiempo real. Gastos, metas, categorías e insights semanales directo al WhatsApp.",
+  },
+];
+
+const TESTIMONIALS = [
+  { q: "Llevaba años queriendo organizar mis finanzas pero todas las apps me aburrían. Con Luca simplemente le escribo y ya. Llevo 3 meses sin perder el hilo.", name: "Valentina M.", role: "Diseñadora, Bogotá",  accent: "#FFB0FF" },
+  { q: "Me di cuenta que gastaba 800 mil al mes en comida sin saberlo. En la primera semana ya lo tenía claro. Ese mes ahorré 300 mil.",                          name: "Sebastián R.", role: "Freelance, Medellín", accent: "#ADDEFF" },
+  { q: "Lo que más me gusta es que no tengo que abrir ninguna app. Le escribo por WhatsApp cuando gasto y él hace todo. Cero esfuerzo.",                          name: "Camila T.",    role: "Estudiante, Cali",   accent: "#FEFF6E" },
+];
+
+/* ── Page ─────────────────────────────────────────────── */
 
 export default function LandingPage() {
   return (
@@ -18,7 +62,7 @@ export default function LandingPage() {
         </div>
       </nav>
 
-      {/* ── Hero ─────────────────────────────────────────── */}
+      {/* ── Hero ──────────────────────────────────────── */}
       <section className="px-8 md:px-16 pt-16 pb-24 max-w-7xl mx-auto grid md:grid-cols-2 gap-12 items-center">
         <AnimateIn className="space-y-7">
           <h1 className="font-serif text-5xl md:text-6xl leading-[1.1] font-normal text-[#1A1A1A]">
@@ -57,11 +101,11 @@ export default function LandingPage() {
                 </div>
                 <div className="p-4 space-y-3 min-h-72" style={{ backgroundColor: "#ECE5DD" }}>
                   <ChatBubble from="user" text="gasté 45 mil en Rappi" time="8:02" />
-                  <ChatBubble from="luca" text="¡Listo! $45.000 en Comida 🍔 Llevas $312.000 este mes." time="8:02" />
+                  <ChatBubble from="luca" text="¡Listo! $45.000 en Comida. Llevas $312.000 este mes." time="8:02" />
                   <ChatBubble from="user" text="cuánto llevo esta semana?" time="8:15" />
-                  <ChatBubble from="luca" text="Esta semana $187.000 💳 Mayor gasto: transporte con $65.000." time="8:15" />
+                  <ChatBubble from="luca" text="Esta semana $187.000. Mayor gasto: transporte con $65.000." time="8:15" />
                   <ChatBubble from="user" text="ponme presupuesto de 400 mil para comida" time="9:30" />
-                  <ChatBubble from="luca" text="Hecho 🎯 Te aviso cuando llegues al 80%." time="9:30" />
+                  <ChatBubble from="luca" text="Hecho. Te aviso cuando llegues al 80%." time="9:30" />
                 </div>
               </div>
             </div>
@@ -69,7 +113,7 @@ export default function LandingPage() {
         </AnimateIn>
       </section>
 
-      {/* ── Capabilities ─────────────────────────────────── */}
+      {/* ── Capabilities ──────────────────────────────── */}
       <section id="como-funciona" className="px-8 md:px-16 py-20 max-w-7xl mx-auto">
         <AnimateIn>
           <p className="text-xs text-[#1A1A1A]/40 uppercase tracking-widest mb-3">Lo que hace Luca</p>
@@ -78,38 +122,33 @@ export default function LandingPage() {
           </h2>
         </AnimateIn>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
-          {[
-            { icon: "💬", t: "Lenguaje natural", d: "Dile exactamente lo que gastaste, como se lo dirías a un amigo." },
-            { icon: "📊", t: "Dashboard en tiempo real", d: "Visualiza tus gastos por categoría, presupuestos y metas." },
-            { icon: "🎯", t: "Alertas de presupuesto", d: "Te avisamos antes de que te pases. Tú decides el límite." },
-            { icon: "🏆", t: "Metas de ahorro", d: "Define tus objetivos y Luca trackea tu progreso cada semana." },
-          ].map((f, i) => (
-            <AnimateIn key={f.t} delay={i * 80} className="space-y-3">
-              <span className="text-3xl">{f.icon}</span>
-              <p className="font-medium text-sm text-[#1A1A1A]">{f.t}</p>
-              <p className="text-[#1A1A1A]/50 text-sm leading-relaxed">{f.d}</p>
+          {CAPABILITIES.map(({ Icon, t, d }, i) => (
+            <AnimateIn key={t} delay={i * 80} className="space-y-4">
+              <div className="w-10 h-10 rounded-xl bg-[#1A1A1A]/5 flex items-center justify-center">
+                <Icon size={18} strokeWidth={1.5} className="text-[#1A1A1A]/60" />
+              </div>
+              <p className="font-medium text-sm text-[#1A1A1A]">{t}</p>
+              <p className="text-[#1A1A1A]/50 text-sm leading-relaxed">{d}</p>
             </AnimateIn>
           ))}
         </div>
       </section>
 
-      {/* ── How it works — color blocks ──────────────────── */}
+      {/* ── How it works ──────────────────────────────── */}
       <section className="px-8 md:px-16 py-16 max-w-7xl mx-auto">
         <div className="grid md:grid-cols-3 gap-4">
-          {[
-            { n: "01", color: "#FEFF6E", t: "Escríbele a Luca", d: "«gasté 45 mil en Rappi» o «pagué el arriendo». Luca entiende cómo hablas tú, no al revés.", emoji: "💬" },
-            { n: "02", color: "#ADDEFF", t: "Luca lo clasifica", d: "En segundos organiza el gasto, actualiza tu presupuesto y te confirma. Powered by IA.", emoji: "⚡" },
-            { n: "03", color: "#FFB0FF", t: "Revisa tu dashboard", d: "Todo en tiempo real. Gastos, metas, categorías y insights semanales directo al WhatsApp.", emoji: "📈" },
-          ].map((s, i) => (
-            <AnimateIn key={s.n} delay={i * 100}>
-              <div className="rounded-2xl p-8 flex flex-col gap-6 h-full" style={{ backgroundColor: s.color }}>
+          {STEPS.map(({ n, color, Icon, t, d }, i) => (
+            <AnimateIn key={n} delay={i * 100}>
+              <div className="rounded-2xl p-8 flex flex-col gap-6 h-full" style={{ backgroundColor: color }}>
                 <div className="flex justify-between items-start">
-                  <span className="text-2xl">{s.emoji}</span>
-                  <span className="font-serif text-5xl font-normal" style={{ color: "rgba(0,0,0,0.12)" }}>{s.n}</span>
+                  <div className="w-9 h-9 rounded-lg bg-[#1A1A1A]/10 flex items-center justify-center">
+                    <Icon size={16} strokeWidth={1.5} className="text-[#1A1A1A]/70" />
+                  </div>
+                  <span className="font-serif text-5xl font-normal" style={{ color: "rgba(0,0,0,0.10)" }}>{n}</span>
                 </div>
                 <div>
-                  <p className="font-medium text-base mb-2 text-[#1A1A1A]">{s.t}</p>
-                  <p className="text-sm leading-relaxed text-[#1A1A1A]/60">{s.d}</p>
+                  <p className="font-medium text-base mb-2 text-[#1A1A1A]">{t}</p>
+                  <p className="text-sm leading-relaxed text-[#1A1A1A]/60">{d}</p>
                 </div>
               </div>
             </AnimateIn>
@@ -117,7 +156,7 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ── Testimonials ─────────────────────────────────── */}
+      {/* ── Testimonials ──────────────────────────────── */}
       <section className="px-8 md:px-16 py-20 max-w-7xl mx-auto">
         <AnimateIn>
           <p className="text-xs text-[#1A1A1A]/40 uppercase tracking-widest mb-3">Personas reales</p>
@@ -126,18 +165,14 @@ export default function LandingPage() {
           </h2>
         </AnimateIn>
         <div className="grid md:grid-cols-3 gap-6">
-          {[
-            { q: "Llevaba años queriendo organizar mis finanzas pero todas las apps me aburrían. Con Luca simplemente le escribo y ya. Llevo 3 meses sin perder el hilo.", name: "Valentina M.", role: "Diseñadora, Bogotá", accent: "#FFB0FF" },
-            { q: "Me di cuenta que gastaba 800 mil al mes en comida sin saberlo. En la primera semana ya lo tenía claro. Ese mes ahorré 300 mil.", name: "Sebastián R.", role: "Freelance, Medellín", accent: "#ADDEFF" },
-            { q: "Lo que más me gusta es que no tengo que abrir ninguna app. Le escribo por WhatsApp cuando gasto y él hace todo. Cero esfuerzo.", name: "Camila T.", role: "Estudiante, Cali", accent: "#FEFF6E" },
-          ].map((t, i) => (
-            <AnimateIn key={t.name} delay={i * 80}>
+          {TESTIMONIALS.map(({ q, name, role, accent }, i) => (
+            <AnimateIn key={name} delay={i * 80}>
               <div className="bg-white rounded-2xl p-7 space-y-5 h-full">
-                <div className="w-6 h-0.5 rounded-full" style={{ backgroundColor: t.accent }} />
-                <p className="text-[#1A1A1A]/65 text-sm leading-relaxed">"{t.q}"</p>
+                <div className="w-6 h-0.5 rounded-full" style={{ backgroundColor: accent }} />
+                <p className="text-[#1A1A1A]/65 text-sm leading-relaxed">"{q}"</p>
                 <div>
-                  <p className="text-sm font-medium">{t.name}</p>
-                  <p className="text-xs text-[#1A1A1A]/40 mt-0.5">{t.role}</p>
+                  <p className="text-sm font-medium">{name}</p>
+                  <p className="text-xs text-[#1A1A1A]/40 mt-0.5">{role}</p>
                 </div>
               </div>
             </AnimateIn>
@@ -145,7 +180,7 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ── CTA ──────────────────────────────────────────── */}
+      {/* ── CTA ───────────────────────────────────────── */}
       <section className="px-8 md:px-16 py-24 max-w-3xl mx-auto text-center">
         <AnimateIn className="space-y-6">
           <h2 className="font-serif text-4xl md:text-5xl font-normal leading-snug text-[#1A1A1A]">

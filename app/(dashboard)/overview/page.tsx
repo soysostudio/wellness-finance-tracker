@@ -105,22 +105,18 @@ export default async function OverviewPage() {
         </h1>
       </AnimateIn>
 
-      {/* ── Summary cards ──────────────────────────── */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-        <AnimateIn delay={0}>
-          <SummaryCard label="Gastos del mes"   value={formatCOP(overview.totalExpenses)} bg="#FFB0FF" />
-        </AnimateIn>
-        <AnimateIn delay={80}>
-          <SummaryCard label="Ingresos del mes" value={formatCOP(overview.totalIncome)}   bg="#ADDEFF" />
-        </AnimateIn>
-        <AnimateIn delay={160}>
-          <SummaryCard
+      {/* ── Summary stats ──────────────────────────── */}
+      <AnimateIn>
+        <div className="grid grid-cols-3 gap-6 py-6 border-t border-b border-[#1A1A1A]/8">
+          <StatBlock label="Gastos del mes"   value={formatCOP(overview.totalExpenses)} />
+          <StatBlock label="Ingresos del mes" value={formatCOP(overview.totalIncome)} />
+          <StatBlock
             label="Balance neto"
             value={formatCOP(overview.net)}
-            bg={overview.net >= 0 ? "#FEFF6E" : "#FFB0FF"}
+            muted={overview.net < 0}
           />
-        </AnimateIn>
-      </div>
+        </div>
+      </AnimateIn>
 
       {/* ── Category breakdown ─────────────────────── */}
       {overview.categoryBreakdown.length > 0 && (
@@ -227,13 +223,11 @@ export default async function OverviewPage() {
 
 /* ── Sub-components ─────────────────────────────────── */
 
-function SummaryCard({ label, value, bg }: { label: string; value: string; bg: string }) {
+function StatBlock({ label, value, muted }: { label: string; value: string; muted?: boolean }) {
   return (
-    <div className="rounded-2xl p-5 space-y-1.5 h-full" style={{ backgroundColor: bg }}>
-      <p className="text-[10px] uppercase tracking-widest text-[#1A1A1A]/50">
-        {label}
-      </p>
-      <p className="font-serif text-2xl font-normal text-[#1A1A1A]">
+    <div className="space-y-1.5">
+      <p className="text-[10px] uppercase tracking-widest text-[#1A1A1A]/40">{label}</p>
+      <p className={`font-serif text-xl md:text-2xl font-normal ${muted ? "text-[#E8673C]" : "text-[#1A1A1A]"}`}>
         {value}
       </p>
     </div>
