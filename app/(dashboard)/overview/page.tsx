@@ -49,10 +49,10 @@ async function getOverviewData(userId: string) {
     const slug = cat?.slug ?? "otros";
     if (!byCat[slug]) {
       byCat[slug] = {
-        name: cat?.name ?? "Otros",
+        name:  cat?.name ?? "Otros",
         slug,
-        color: cat?.color ?? getCategoryColor(slug),
-        icon: getCategoryIcon(slug),
+        color: getCategoryColor(slug), // always use code palette, not stale DB color
+        icon:  getCategoryIcon(slug),
         total: 0,
       };
     }

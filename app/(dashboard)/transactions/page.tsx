@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { formatCOP } from "@/lib/utils/currency";
 import { CategoryIcon } from "@/components/ui/category-icon";
+import { getCategoryColor } from "@/lib/utils/categories";
 import { redirect } from "next/navigation";
 import { AnimateIn } from "@/components/ui/animate-in";
 
@@ -65,8 +66,8 @@ export default async function TransactionsPage() {
           <div className="space-y-1.5">
             {transactions.map((t) => {
               const cat      = Array.isArray(t.categories) ? t.categories[0] : t.categories;
-              const color    = cat?.color ?? "#BDC3C7";
               const slug     = cat?.slug ?? "otros";
+              const color    = getCategoryColor(slug); // code palette is source of truth
               const label    = t.merchant || t.description || cat?.name || "Movimiento";
               const isExpense = t.transaction_type === "expense";
               const date     = new Date(t.occurred_at).toLocaleDateString("es-CO", {

@@ -33,7 +33,7 @@ export function RecentTransactions({ transactions }: RecentTransactionsProps) {
       {transactions.map((tx, i) => {
         const cat = Array.isArray(tx.categories) ? tx.categories[0] : tx.categories;
         const slug = cat?.slug ?? "otros";
-        const color = cat?.color ?? getCategoryColor(slug);
+        const color = getCategoryColor(slug); // code palette is source of truth
         const label = tx.merchant ?? tx.description ?? "Sin descripción";
         const isIncome = tx.transaction_type === "income";
         const date = formatInTimeZone(

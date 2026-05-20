@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { formatCOP } from "@/lib/utils/currency";
 import { CategoryIcon } from "@/components/ui/category-icon";
+import { getCategoryColor } from "@/lib/utils/categories";
 import { getCurrentMonthRange } from "@/lib/utils/dates";
 import { redirect } from "next/navigation";
 import { AnimateIn } from "@/components/ui/animate-in";
@@ -64,7 +65,7 @@ export default async function BudgetsPage() {
           {budgets.map((budget, i) => {
             const cat      = Array.isArray(budget.categories) ? budget.categories[0] : budget.categories;
             const slug     = cat?.slug ?? "otros";
-            const color    = cat?.color ?? "#BDC3C7";
+            const color    = getCategoryColor(slug); // code palette is source of truth
             const spent    = spentByCategory[budget.id] ?? 0;
             const pct      = Math.min(Math.round((spent / budget.amount_limit) * 100), 100);
             const remaining = budget.amount_limit - spent;

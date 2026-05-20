@@ -40,7 +40,7 @@ export default async function InsightsPage() {
       byCat[slug] = {
         name:  cat?.name  ?? "Otros",
         slug,
-        color: cat?.color ?? getCategoryColor(slug),
+        color: getCategoryColor(slug), // code palette is source of truth
         icon:  "",
         total: 0,
       };
