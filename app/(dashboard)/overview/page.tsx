@@ -4,6 +4,7 @@ import { getCurrentMonthRange } from "@/lib/utils/dates";
 import { getCategoryColor, getCategoryIcon } from "@/lib/utils/categories";
 import { redirect } from "next/navigation";
 import { RecentTransactions } from "@/components/dashboard/transaction-list";
+import { AnimateIn } from "@/components/ui/animate-in";
 
 export const revalidate = 0;
 
@@ -41,14 +42,12 @@ async function getOverviewData(userId: string) {
   const totalExpenses = expenses.reduce((s, t) => s + t.amount, 0);
   const totalIncome = income.reduce((s, t) => s + t.amount, 0);
 
-  // Spending by category
   const byCat: Record<string, { name: string; slug: string; color: string; icon: string; total: number }> = {};
   for (const t of expenses) {
     const cat = Array.isArray(t.categories) ? t.categories[0] : t.categories;
     const slug = cat?.slug ?? "otros";
-    const key = slug;
-    if (!byCat[key]) {
-      byCat[key] = {
+    if (!byCat[slug]) {
+      byCat[slug] = {
         name: cat?.name ?? "Otros",
         slug,
         color: cat?.color ?? getCategoryColor(slug),
@@ -56,7 +55,7 @@ async function getOverviewData(userId: string) {
         total: 0,
       };
     }
-    byCat[key].total += t.amount;
+    byCat[slug].total += t.amount;
   }
 
   const categoryBreakdown = Object.values(byCat)
@@ -93,124 +92,157 @@ export default async function OverviewPage() {
   const year = now.getFullYear();
 
   return (
-    <div className="p-6 md:p-8 max-w-5xl mx-auto space-y-8">
-      {/* Header */}
-      <div>
-        <p className="text-sm text-muted-foreground uppercase tracking-widest font-medium">
+    <div className="p-6 md:p-8 max-w-5xl mx-auto space-y-10">
+
+      {/* ── Header ─────────────────────────────────── */}
+      <AnimateIn>
+        <p className="text-xs text-[#1A1A1A]/40 uppercase tracking-widest">
           {monthName} {year}
         </p>
-        <h1 className="font-serif text-4xl md:text-5xl font-normal mt-1">
+        <h1 className="font-serif text-4xl md:text-5xl font-normal mt-1 text-[#1A1A1A]">
           Hola, {firstName} 👋
         </h1>
+      </AnimateIn>
+
+      {/* ── Summary cards ──────────────────────────── */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+        <AnimateIn delay={0}>
+          <SummaryCard label="Gastos del mes"   value={formatCOP(overview.totalExpenses)} bg="#FFB0FF" />
+        </AnimateIn>
+        <AnimateIn delay={80}>
+          <SummaryCard label="Ingresos del mes" value={formatCOP(overview.totalIncome)}   bg="#ADDEFF" />
+        </AnimateIn>
+        <AnimateIn delay={160}>
+          <SummaryCard
+            label="Balance neto"
+            value={formatCOP(overview.net)}
+            bg={overview.net >= 0 ? "#FEFF6E" : "#FFB0FF"}
+          />
+        </AnimateIn>
       </div>
 
-      {/* Summary cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <SummaryCard label="Gastos del mes"  value={formatCOP(overview.totalExpenses)} bg="#FFB0FF" />
-        <SummaryCard label="Ingresos del mes" value={formatCOP(overview.totalIncome)}   bg="#ADDEFF" />
-        <SummaryCard label="Balance neto"     value={formatCOP(overview.net)}           bg={overview.net >= 0 ? "#FEFF6E" : "#FFB0FF"} />
-      </div>
-
-      {/* Category breakdown — editorial bold blocks */}
+      {/* ── Category breakdown ─────────────────────── */}
       {overview.categoryBreakdown.length > 0 && (
         <section>
-          <h2 className="text-xs uppercase tracking-widest font-semibold text-muted-foreground mb-3">
-            Gastos por categoría
-          </h2>
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-            {overview.categoryBreakdown.map((cat) => (
-              <div
-                key={cat.slug}
-                className="rounded-2xl p-4 flex flex-col gap-1"
-                style={{ backgroundColor: cat.color }}
-              >
-                <span className="text-2xl">{cat.icon}</span>
-                <p className="text-xs font-semibold text-black/70 uppercase tracking-wide">
-                  {cat.name}
-                </p>
-                <p className="text-xl font-black text-black">
-                  {formatCOP(cat.total)}
-                </p>
-              </div>
+          <AnimateIn>
+            <SectionLabel>Gastos por categoría</SectionLabel>
+          </AnimateIn>
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mt-3">
+            {overview.categoryBreakdown.map((cat, i) => (
+              <AnimateIn key={cat.slug} delay={i * 60}>
+                <div
+                  className="rounded-2xl p-4 flex flex-col gap-2 h-full"
+                  style={{ backgroundColor: cat.color + "CC" }}
+                >
+                  <span className="text-xl">{cat.icon}</span>
+                  <p className="text-[10px] text-[#1A1A1A]/50 uppercase tracking-widest leading-none">
+                    {cat.name}
+                  </p>
+                  <p className="font-serif text-xl font-normal text-[#1A1A1A]">
+                    {formatCOP(cat.total)}
+                  </p>
+                </div>
+              </AnimateIn>
             ))}
           </div>
         </section>
       )}
 
-      {/* Recent transactions */}
+      {/* ── Recent transactions ────────────────────── */}
       <section>
-        <div className="flex items-center justify-between mb-3">
-          <h2 className="text-xs uppercase tracking-widest font-semibold text-muted-foreground">
-            Últimas transacciones
-          </h2>
-          <a href="/transactions" className="text-xs font-semibold underline underline-offset-4">
-            Ver todas
-          </a>
-        </div>
-        <RecentTransactions transactions={overview.recentTransactions} />
+        <AnimateIn>
+          <div className="flex items-center justify-between mb-3">
+            <SectionLabel>Últimas transacciones</SectionLabel>
+            <a
+              href="/transactions"
+              className="text-xs text-[#1A1A1A]/40 hover:text-[#1A1A1A] transition-colors underline underline-offset-4"
+            >
+              Ver todas
+            </a>
+          </div>
+        </AnimateIn>
+        <AnimateIn delay={60}>
+          <RecentTransactions transactions={overview.recentTransactions} />
+        </AnimateIn>
       </section>
 
-      {/* Goals */}
+      {/* ── Goals ──────────────────────────────────── */}
       {overview.goals.length > 0 && (
         <section>
-          <h2 className="text-xs uppercase tracking-widest font-semibold text-muted-foreground mb-3">
-            Tus metas activas
-          </h2>
+          <AnimateIn>
+            <SectionLabel className="mb-3">Tus metas activas</SectionLabel>
+          </AnimateIn>
           <div className="space-y-3">
-            {overview.goals.map((goal) => {
+            {overview.goals.map((goal, i) => {
               const pct = Math.min(
                 Math.round((goal.current_amount / goal.target_amount) * 100),
                 100
               );
               return (
-                <div key={goal.id} className="bg-card rounded-2xl p-4 space-y-2">
-                  <div className="flex justify-between items-center">
-                    <p className="font-semibold text-sm">{goal.name}</p>
-                    <p className="text-xs text-muted-foreground">{pct}%</p>
+                <AnimateIn key={goal.id} delay={i * 80}>
+                  <div className="bg-card rounded-2xl p-5 space-y-3 border border-[#1A1A1A]/5">
+                    <div className="flex justify-between items-baseline">
+                      <p className="text-sm font-medium text-[#1A1A1A]">{goal.name}</p>
+                      <p className="text-xs text-[#1A1A1A]/40">{pct}%</p>
+                    </div>
+                    <div className="h-1.5 bg-[#1A1A1A]/8 rounded-full overflow-hidden">
+                      <div
+                        className="h-full rounded-full bg-[#1A1A1A] transition-all duration-700"
+                        style={{ width: `${pct}%` }}
+                      />
+                    </div>
+                    <div className="flex justify-between text-xs text-[#1A1A1A]/40">
+                      <span>{formatCOP(goal.current_amount)}</span>
+                      <span>{formatCOP(goal.target_amount)}</span>
+                    </div>
                   </div>
-                  <div className="h-2 bg-muted rounded-full overflow-hidden">
-                    <div
-                      className="h-full rounded-full bg-foreground transition-all"
-                      style={{ width: `${pct}%` }}
-                    />
-                  </div>
-                  <div className="flex justify-between text-xs text-muted-foreground">
-                    <span>{formatCOP(goal.current_amount)}</span>
-                    <span>{formatCOP(goal.target_amount)}</span>
-                  </div>
-                </div>
+                </AnimateIn>
               );
             })}
           </div>
         </section>
       )}
 
-      {/* Empty state */}
+      {/* ── Empty state ────────────────────────────── */}
       {overview.totalExpenses === 0 && overview.totalIncome === 0 && (
-        <div className="text-center py-16 space-y-3">
-          <p className="text-5xl">💬</p>
-          <p className="font-semibold">Aún no hay movimientos este mes</p>
-          <p className="text-muted-foreground text-sm max-w-xs mx-auto">
-            Cuéntale a Luca tu primer gasto por WhatsApp y aparecerá aquí al instante.
-          </p>
-          <p className="text-sm font-mono bg-muted rounded-xl px-4 py-2 inline-block">
-            &quot;gasté 45 mil en Rappi&quot;
-          </p>
-        </div>
+        <AnimateIn>
+          <div className="text-center py-16 space-y-4">
+            <p className="text-5xl">💬</p>
+            <p className="font-serif text-2xl font-normal text-[#1A1A1A]">
+              Sin movimientos este mes
+            </p>
+            <p className="text-[#1A1A1A]/50 text-sm max-w-xs mx-auto leading-relaxed">
+              Cuéntale a Luca tu primer gasto por WhatsApp y aparecerá aquí al instante.
+            </p>
+            <p className="text-sm font-mono bg-[#FEFF6E] rounded-xl px-4 py-2 inline-block text-[#1A1A1A]">
+              &quot;gasté 45 mil en Rappi&quot;
+            </p>
+          </div>
+        </AnimateIn>
       )}
     </div>
   );
 }
 
+/* ── Sub-components ─────────────────────────────────── */
+
 function SummaryCard({ label, value, bg }: { label: string; value: string; bg: string }) {
   return (
-    <div className="rounded-2xl p-5 space-y-1" style={{ backgroundColor: bg }}>
-      <p className="text-xs uppercase tracking-widest font-medium text-[#1A1A1A]/50">
+    <div className="rounded-2xl p-5 space-y-1.5 h-full" style={{ backgroundColor: bg }}>
+      <p className="text-[10px] uppercase tracking-widest text-[#1A1A1A]/50">
         {label}
       </p>
       <p className="font-serif text-2xl font-normal text-[#1A1A1A]">
         {value}
       </p>
     </div>
+  );
+}
+
+function SectionLabel({ children, className }: { children: React.ReactNode; className?: string }) {
+  return (
+    <p className={`text-[10px] uppercase tracking-widest text-[#1A1A1A]/40 font-medium ${className ?? ""}`}>
+      {children}
+    </p>
   );
 }

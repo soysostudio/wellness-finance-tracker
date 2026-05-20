@@ -45,23 +45,23 @@ export function RecentTransactions({ transactions }: RecentTransactionsProps) {
         return (
           <div
             key={tx.id ?? i}
-            className="flex items-center gap-3 bg-card rounded-xl px-4 py-3"
+            className="flex items-center gap-3 bg-card rounded-xl px-4 py-3 border border-[#1A1A1A]/5"
           >
             <div
-              className="w-9 h-9 rounded-xl flex items-center justify-center text-lg shrink-0"
-              style={{ backgroundColor: color + "33" }}
+              className="w-9 h-9 rounded-xl flex items-center justify-center text-base shrink-0"
+              style={{ backgroundColor: color + "26" }}
             >
               {icon}
             </div>
             <div className="flex-1 min-w-0">
-              <p className="font-medium text-sm truncate">{label}</p>
-              <p className="text-xs text-muted-foreground">{date}</p>
+              <p className="text-sm font-medium text-[#1A1A1A] truncate capitalize">{label}</p>
+              <p className="text-xs text-[#1A1A1A]/40 mt-0.5">{date}</p>
             </div>
             <p
-              className="text-sm font-bold shrink-0"
-              style={{ color: isIncome ? "#2A9D8F" : undefined }}
+              className="font-serif text-sm font-normal shrink-0"
+              style={{ color: isIncome ? "#2A9D8F" : "#1A1A1A" }}
             >
-              {isIncome ? "+" : "-"}{formatCOP(tx.amount)}
+              {isIncome ? "+" : "−"}{formatCOP(tx.amount)}
             </p>
           </div>
         );
