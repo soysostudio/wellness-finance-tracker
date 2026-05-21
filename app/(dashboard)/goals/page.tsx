@@ -3,6 +3,7 @@ import { formatCOP } from "@/lib/utils/currency";
 import { redirect } from "next/navigation";
 import { AnimateIn } from "@/components/ui/animate-in";
 import { GoalRow } from "@/components/dashboard/goal-row";
+import { NewGoalForm } from "@/components/dashboard/new-goal-form";
 
 export const revalidate = 0;
 
@@ -31,13 +32,18 @@ export default async function GoalsPage() {
         </h1>
       </AnimateIn>
 
+      {/* New goal form — always visible */}
+      <AnimateIn>
+        <NewGoalForm />
+      </AnimateIn>
+
       {!goals?.length ? (
         <AnimateIn>
-          <div className="text-center py-20 space-y-4">
+          <div className="text-center py-16 space-y-4">
             <p className="text-5xl">🏆</p>
             <p className="font-serif text-2xl font-normal text-foreground">Sin metas aún</p>
             <p className="text-foreground/50 text-sm max-w-xs mx-auto leading-relaxed">
-              Dile a Luca en WhatsApp qué quieres ahorrar
+              Créala arriba o dile a Luca por WhatsApp
             </p>
             <p className="text-sm font-mono bg-[#FEFF6E] rounded-xl px-4 py-2 inline-block text-[#1A1A1A]">
               &quot;quiero ahorrar 2 millones para vacaciones&quot;
@@ -69,12 +75,8 @@ export default async function GoalsPage() {
               </AnimateIn>
               {completed.map((goal, i) => (
                 <AnimateIn key={goal.id} delay={i * 60}>
-                  <div className="bg-card border border-foreground/5 rounded-2xl p-4 flex items-center gap-4 opacity-60">
-                    <span className="text-xl">{goal.icon ?? "✅"}</span>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-foreground truncate">{goal.name}</p>
-                      <p className="text-xs text-foreground/40 mt-0.5">{formatCOP(goal.target_amount)} — completada</p>
-                    </div>
+                  <div className="opacity-60">
+                    <GoalRow goal={goal} />
                   </div>
                 </AnimateIn>
               ))}
