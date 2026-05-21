@@ -1,9 +1,8 @@
 import { createClient } from "@/lib/supabase/server";
 import { formatCOP } from "@/lib/utils/currency";
-import { CategoryIcon } from "@/components/ui/category-icon";
-import { getCategoryColor } from "@/lib/utils/categories";
 import { redirect } from "next/navigation";
 import { AnimateIn } from "@/components/ui/animate-in";
+import { TransactionRow } from "@/components/dashboard/transaction-row";
 
 export const revalidate = 0;
 
@@ -64,39 +63,9 @@ export default async function TransactionsPage() {
       ) : (
         <AnimateIn delay={60}>
           <div className="space-y-1.5">
-            {transactions.map((t) => {
-              const cat      = Array.isArray(t.categories) ? t.categories[0] : t.categories;
-              const slug     = cat?.slug ?? "otros";
-              const color    = getCategoryColor(slug); // code palette is source of truth
-              const label    = t.merchant || t.description || cat?.name || "Movimiento";
-              const isExpense = t.transaction_type === "expense";
-              const date     = new Date(t.occurred_at).toLocaleDateString("es-CO", {
-                day: "numeric", month: "short",
-              });
-
-              return (
-                <div
-                  key={t.id}
-                  className="flex items-center gap-4 px-4 py-3 rounded-2xl bg-card border border-foreground/5 hover:border-foreground/10 transition-colors"
-                >
-                  <div
-                    className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0"
-                    style={{ backgroundColor: color + "26" }}
-                  >
-                    <CategoryIcon slug={slug} size={16} strokeWidth={1.5} style={{ color }} />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-foreground capitalize truncate">{label}</p>
-                    <p className="text-xs text-foreground/40 mt-0.5">{date}</p>
-                  </div>
-                  <p
-                    className={`font-serif text-sm font-normal shrink-0 ${isExpense ? "text-foreground" : "text-[#2A9D8F]"}`}
-                  >
-                    {isExpense ? "−" : "+"}{formatCOP(t.amount)}
-                  </p>
-                </div>
-              );
-            })}
+            {transactions.map((t) => (
+              <TransactionRow key={t.id} t={t} />
+            ))}
           </div>
         </AnimateIn>
       )}
