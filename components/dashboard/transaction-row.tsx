@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Trash2, Pencil, X } from "lucide-react";
 import { CategoryIcon } from "@/components/ui/category-icon";
+import { SwipeActions } from "@/components/ui/swipe-actions";
 import { getCategoryColor, SYSTEM_CATEGORIES } from "@/lib/utils/categories";
 import { formatCOP } from "@/lib/utils/currency";
 
@@ -73,10 +74,26 @@ export function TransactionRow({ t }: { t: Transaction }) {
     }
   }
 
+  const swipeActions = [
+    {
+      icon:    <Pencil size={18} strokeWidth={1.5} />,
+      label:   "Editar",
+      bg:      "#4A7C6F",
+      onClick: () => setEditing(true),
+    },
+    {
+      icon:    <Trash2 size={18} strokeWidth={1.5} />,
+      label:   "Eliminar",
+      bg:      "#E8673C",
+      onClick: () => setConfirming(true),
+    },
+  ];
+
   return (
     <>
       {/* Row */}
-      <div className="group flex items-center gap-4 px-4 py-3 rounded-2xl bg-card border border-foreground/5 hover:border-foreground/10 transition-colors">
+      <SwipeActions actions={swipeActions} className="rounded-2xl group">
+      <div className="flex items-center gap-4 px-4 py-3 rounded-2xl bg-card border border-foreground/5 hover:border-foreground/10 transition-colors">
         <div
           className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0"
           style={{ backgroundColor: color + "26" }}
@@ -112,7 +129,7 @@ export function TransactionRow({ t }: { t: Transaction }) {
             </button>
           </div>
         ) : (
-          <div className="flex items-center gap-1 md:opacity-0 md:group-hover:opacity-100 transition-opacity shrink-0">
+          <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
             <button
               onClick={() => setEditing(true)}
               className="p-1.5 rounded-lg hover:bg-foreground/6 text-foreground/40 hover:text-foreground transition-colors"
@@ -130,6 +147,7 @@ export function TransactionRow({ t }: { t: Transaction }) {
           </div>
         )}
       </div>
+      </SwipeActions>
 
       {/* Edit modal */}
       {editing && (

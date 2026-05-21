@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Pencil, Trash2, X } from "lucide-react";
 import { CategoryIcon } from "@/components/ui/category-icon";
+import { SwipeActions } from "@/components/ui/swipe-actions";
 import { getCategoryColor } from "@/lib/utils/categories";
 import { formatCOP } from "@/lib/utils/currency";
 
@@ -73,9 +74,25 @@ export function BudgetRow({ budget, spent }: { budget: Budget; spent: number }) 
     }
   }
 
+  const swipeActions = [
+    {
+      icon:    <Pencil size={18} strokeWidth={1.5} />,
+      label:   "Editar",
+      bg:      "#4A7C6F",
+      onClick: () => setEditing(true),
+    },
+    {
+      icon:    <Trash2 size={18} strokeWidth={1.5} />,
+      label:   "Eliminar",
+      bg:      "#E8673C",
+      onClick: () => setConfirming(true),
+    },
+  ];
+
   return (
     <>
-      <div className="group bg-card border border-foreground/5 rounded-2xl p-5 space-y-4">
+      <SwipeActions actions={swipeActions} className="rounded-2xl group">
+      <div className="bg-card border border-foreground/5 rounded-2xl p-5 space-y-4">
         <div className="flex items-center gap-3">
           <div
             className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0"
@@ -94,7 +111,7 @@ export function BudgetRow({ budget, spent }: { budget: Budget; spent: number }) 
               <button onClick={() => setConfirming(false)} className="text-xs text-foreground/40 hover:text-foreground">No</button>
             </div>
           ) : (
-            <div className="flex items-center gap-1 md:opacity-0 md:group-hover:opacity-100 transition-opacity shrink-0">
+            <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
               <button
                 onClick={() => setEditing(true)}
                 className="p-1.5 rounded-lg hover:bg-foreground/6 text-foreground/40 hover:text-foreground transition-colors"
@@ -144,6 +161,7 @@ export function BudgetRow({ budget, spent }: { budget: Budget; spent: number }) 
           </p>
         )}
       </div>
+      </SwipeActions>
 
       {/* Edit modal */}
       {editing && (
