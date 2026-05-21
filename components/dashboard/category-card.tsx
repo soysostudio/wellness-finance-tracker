@@ -4,7 +4,6 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Pencil, Trash2, X } from "lucide-react";
 import { CategoryIcon } from "@/components/ui/category-icon";
-import { SwipeActions } from "@/components/ui/swipe-actions";
 
 const PRESET_COLORS = [
   "#F4A261", "#E9C46A", "#457B9D", "#6D6875",
@@ -64,27 +63,11 @@ export function CategoryCard({ cat }: { cat: Category }) {
     }
   }
 
-  const swipeActions = [
-    {
-      icon:    <Pencil size={18} strokeWidth={1.5} />,
-      label:   "Editar",
-      bg:      "#4A7C6F",
-      onClick: () => setEditing(true),
-    },
-    {
-      icon:    <Trash2 size={18} strokeWidth={1.5} />,
-      label:   "Eliminar",
-      bg:      "#E8673C",
-      onClick: () => setConfirming(true),
-    },
-  ];
-
   return (
     <>
       {/* Card */}
-      <SwipeActions actions={swipeActions} className="rounded-2xl group h-full">
       <div
-        className="relative rounded-2xl p-4 flex flex-col gap-2 h-full"
+        className="group relative rounded-2xl p-4 flex flex-col gap-2 h-full"
         style={{ backgroundColor: color }}
       >
         <CategoryIcon slug={cat.slug} size={18} strokeWidth={1.5} style={{ color, filter: "brightness(0.6)" }} />
@@ -95,7 +78,6 @@ export function CategoryCard({ cat }: { cat: Category }) {
           {cat.is_income ? "Ingreso" : "Gasto"}
         </p>
 
-        {/* Desktop hover actions */}
         {confirming ? (
           <div className="absolute top-2 right-2 flex items-center gap-1.5 bg-white/80 rounded-lg px-2 py-1">
             <span className="text-[10px] text-[#1A1A1A]/60">¿Eliminar?</span>
@@ -103,7 +85,7 @@ export function CategoryCard({ cat }: { cat: Category }) {
             <button onClick={() => setConfirming(false)} className="text-[10px] text-[#1A1A1A]/50">No</button>
           </div>
         ) : (
-          <div className="absolute top-2 right-2 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+          <div className="absolute top-2 right-2 flex items-center gap-1 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
             <button
               onClick={() => setEditing(true)}
               className="p-1 rounded-lg bg-[#1A1A1A]/10 hover:bg-[#1A1A1A]/20 text-[#1A1A1A]/60 hover:text-[#1A1A1A] transition-colors"
@@ -121,7 +103,6 @@ export function CategoryCard({ cat }: { cat: Category }) {
           </div>
         )}
       </div>
-      </SwipeActions>
 
       {/* Edit modal */}
       {editing && (
