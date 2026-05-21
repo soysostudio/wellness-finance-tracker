@@ -19,9 +19,10 @@ interface Goal {
 
 export function GoalRow({ goal }: { goal: Goal }) {
   const router = useRouter();
-  const [editing, setEditing]   = useState(false);
-  const [deleting, setDeleting] = useState(false);
-  const [saving, setSaving]     = useState(false);
+  const [editing, setEditing]       = useState(false);
+  const [confirming, setConfirming] = useState(false);
+  const [deleting, setDeleting]     = useState(false);
+  const [saving, setSaving]         = useState(false);
 
   const pct       = Math.min(Math.round((goal.current_amount / goal.target_amount) * 100), 100);
   const remaining = goal.target_amount - goal.current_amount;
@@ -87,23 +88,30 @@ export function GoalRow({ goal }: { goal: Goal }) {
               <p className="text-xs text-foreground/40 mt-0.5">{goal.description}</p>
             )}
           </div>
-          <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
-            <button
-              onClick={() => setEditing(true)}
-              className="p-1.5 rounded-lg hover:bg-foreground/6 text-foreground/40 hover:text-foreground transition-colors"
-              title="Editar"
-            >
-              <Pencil size={14} strokeWidth={1.5} />
-            </button>
-            <button
-              onClick={handleDelete}
-              disabled={deleting}
-              className="p-1.5 rounded-lg hover:bg-red-50 dark:hover:bg-red-950/30 text-foreground/40 hover:text-red-500 transition-colors disabled:opacity-50"
-              title="Eliminar"
-            >
-              <Trash2 size={14} strokeWidth={1.5} />
-            </button>
-          </div>
+          {confirming ? (
+            <div className="flex items-center gap-2 shrink-0">
+              <span className="text-xs text-foreground/50">¿Eliminar?</span>
+              <button onClick={handleDelete} disabled={deleting} className="text-xs font-medium text-red-500 hover:text-red-600 disabled:opacity-50">{deleting ? "..." : "Sí"}</button>
+              <button onClick={() => setConfirming(false)} className="text-xs text-foreground/40 hover:text-foreground">No</button>
+            </div>
+          ) : (
+            <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
+              <button
+                onClick={() => setEditing(true)}
+                className="p-1.5 rounded-lg hover:bg-foreground/6 text-foreground/40 hover:text-foreground transition-colors"
+                title="Editar"
+              >
+                <Pencil size={14} strokeWidth={1.5} />
+              </button>
+              <button
+                onClick={() => setConfirming(true)}
+                className="p-1.5 rounded-lg hover:bg-red-50 dark:hover:bg-red-950/30 text-foreground/40 hover:text-red-500 transition-colors"
+                title="Eliminar"
+              >
+                <Trash2 size={14} strokeWidth={1.5} />
+              </button>
+            </div>
+          )}
           <span
             className="text-xs px-3 py-1 rounded-full shrink-0 font-medium"
             style={{ backgroundColor: "#FEFF6E", color: "#1A1A1A" }}

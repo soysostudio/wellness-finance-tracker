@@ -22,29 +22,43 @@ export function RemindersForm({ userId, active, reminderIds }: Props) {
   const [weekly, setWeekly] = useState(active.weekly);
   const [loading, setLoading] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [error, setError] = useState("");
   const router = useRouter();
 
   async function toggle(type: ReminderType, enabled: boolean) {
     setLoading(true);
+    setError("");
     const supabase = createClient();
     const existingId = type === "daily_summary" ? reminderIds.daily : reminderIds.weekly;
 
+    let err = null;
     if (existingId) {
-      await supabase.from("reminders").update({ is_active: enabled }).eq("id", existingId);
+      const result = await supabase
+        .from("reminders")
+        .update({ is_active: enabled })
+        .eq("id", existingId);
+      err = result.error;
     } else if (enabled) {
-      await supabase.from("reminders").insert({
+      const result = await supabase.from("reminders").insert({
         user_id: userId,
         reminder_type: type,
         is_active: true,
       });
+      err = result.error;
+    }
+
+    setLoading(false);
+
+    if (err) {
+      setError("No se pudo guardar. Intenta de nuevo.");
+      return;
     }
 
     if (type === "daily_summary") setDaily(enabled);
     else setWeekly(enabled);
 
-    setLoading(false);
     setSaved(true);
-    setTimeout(() => setSaved(false), 2000);
+    setTimeout(() => setSaved(false), 2500);
     router.refresh();
   }
 
@@ -55,6 +69,7 @@ export function RemindersForm({ userId, active, reminderIds }: Props) {
           Recordatorios de Luca
         </h2>
         {saved && <span className="text-xs text-green-600 font-semibold">✓ Guardado</span>}
+        {error && <span className="text-xs text-destructive">{error}</span>}
       </div>
 
       <div className="space-y-3">

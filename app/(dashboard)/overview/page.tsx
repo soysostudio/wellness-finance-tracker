@@ -3,7 +3,7 @@ import { formatCOP } from "@/lib/utils/currency";
 import { getCurrentMonthRange } from "@/lib/utils/dates";
 import { getCategoryColor, getCategoryIcon } from "@/lib/utils/categories";
 import { redirect } from "next/navigation";
-import { RecentTransactions } from "@/components/dashboard/transaction-list";
+import { TransactionRow } from "@/components/dashboard/transaction-row";
 import { AnimateIn } from "@/components/ui/animate-in";
 import { CategoryIcon } from "@/components/ui/category-icon";
 
@@ -17,7 +17,7 @@ async function getOverviewData(userId: string) {
     await Promise.all([
       supabase
         .from("transactions")
-        .select("amount, transaction_type, category_id, occurred_at, description, merchant, categories(name, slug, color, icon)")
+        .select("id, amount, transaction_type, category_id, occurred_at, description, merchant, categories(name, slug, color, icon)")
         .eq("user_id", userId)
         .gte("occurred_at", start)
         .lte("occurred_at", end)
@@ -159,7 +159,15 @@ export default async function OverviewPage() {
           </div>
         </AnimateIn>
         <AnimateIn delay={60}>
-          <RecentTransactions transactions={overview.recentTransactions} />
+          {overview.recentTransactions.length === 0 ? (
+            <div className="text-center py-8 text-foreground/40 text-sm">Sin transacciones aún</div>
+          ) : (
+            <div className="space-y-1.5">
+              {overview.recentTransactions.map((t) => (
+                <TransactionRow key={t.id} t={t} />
+              ))}
+            </div>
+          )}
         </AnimateIn>
       </section>
 

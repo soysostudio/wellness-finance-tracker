@@ -22,9 +22,10 @@ interface Category {
 
 export function CategoryCard({ cat }: { cat: Category }) {
   const router = useRouter();
-  const [editing, setEditing]   = useState(false);
-  const [deleting, setDeleting] = useState(false);
-  const [saving, setSaving]     = useState(false);
+  const [editing, setEditing]       = useState(false);
+  const [confirming, setConfirming] = useState(false);
+  const [deleting, setDeleting]     = useState(false);
+  const [saving, setSaving]         = useState(false);
 
   const color = cat.color ?? "#BDC3C7";
 
@@ -78,23 +79,30 @@ export function CategoryCard({ cat }: { cat: Category }) {
         </p>
 
         {/* Hover actions */}
-        <div className="absolute top-2 right-2 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-          <button
-            onClick={() => setEditing(true)}
-            className="p-1 rounded-lg bg-[#1A1A1A]/10 hover:bg-[#1A1A1A]/20 text-[#1A1A1A]/60 hover:text-[#1A1A1A] transition-colors"
-            title="Editar"
-          >
-            <Pencil size={12} strokeWidth={1.5} />
-          </button>
-          <button
-            onClick={handleDelete}
-            disabled={deleting}
-            className="p-1 rounded-lg bg-[#1A1A1A]/10 hover:bg-red-500/20 text-[#1A1A1A]/60 hover:text-red-600 transition-colors disabled:opacity-50"
-            title="Eliminar"
-          >
-            <Trash2 size={12} strokeWidth={1.5} />
-          </button>
-        </div>
+        {confirming ? (
+          <div className="absolute top-2 right-2 flex items-center gap-1.5 bg-white/80 rounded-lg px-2 py-1">
+            <span className="text-[10px] text-[#1A1A1A]/60">¿Eliminar?</span>
+            <button onClick={handleDelete} disabled={deleting} className="text-[10px] font-medium text-red-600">{deleting ? "..." : "Sí"}</button>
+            <button onClick={() => setConfirming(false)} className="text-[10px] text-[#1A1A1A]/50">No</button>
+          </div>
+        ) : (
+          <div className="absolute top-2 right-2 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+            <button
+              onClick={() => setEditing(true)}
+              className="p-1 rounded-lg bg-[#1A1A1A]/10 hover:bg-[#1A1A1A]/20 text-[#1A1A1A]/60 hover:text-[#1A1A1A] transition-colors"
+              title="Editar"
+            >
+              <Pencil size={12} strokeWidth={1.5} />
+            </button>
+            <button
+              onClick={() => setConfirming(true)}
+              className="p-1 rounded-lg bg-[#1A1A1A]/10 hover:bg-red-500/20 text-[#1A1A1A]/60 hover:text-red-600 transition-colors"
+              title="Eliminar"
+            >
+              <Trash2 size={12} strokeWidth={1.5} />
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Edit modal */}
