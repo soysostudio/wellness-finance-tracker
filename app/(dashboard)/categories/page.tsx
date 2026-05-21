@@ -2,6 +2,7 @@ import { createClient } from "@/lib/supabase/server";
 import { SYSTEM_CATEGORIES } from "@/lib/utils/categories";
 import { redirect } from "next/navigation";
 import { NewCategoryForm } from "@/components/dashboard/new-category-form";
+import { CategoryCard } from "@/components/dashboard/category-card";
 import { AnimateIn } from "@/components/ui/animate-in";
 import { CategoryIcon } from "@/components/ui/category-icon";
 
@@ -46,18 +47,7 @@ export default async function CategoriesPage() {
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mt-2">
             {customCategories.map((cat, i) => (
               <AnimateIn key={cat.id} delay={i * 50}>
-                <div
-                  className="rounded-2xl p-4 flex flex-col gap-2 h-full"
-                  style={{ backgroundColor: (cat.color ?? "#BDC3C7") + "CC" }}
-                >
-                  <CategoryIcon slug={cat.slug} size={18} strokeWidth={1.5} style={{ color: cat.color ?? "#BDC3C7", filter: "brightness(0.6)" }} />
-                  <p className="text-[10px] text-[#1A1A1A]/50 uppercase tracking-widest truncate">
-                    {cat.name}
-                  </p>
-                  <p className="text-xs text-[#1A1A1A]/40">
-                    {cat.is_income ? "Ingreso" : "Gasto"}
-                  </p>
-                </div>
+                <CategoryCard cat={cat} />
               </AnimateIn>
             ))}
           </div>
@@ -80,7 +70,7 @@ export default async function CategoriesPage() {
             <AnimateIn key={cat.slug} delay={i * 40}>
               <div
                 className="rounded-2xl p-4 flex flex-col gap-2 h-full"
-                style={{ backgroundColor: cat.color + "CC" }}
+                style={{ backgroundColor: cat.color }}
               >
                 <CategoryIcon slug={cat.slug} size={18} strokeWidth={1.5} style={{ color: cat.color, filter: "brightness(0.6)" }} />
                 <p className="text-[10px] text-[#1A1A1A]/50 uppercase tracking-widest truncate">

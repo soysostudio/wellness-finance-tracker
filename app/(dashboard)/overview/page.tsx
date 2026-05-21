@@ -129,7 +129,7 @@ export default async function OverviewPage() {
               <AnimateIn key={cat.slug} delay={i * 60}>
                 <div
                   className="rounded-2xl p-4 flex flex-col gap-2 h-full"
-                  style={{ backgroundColor: cat.color + "CC" }}
+                  style={{ backgroundColor: cat.color }}
                 >
                   <CategoryIcon slug={cat.slug} size={18} strokeWidth={1.5} style={{ color: cat.color, filter: "brightness(0.6)" }} />
                   <p className="text-[10px] text-[#1A1A1A]/50 uppercase tracking-widest leading-none">
@@ -182,7 +182,7 @@ export default async function OverviewPage() {
                       <p className="text-sm font-medium text-foreground">{goal.name}</p>
                       <p className="text-xs text-foreground/40">{pct}%</p>
                     </div>
-                    <div className="h-1.5 bg-[#1A1A1A]/8 rounded-full overflow-hidden">
+                    <div className="h-1.5 bg-foreground/8 rounded-full overflow-hidden">
                       <div
                         className="h-full rounded-full bg-foreground transition-all duration-700"
                         style={{ width: `${pct}%` }}

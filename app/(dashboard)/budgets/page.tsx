@@ -1,10 +1,10 @@
 import { createClient } from "@/lib/supabase/server";
-import { formatCOP } from "@/lib/utils/currency";
-import { CategoryIcon } from "@/components/ui/category-icon";
-import { getCategoryColor } from "@/lib/utils/categories";
+import { SYSTEM_CATEGORIES } from "@/lib/utils/categories";
 import { getCurrentMonthRange } from "@/lib/utils/dates";
 import { redirect } from "next/navigation";
 import { AnimateIn } from "@/components/ui/animate-in";
+import { NewBudgetForm } from "@/components/dashboard/new-budget-form";
+import { BudgetRow } from "@/components/dashboard/budget-row";
 
 export const revalidate = 0;
 
@@ -15,26 +15,37 @@ export default async function BudgetsPage() {
 
   const { start, end } = getCurrentMonthRange();
 
-  const { data: budgets } = await supabase
-    .from("budgets")
-    .select("id, amount_limit, alert_at, period, categories(name, slug, color, icon)")
-    .eq("user_id", user.id)
-    .eq("is_active", true);
+  const [{ data: budgets }, { data: transactions }, { data: customCategories }] = await Promise.all([
+    supabase
+      .from("budgets")
+      .select("id, amount_limit, alert_at, period, category_id, categories(name, slug, color, icon)")
+      .eq("user_id", user.id)
+      .eq("is_active", true),
 
-  const { data: transactions } = await supabase
-    .from("transactions")
-    .select("amount, category_id")
-    .eq("user_id", user.id)
-    .eq("transaction_type", "expense")
-    .gte("occurred_at", start)
-    .lte("occurred_at", end);
+    supabase
+      .from("transactions")
+      .select("amount, category_id")
+      .eq("user_id", user.id)
+      .eq("transaction_type", "expense")
+      .gte("occurred_at", start)
+      .lte("occurred_at", end),
 
+    supabase
+      .from("categories")
+      .select("id, name, slug")
+      .eq("user_id", user.id),
+  ]);
+
+  // Map category_id → total spent this month
   const spentByCategory: Record<string, number> = {};
   for (const t of transactions ?? []) {
     if (t.category_id) {
       spentByCategory[t.category_id] = (spentByCategory[t.category_id] ?? 0) + t.amount;
     }
   }
+
+  const systemCats = SYSTEM_CATEGORIES.map((c) => ({ slug: c.slug, name: c.name }));
+  const customCats = (customCategories ?? []).map((c) => ({ id: c.id, slug: c.slug, name: c.name }));
 
   return (
     <div className="p-6 md:p-8 max-w-4xl mx-auto space-y-8">
@@ -47,13 +58,18 @@ export default async function BudgetsPage() {
         </h1>
       </AnimateIn>
 
+      {/* New budget form */}
+      <AnimateIn>
+        <NewBudgetForm systemCategories={systemCats} customCategories={customCats} />
+      </AnimateIn>
+
       {!budgets?.length ? (
         <AnimateIn>
-          <div className="text-center py-20 space-y-4">
+          <div className="text-center py-16 space-y-4">
             <p className="text-5xl">🎯</p>
             <p className="font-serif text-2xl font-normal text-foreground">Sin presupuestos aún</p>
             <p className="text-foreground/50 text-sm max-w-xs mx-auto leading-relaxed">
-              Dile a Luca qué límite quieres para cada categoría
+              Créalo arriba o dile a Luca por WhatsApp
             </p>
             <p className="text-sm font-mono bg-[#FEFF6E] rounded-xl px-4 py-2 inline-block text-[#1A1A1A]">
               &quot;ponme un presupuesto de 300 mil para comida&quot;
@@ -63,66 +79,10 @@ export default async function BudgetsPage() {
       ) : (
         <div className="space-y-3">
           {budgets.map((budget, i) => {
-            const cat      = Array.isArray(budget.categories) ? budget.categories[0] : budget.categories;
-            const slug     = cat?.slug ?? "otros";
-            const color    = getCategoryColor(slug); // code palette is source of truth
-            const spent    = spentByCategory[budget.id] ?? 0;
-            const pct      = Math.min(Math.round((spent / budget.amount_limit) * 100), 100);
-            const remaining = budget.amount_limit - spent;
-            const alertPct = Math.round((budget.alert_at ?? 0.8) * 100);
-
-            const barColor =
-              pct >= 100 ? "#E76F51" :
-              pct >= alertPct ? "#F4A261" :
-              "#1A1A1A";
-
+            const spent = spentByCategory[budget.category_id ?? ""] ?? 0;
             return (
               <AnimateIn key={budget.id} delay={i * 70}>
-                <div className="bg-card border border-foreground/5 rounded-2xl p-5 space-y-4">
-                  <div className="flex items-center gap-3">
-                    <div
-                      className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0"
-                      style={{ backgroundColor: color + "26" }}
-                    >
-                      <CategoryIcon slug={slug} size={16} strokeWidth={1.5} style={{ color }} />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-foreground">{cat?.name ?? "Categoría"}</p>
-                      <p className="text-xs text-foreground/40 capitalize">{budget.period}</p>
-                    </div>
-                    <div className="text-right shrink-0">
-                      <p className="font-serif text-xl font-normal text-foreground">{pct}%</p>
-                      <p className="text-[10px] text-foreground/40 uppercase tracking-widest">usado</p>
-                    </div>
-                  </div>
-
-                  <div className="space-y-2">
-                    <div className="h-1.5 bg-[#1A1A1A]/8 rounded-full overflow-hidden">
-                      <div
-                        className="h-full rounded-full transition-all duration-700"
-                        style={{ width: `${pct}%`, backgroundColor: barColor }}
-                      />
-                    </div>
-                    <div className="flex justify-between text-xs text-foreground/40">
-                      <span>{formatCOP(spent)} gastado</span>
-                      <span>límite {formatCOP(budget.amount_limit)}</span>
-                    </div>
-                  </div>
-
-                  {pct >= 100 ? (
-                    <p className="text-xs text-[#E76F51] font-medium">
-                      🚨 Superaste tu presupuesto por {formatCOP(Math.abs(remaining))}
-                    </p>
-                  ) : pct >= alertPct ? (
-                    <p className="text-xs text-[#F4A261] font-medium">
-                      ⚠️ Quedan {formatCOP(remaining)} — cerca del límite
-                    </p>
-                  ) : (
-                    <p className="text-xs text-foreground/40">
-                      {formatCOP(remaining)} disponibles
-                    </p>
-                  )}
-                </div>
+                <BudgetRow budget={budget} spent={spent} />
               </AnimateIn>
             );
           })}

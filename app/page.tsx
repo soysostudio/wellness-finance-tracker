@@ -90,7 +90,7 @@ export default function LandingPage() {
         <AnimateIn delay={120} from="fade" className="flex justify-center">
           <div className="w-full max-w-sm">
             <div className="relative">
-              <div className="absolute -top-4 -right-4 w-full h-full rounded-3xl" style={{ backgroundColor: "#FFB0FF", opacity: 0.5 }} />
+              <div className="absolute -top-4 -right-4 w-full h-full rounded-3xl opacity-50 dark:opacity-20" style={{ backgroundColor: "#FFB0FF" }} />
               <div className="relative bg-card rounded-3xl shadow-lg overflow-hidden">
                 <div className="px-4 py-3 flex items-center gap-3" style={{ backgroundColor: "#075E54" }}>
                   <div className="w-8 h-8 rounded-full flex items-center justify-center text-white text-sm font-semibold" style={{ backgroundColor: "#25D366" }}>L</div>
@@ -99,7 +99,7 @@ export default function LandingPage() {
                     <p className="text-white/50 text-xs">en línea</p>
                   </div>
                 </div>
-                <div className="p-4 space-y-3 min-h-72" style={{ backgroundColor: "#ECE5DD" }}>
+                <div className="p-4 space-y-3 min-h-72 bg-[#ECE5DD] dark:bg-[#111B21]">
                   <ChatBubble from="user" text="gasté 45 mil en Rappi" time="8:02" />
                   <ChatBubble from="luca" text="¡Listo! $45.000 en Comida. Llevas $312.000 este mes." time="8:02" />
                   <ChatBubble from="user" text="cuánto llevo esta semana?" time="8:15" />
@@ -124,7 +124,7 @@ export default function LandingPage() {
         <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
           {CAPABILITIES.map(({ Icon, t, d }, i) => (
             <AnimateIn key={t} delay={i * 80} className="space-y-4">
-              <div className="w-10 h-10 rounded-xl bg-[#1A1A1A]/5 flex items-center justify-center">
+              <div className="w-10 h-10 rounded-xl bg-foreground/5 flex items-center justify-center">
                 <Icon size={18} strokeWidth={1.5} className="text-foreground/60" />
               </div>
               <p className="font-medium text-sm text-foreground">{t}</p>
@@ -217,7 +217,7 @@ function ChatBubble({ from, text, time }: { from: "user" | "luca"; text: string;
   const isUser = from === "user";
   return (
     <div className={`flex ${isUser ? "justify-end" : "justify-start"}`}>
-      <div className={`max-w-[85%] rounded-2xl px-3.5 py-2.5 text-xs shadow-sm ${isUser ? "bg-[#DCF8C6]" : "bg-card"}`}>
+      <div className={`max-w-[85%] rounded-2xl px-3.5 py-2.5 text-xs shadow-sm ${isUser ? "bg-[#DCF8C6] dark:bg-[#005C4B]" : "bg-card"}`}>
         <p className="leading-snug text-foreground">{text}</p>
         <p className="text-right mt-1 text-[10px] text-foreground/40">{time}</p>
       </div>
