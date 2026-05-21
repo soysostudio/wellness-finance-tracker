@@ -106,6 +106,25 @@ export async function processIncomingMessage(payload: TwilioWebhookPayload): Pro
     .select('id')
     .single();
 
+  // 3b. Onboarding flow — if user has never been onboarded, guide them first
+  if (!user.onboarded_at) {
+    const handled = await handleOnboarding(user, payload.Body, conversationId, supabase);
+    if (handled) {
+      await Promise.all([
+        supabase.from('messages').insert({
+          conversation_id: conversationId,
+          user_id: user.id,
+          direction: 'outbound',
+          body: handled,
+          processed_at: new Date().toISOString(),
+        }),
+        sendWhatsAppMessage(payload.From, handled),
+      ]);
+      return;
+    }
+    // If onboarding just completed, fall through to normal processing
+  }
+
   // 4. Build context + call AI
   const context = await buildContextWindow(conversationId, supabase);
   let replyText: string;
@@ -326,6 +345,96 @@ export async function processIncomingMessage(payload: TwilioWebhookPayload): Pro
 
   // 7. Compress conversation if needed (fire-and-forget)
   compressConversationIfNeeded(conversationId, supabase).catch(console.error);
+}
+
+/**
+ * Multi-step onboarding flow for new users.
+ * Returns the reply to send, or null if onboarding is complete and normal flow should proceed.
+ * Steps are tracked by counting prior inbound messages in the conversation.
+ */
+async function handleOnboarding(
+  user: { id: string; full_name: string | null },
+  inboundText: string,
+  conversationId: string,
+  supabase: AdminClient
+): Promise<string | null> {
+  const firstName = user.full_name?.split(' ')[0] ?? 'tú';
+
+  // Count prior inbound messages to determine step
+  const { count } = await supabase
+    .from('messages')
+    .select('id', { count: 'exact', head: true })
+    .eq('conversation_id', conversationId)
+    .eq('direction', 'inbound');
+
+  const step = count ?? 0; // 0 = first message, 1 = income answer, 2 = categories, 3 = goal
+
+  if (step === 0) {
+    // Step 1: Welcome + ask for monthly income
+    return `¡Hola, ${firstName}! 🎉 Ya tienes tu cuenta lista en Luca.
+
+Voy a hacerte 3 preguntas rápidas para personalizarte la experiencia. Primero: ¿cuánto ganas aproximadamente al mes? (ej: "2 millones", "1.5 millones", "800 mil")`;
+  }
+
+  if (step === 1) {
+    // Step 2: Parse income from answer and ask about main categories
+    const incomeMatch = inboundText.match(/[\d.,]+/);
+    let income = 0;
+    if (incomeMatch) {
+      const raw = incomeMatch[0].replace(/\./g, '').replace(',', '.');
+      income = parseFloat(raw);
+      // Handle "millones" / "mil"
+      if (/millón|millon/i.test(inboundText)) income *= 1_000_000;
+      else if (/mil/i.test(inboundText) && income < 1_000) income *= 1_000;
+    }
+
+    if (income > 0) {
+      void Promise.resolve(
+        supabase.from('users').update({ monthly_income: income }).eq('id', user.id)
+      ).catch(console.error);
+    }
+
+    return `Perfecto 💪 ¿En qué sueles gastar más? Cuéntame las 2-3 categorías principales (comida, transporte, entretenimiento, hogar, etc.)`;
+  }
+
+  if (step === 2) {
+    // Step 3: Acknowledge categories + ask for savings goal
+    return `Genial, ya tengo una idea de tu perfil 📊 Última pregunta: ¿tienes alguna meta de ahorro? (ej: "vacaciones a Cartagena", "fondo de emergencia", "cambiar el carro") Si no, escribe "ninguna".`;
+  }
+
+  if (step === 3) {
+    // Step 4: Save goal if mentioned + mark onboarding complete
+    const noGoal = /ninguna|no|nada|sin meta/i.test(inboundText);
+    if (!noGoal && inboundText.trim().length > 3) {
+      void Promise.resolve(
+        supabase.from('goals').insert({
+          user_id: user.id,
+          name: inboundText.trim(),
+          target_amount: 0, // amount TBD by user later
+        })
+      ).catch(console.error);
+    }
+
+    // Mark onboarded
+    await supabase
+      .from('users')
+      .update({ onboarded_at: new Date().toISOString() })
+      .eq('id', user.id);
+
+    return `¡Listo, ${firstName}! Ya estoy configurado para ti 🚀
+
+Desde ahora solo escríbeme tus gastos e ingresos y yo me encargo del resto. Por ejemplo: _"gasté 45 mil en Rappi"_ o _"recibí mi quincena, 2.5 millones"_.
+
+Ver tu dashboard: ${BASE_URL}/overview`;
+  }
+
+  // Step > 3 but onboarded_at still null — edge case, just complete onboarding
+  await supabase
+    .from('users')
+    .update({ onboarded_at: new Date().toISOString() })
+    .eq('id', user.id);
+
+  return null; // fall through to normal processing
 }
 
 async function checkBudgetAlert(
