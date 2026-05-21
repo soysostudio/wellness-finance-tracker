@@ -2,7 +2,7 @@ import { createClient } from "@/lib/supabase/server";
 import { formatCOP } from "@/lib/utils/currency";
 import { getCategoryColor } from "@/lib/utils/categories";
 import { CategoryIcon } from "@/components/ui/category-icon";
-import { getCurrentMonthRange } from "@/lib/utils/dates";
+import { getCurrentMonthRange, getLastMonthRange } from "@/lib/utils/dates";
 import { redirect } from "next/navigation";
 import { AnimateIn } from "@/components/ui/animate-in";
 
@@ -13,25 +13,52 @@ export default async function InsightsPage() {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
-  const { start, end } = getCurrentMonthRange();
+  const { start, end }               = getCurrentMonthRange();
+  const { start: lastStart, end: lastEnd } = getLastMonthRange();
 
-  const { data: transactions } = await supabase
-    .from("transactions")
-    .select("amount, transaction_type, occurred_at, categories(name, slug, color, icon)")
-    .eq("user_id", user.id)
-    .gte("occurred_at", start)
-    .lte("occurred_at", end)
-    .order("occurred_at", { ascending: true });
+  const [{ data: transactions }, { data: lastMonthTxs }] = await Promise.all([
+    supabase
+      .from("transactions")
+      .select("amount, transaction_type, occurred_at, categories(name, slug, color, icon)")
+      .eq("user_id", user.id)
+      .gte("occurred_at", start)
+      .lte("occurred_at", end)
+      .order("occurred_at", { ascending: true }),
+
+    supabase
+      .from("transactions")
+      .select("amount, transaction_type")
+      .eq("user_id", user.id)
+      .eq("transaction_type", "expense")
+      .gte("occurred_at", lastStart)
+      .lte("occurred_at", lastEnd),
+  ]);
 
   const expenses = (transactions ?? []).filter((t) => t.transaction_type === "expense");
   const income   = (transactions ?? []).filter((t) => t.transaction_type === "income");
 
-  const totalExpenses = expenses.reduce((s, t) => s + t.amount, 0);
-  const totalIncome   = income.reduce((s, t) => s + t.amount, 0);
-  const savingsRate   = totalIncome > 0
+  const totalExpenses  = expenses.reduce((s, t) => s + t.amount, 0);
+  const totalIncome    = income.reduce((s, t) => s + t.amount, 0);
+  const lastMonthTotal = (lastMonthTxs ?? []).reduce((s, t) => s + t.amount, 0);
+
+  const savingsRate = totalIncome > 0
     ? Math.round(((totalIncome - totalExpenses) / totalIncome) * 100)
     : 0;
 
+  // Month-over-month comparison (null if no last month data)
+  const monthDelta: number | null = lastMonthTotal > 0
+    ? Math.round(((totalExpenses - lastMonthTotal) / lastMonthTotal) * 100)
+    : null;
+
+  // Projection to end of month
+  const now         = new Date();
+  const daysPassed  = now.getDate();
+  const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+  const projection  = daysPassed > 0
+    ? Math.round((totalExpenses / daysPassed) * daysInMonth)
+    : 0;
+
+  // Category breakdown
   const byCat: Record<string, { name: string; slug: string; color: string; icon: string; total: number }> = {};
   for (const t of expenses) {
     const cat  = Array.isArray(t.categories) ? t.categories[0] : t.categories;
@@ -40,7 +67,7 @@ export default async function InsightsPage() {
       byCat[slug] = {
         name:  cat?.name  ?? "Otros",
         slug,
-        color: getCategoryColor(slug), // code palette is source of truth
+        color: getCategoryColor(slug),
         icon:  "",
         total: 0,
       };
@@ -50,6 +77,7 @@ export default async function InsightsPage() {
   const categories  = Object.values(byCat).sort((a, b) => b.total - a.total);
   const topCategory = categories[0];
 
+  // Daily sparkline
   const dailyMap: Record<string, number> = {};
   for (const t of expenses) {
     const day = t.occurred_at.slice(0, 10);
@@ -61,7 +89,6 @@ export default async function InsightsPage() {
     ? Math.round(dailyValues.reduce((s, v) => s + v, 0) / dailyValues.length)
     : 0;
 
-  const now       = new Date();
   const monthName = now.toLocaleDateString("es-CO", { month: "long", year: "numeric" });
 
   return (
@@ -125,6 +152,43 @@ export default async function InsightsPage() {
                     }}
                   />
                 ))}
+              </div>
+            </div>
+          </AnimateIn>
+
+          {/* Month comparison + projection */}
+          <AnimateIn delay={100}>
+            <div className="grid grid-cols-2 gap-4">
+              {/* vs. last month */}
+              <div className="bg-card border border-foreground/5 rounded-2xl p-5 space-y-1.5">
+                <p className="text-[10px] uppercase tracking-widest text-foreground/40">vs. mes anterior</p>
+                {monthDelta === null ? (
+                  <p className="font-serif text-2xl font-normal text-foreground/30">—</p>
+                ) : (
+                  <>
+                    <p className={`font-serif text-2xl font-normal ${
+                      monthDelta > 10 ? "text-[#E8673C]" : monthDelta < -5 ? "text-[#2A9D8F]" : "text-foreground"
+                    }`}>
+                      {monthDelta > 0 ? "+" : ""}{monthDelta}%
+                    </p>
+                    <p className="text-xs text-foreground/40">
+                      {monthDelta > 0
+                        ? `Gastaste ${formatCOP(totalExpenses - lastMonthTotal)} más`
+                        : monthDelta < 0
+                        ? `Ahorraste ${formatCOP(lastMonthTotal - totalExpenses)} más`
+                        : "Igual que el mes pasado"}
+                    </p>
+                  </>
+                )}
+              </div>
+
+              {/* Projection */}
+              <div className="bg-card border border-foreground/5 rounded-2xl p-5 space-y-1.5">
+                <p className="text-[10px] uppercase tracking-widest text-foreground/40">Proyección del mes</p>
+                <p className="font-serif text-2xl font-normal text-foreground">{formatCOP(projection)}</p>
+                <p className="text-xs text-foreground/40">
+                  Día {daysPassed} de {daysInMonth} · a este ritmo
+                </p>
               </div>
             </div>
           </AnimateIn>

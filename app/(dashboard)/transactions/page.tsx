@@ -2,7 +2,8 @@ import { createClient } from "@/lib/supabase/server";
 import { formatCOP } from "@/lib/utils/currency";
 import { redirect } from "next/navigation";
 import { AnimateIn } from "@/components/ui/animate-in";
-import { TransactionRow } from "@/components/dashboard/transaction-row";
+import { NewTransactionForm } from "@/components/dashboard/new-transaction-form";
+import { TransactionFilterList } from "@/components/dashboard/transaction-filter-list";
 
 export const revalidate = 0;
 
@@ -11,17 +12,21 @@ export default async function TransactionsPage() {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
+  const PAGE_SIZE = 50;
+
   const { data: transactions } = await supabase
     .from("transactions")
     .select("id, amount, transaction_type, description, merchant, occurred_at, categories(name, slug, color, icon)")
     .eq("user_id", user.id)
     .order("occurred_at", { ascending: false })
-    .limit(100);
+    .limit(PAGE_SIZE);
 
-  const expenses = (transactions ?? []).filter((t) => t.transaction_type === "expense");
-  const income   = (transactions ?? []).filter((t) => t.transaction_type === "income");
+  const allTxs       = transactions ?? [];
+  const expenses     = allTxs.filter((t) => t.transaction_type === "expense");
+  const income       = allTxs.filter((t) => t.transaction_type === "income");
   const totalExpenses = expenses.reduce((s, t) => s + t.amount, 0);
   const totalIncome   = income.reduce((s, t) => s + t.amount, 0);
+  const initialHasMore = allTxs.length === PAGE_SIZE;
 
   return (
     <div className="p-6 md:p-8 max-w-4xl mx-auto space-y-8">
@@ -32,6 +37,11 @@ export default async function TransactionsPage() {
         <h1 className="font-serif text-4xl md:text-5xl font-normal mt-1 text-foreground">
           Transacciones
         </h1>
+      </AnimateIn>
+
+      {/* New transaction */}
+      <AnimateIn>
+        <NewTransactionForm />
       </AnimateIn>
 
       {/* Summary stats */}
@@ -49,37 +59,24 @@ export default async function TransactionsPage() {
       </AnimateIn>
 
       {/* List */}
-      {!transactions?.length ? (
+      {!allTxs.length ? (
         <AnimateIn>
-          <EmptyState
-            emoji="💬"
-            title="Sin transacciones aún"
-            body="Cuéntale un gasto a Luca por WhatsApp"
-            example='"gasté 30 mil en el mercado"'
-          />
+          <div className="text-center py-20 space-y-4">
+            <p className="text-5xl">💬</p>
+            <p className="font-serif text-2xl font-normal text-foreground">Sin transacciones aún</p>
+            <p className="text-foreground/50 text-sm max-w-xs mx-auto leading-relaxed">
+              Agrégala arriba o cuéntale un gasto a Luca por WhatsApp
+            </p>
+          </div>
         </AnimateIn>
       ) : (
         <AnimateIn delay={60}>
-          <div className="space-y-1.5">
-            {transactions.map((t) => (
-              <TransactionRow key={t.id} t={t} />
-            ))}
-          </div>
+          <TransactionFilterList
+            initialTransactions={allTxs}
+            initialHasMore={initialHasMore}
+          />
         </AnimateIn>
       )}
-    </div>
-  );
-}
-
-function EmptyState({ emoji, title, body, example }: { emoji: string; title: string; body: string; example: string }) {
-  return (
-    <div className="text-center py-20 space-y-4">
-      <p className="text-5xl">{emoji}</p>
-      <p className="font-serif text-2xl font-normal text-foreground">{title}</p>
-      <p className="text-foreground/50 text-sm max-w-xs mx-auto leading-relaxed">{body}</p>
-      <p className="text-sm font-mono bg-[#FEFF6E] rounded-xl px-4 py-2 inline-block text-foreground">
-        &quot;{example}&quot;
-      </p>
     </div>
   );
 }

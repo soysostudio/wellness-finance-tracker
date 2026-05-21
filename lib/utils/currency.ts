@@ -24,6 +24,15 @@ export function formatCOPColoquial(amount: number): string {
   return `${sign}${abs} pesos`;
 }
 
+export function formatCurrency(amount: number, currency: string = 'COP'): string {
+  return new Intl.NumberFormat('es-CO', {
+    style: 'currency',
+    currency,
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
+  }).format(amount);
+}
+
 export function parseCOPInput(input: string): number | null {
   const cleaned = input
     .replace(/\$/g, '')

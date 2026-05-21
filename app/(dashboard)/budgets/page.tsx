@@ -47,6 +47,22 @@ export default async function BudgetsPage() {
   const systemCats = SYSTEM_CATEGORIES.map((c) => ({ slug: c.slug, name: c.name }));
   const customCats = (customCategories ?? []).map((c) => ({ id: c.id, slug: c.slug, name: c.name }));
 
+  // Compute alert summary for banner
+  const alertBudgets = (budgets ?? []).filter((b) => {
+    const spent   = spentByCategory[b.category_id ?? ""] ?? 0;
+    const pct     = spent / b.amount_limit;
+    const alertAt = b.alert_at ?? 0.8;
+    return pct >= alertAt;
+  });
+  const overBudgets  = alertBudgets.filter((b) => {
+    const spent = spentByCategory[b.category_id ?? ""] ?? 0;
+    return spent >= b.amount_limit;
+  });
+  const nearBudgets  = alertBudgets.filter((b) => {
+    const spent = spentByCategory[b.category_id ?? ""] ?? 0;
+    return spent < b.amount_limit;
+  });
+
   return (
     <div className="p-6 md:p-8 max-w-4xl mx-auto space-y-8">
 
@@ -57,6 +73,34 @@ export default async function BudgetsPage() {
           Presupuestos
         </h1>
       </AnimateIn>
+
+      {/* Alert banner */}
+      {alertBudgets.length > 0 && (
+        <AnimateIn>
+          <div
+            className="rounded-2xl px-5 py-4 flex items-start gap-3"
+            style={{ backgroundColor: overBudgets.length > 0 ? "#FEE2E2" : "#FEF9C3" }}
+          >
+            <span className="text-xl shrink-0 mt-0.5">
+              {overBudgets.length > 0 ? "🚨" : "⚠️"}
+            </span>
+            <div>
+              <p className="text-sm font-semibold text-[#1A1A1A]">
+                {overBudgets.length > 0
+                  ? `${overBudgets.length} presupuesto${overBudgets.length > 1 ? "s" : ""} superado${overBudgets.length > 1 ? "s" : ""}`
+                  : `${nearBudgets.length} presupuesto${nearBudgets.length > 1 ? "s" : ""} cerca del límite`}
+              </p>
+              <p className="text-xs text-[#1A1A1A]/60 mt-0.5">
+                {overBudgets.length > 0 && nearBudgets.length > 0
+                  ? `Además, ${nearBudgets.length} está${nearBudgets.length > 1 ? "n" : ""} cerca del límite.`
+                  : overBudgets.length > 0
+                  ? "Revisa tus gastos para el resto del mes."
+                  : "Vas bien, pero vigila los gastos que quedan."}
+              </p>
+            </div>
+          </div>
+        </AnimateIn>
+      )}
 
       {/* New budget form */}
       <AnimateIn>
