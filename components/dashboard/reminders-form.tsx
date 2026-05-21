@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
 
 type ReminderType = "daily_summary" | "weekly_summary";
@@ -28,30 +27,25 @@ export function RemindersForm({ userId, active, reminderIds }: Props) {
   async function toggle(type: ReminderType, enabled: boolean) {
     setLoading(true);
     setError("");
-    const supabase = createClient();
     const existingId = type === "daily_summary" ? reminderIds.daily : reminderIds.weekly;
 
-    let err = null;
-    if (existingId) {
-      const result = await supabase
-        .from("reminders")
-        .update({ is_active: enabled })
-        .eq("id", existingId);
-      err = result.error;
-    } else if (enabled) {
-      const result = await supabase.from("reminders").insert({
-        user_id: userId,
-        reminder_type: type,
-        is_active: true,
+    try {
+      const res = await fetch("/api/reminders", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ reminder_type: type, is_active: enabled, id: existingId ?? undefined }),
       });
-      err = result.error;
-    }
 
-    setLoading(false);
-
-    if (err) {
-      setError("No se pudo guardar. Intenta de nuevo.");
+      if (!res.ok) {
+        const data = await res.json() as { error?: string };
+        setError(data.error ?? "No se pudo guardar. Intenta de nuevo.");
+        return;
+      }
+    } catch {
+      setError("Error de red. Intenta de nuevo.");
       return;
+    } finally {
+      setLoading(false);
     }
 
     if (type === "daily_summary") setDaily(enabled);
