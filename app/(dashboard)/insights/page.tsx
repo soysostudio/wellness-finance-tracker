@@ -89,23 +89,21 @@ export default async function InsightsPage() {
         <div className="space-y-6">
 
           {/* Key metrics */}
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-            {[
-              { label: "Gasto total",   value: formatCOP(totalExpenses), bg: "#FFB0FF" },
-              { label: "Ingreso total", value: formatCOP(totalIncome),   bg: "#ADDEFF" },
-              {
-                label: "Tasa de ahorro",
-                value: `${savingsRate}%`,
-                bg: savingsRate >= 20 ? "#FEFF6E" : savingsRate >= 10 ? "#FEF3D6" : "#FFB0FF",
-              },
-            ].map((m, i) => (
-              <AnimateIn key={m.label} delay={i * 70}>
-                <div className="rounded-2xl p-5 space-y-1.5 h-full" style={{ backgroundColor: m.bg }}>
-                  <p className="text-[10px] uppercase tracking-widest text-[#1A1A1A]/50">{m.label}</p>
-                  <p className="font-serif text-2xl font-normal text-[#1A1A1A]">{m.value}</p>
-                </div>
-              </AnimateIn>
-            ))}
+          <div className="grid grid-cols-3 gap-6 py-6 border-t border-b border-foreground/8">
+            <div className="space-y-1.5">
+              <p className="text-[10px] uppercase tracking-widest text-foreground/40">Gasto total</p>
+              <p className="font-serif text-xl md:text-2xl font-normal text-foreground">{formatCOP(totalExpenses)}</p>
+            </div>
+            <div className="space-y-1.5">
+              <p className="text-[10px] uppercase tracking-widest text-foreground/40">Ingreso total</p>
+              <p className="font-serif text-xl md:text-2xl font-normal text-foreground">{formatCOP(totalIncome)}</p>
+            </div>
+            <div className="space-y-1.5">
+              <p className="text-[10px] uppercase tracking-widest text-foreground/40">Tasa de ahorro</p>
+              <p className={`font-serif text-xl md:text-2xl font-normal ${savingsRate < 10 ? "text-[#E8673C]" : "text-foreground"}`}>
+                {savingsRate}%
+              </p>
+            </div>
           </div>
 
           {/* Daily avg + sparkline */}
@@ -154,10 +152,10 @@ export default async function InsightsPage() {
                             {formatCOP(cat.total)}
                           </span>
                         </div>
-                        <div className="h-1.5 bg-[#1A1A1A]/8 rounded-full overflow-hidden">
+                        <div className="h-1.5 bg-foreground/8 rounded-full overflow-hidden">
                           <div
                             className="h-full rounded-full transition-all duration-700"
-                            style={{ width: `${pct}%`, backgroundColor: cat.color + "CC" }}
+                            style={{ width: `${pct}%`, backgroundColor: cat.color }}
                           />
                         </div>
                         <p className="text-xs text-foreground/40 text-right">{pct}% del total</p>

@@ -34,21 +34,19 @@ export default async function TransactionsPage() {
         </h1>
       </AnimateIn>
 
-      {/* Summary cards */}
-      <div className="grid grid-cols-2 gap-3">
-        <AnimateIn delay={0}>
-          <div className="rounded-2xl p-5 space-y-1.5" style={{ backgroundColor: "#FFB0FF" }}>
-            <p className="text-[10px] uppercase tracking-widest text-[#1A1A1A]/50">Total gastos</p>
-            <p className="font-serif text-2xl font-normal text-[#1A1A1A]">{formatCOP(totalExpenses)}</p>
+      {/* Summary stats */}
+      <AnimateIn>
+        <div className="grid grid-cols-2 gap-6 py-6 border-t border-b border-foreground/8">
+          <div className="space-y-1.5">
+            <p className="text-[10px] uppercase tracking-widest text-foreground/40">Total gastos</p>
+            <p className="font-serif text-xl md:text-2xl font-normal text-foreground">{formatCOP(totalExpenses)}</p>
           </div>
-        </AnimateIn>
-        <AnimateIn delay={80}>
-          <div className="rounded-2xl p-5 space-y-1.5" style={{ backgroundColor: "#ADDEFF" }}>
-            <p className="text-[10px] uppercase tracking-widest text-[#1A1A1A]/50">Total ingresos</p>
-            <p className="font-serif text-2xl font-normal text-[#1A1A1A]">{formatCOP(totalIncome)}</p>
+          <div className="space-y-1.5">
+            <p className="text-[10px] uppercase tracking-widest text-foreground/40">Total ingresos</p>
+            <p className="font-serif text-xl md:text-2xl font-normal text-foreground">{formatCOP(totalIncome)}</p>
           </div>
-        </AnimateIn>
-      </div>
+        </div>
+      </AnimateIn>
 
       {/* List */}
       {!transactions?.length ? (
