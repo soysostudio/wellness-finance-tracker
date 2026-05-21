@@ -67,7 +67,7 @@ export default function LandingPage() {
         <AnimateIn className="space-y-7">
           <h1 className="font-serif text-5xl md:text-6xl leading-[1.1] font-normal text-foreground">
             Maneja tu plata<br />
-            <span style={{ background: "linear-gradient(to top, #FEFF6E 80%, transparent 80%)" }}>por WhatsApp.</span>
+            <span style={{ background: "linear-gradient(to top, #FEFF6E 80%, transparent 80%)", color: "#1A1A1A" }}>por WhatsApp.</span>
           </h1>
           <p className="text-foreground/55 text-lg leading-relaxed max-w-md">
             Escríbele a Luca como le escribes a un amigo.
@@ -185,7 +185,7 @@ export default function LandingPage() {
         <AnimateIn className="space-y-6">
           <h2 className="font-serif text-4xl md:text-5xl font-normal leading-snug text-foreground">
             Tu plata, finalmente<br />
-            <span style={{ background: "linear-gradient(to top, #FFB0FF 80%, transparent 80%)" }}>organizada.</span>
+            <span style={{ background: "linear-gradient(to top, #FFB0FF 80%, transparent 80%)", color: "#1A1A1A" }}>organizada.</span>
           </h2>
           <p className="text-foreground/50 leading-relaxed">
             Únete gratis en 2 minutos. Sin contraseñas, sin apps, sin complicaciones.
