@@ -11,6 +11,10 @@ export type MessageIntent =
   | 'set_goal'
   | 'set_budget'
   | 'spending_summary'
+  | 'clarify_merchant'
+  | 'clarify_category'
+  | 'delete_last_transaction'
+  | 'edit_last_transaction'
   | 'chat'
   | 'unknown';
 

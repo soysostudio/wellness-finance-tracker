@@ -25,28 +25,44 @@ export interface ExtractionResult {
     target_amount: number;
     target_date?: string;
   };
+  clarification?: {
+    type: 'merchant' | 'category';
+    original: string;
+    suggestion: string | null;
+  };
+  edit?: {
+    field: 'amount' | 'category' | 'description' | 'delete';
+    new_value: string | number | null;
+  };
   reply_draft: string;
 }
 
 export async function extractFromMessage(
   userMessage: string,
   contextMessages: OpenAI.ChatCompletionMessageParam[],
-  user: User
+  user: User,
+  options?: {
+    categoryRules?: { keyword: string; category_slug: string }[];
+  }
 ): Promise<ExtractionResult> {
   const openai = getOpenAIClient();
+
+  const dashboardUrl = process.env.NEXT_PUBLIC_BASE_URL ?? 'https://finance-tracker.xyz';
 
   const systemPrompt = buildSystemPrompt({
     userName: user.full_name ?? 'Usuario',
     currency: user.currency,
     timezone: user.timezone,
     monthlyIncome: user.monthly_income,
+    dashboardUrl,
+    categoryRules: options?.categoryRules,
   });
 
   const response = await openai.chat.completions.create({
     model: 'gpt-4o-mini',
     response_format: { type: 'json_object' },
     temperature: 0.1,
-    max_tokens: 500,
+    max_tokens: 600,
     messages: [
       { role: 'system', content: systemPrompt },
       ...contextMessages,
@@ -63,6 +79,8 @@ export async function extractFromMessage(
     transaction: parsed.transaction ?? undefined,
     query: parsed.query ?? undefined,
     goal: parsed.goal ?? undefined,
+    clarification: parsed.clarification ?? undefined,
+    edit: parsed.edit ?? undefined,
     reply_draft: parsed.reply_draft ?? 'Uy, no entendí bien. ¿Me lo repites? 😅',
   };
 }

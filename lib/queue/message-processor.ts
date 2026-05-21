@@ -4,12 +4,15 @@ import { buildContextWindow, compressConversationIfNeeded } from '@/lib/openai/c
 import { sendWhatsAppMessage } from '@/lib/twilio/send-message';
 import { formatCOPColoquial } from '@/lib/utils/currency';
 import { getCurrentMonthRange } from '@/lib/utils/dates';
+import { SYSTEM_CATEGORIES } from '@/lib/utils/categories';
 import type { TwilioWebhookPayload } from '@/types/whatsapp';
 import type { AdminClient } from '@/lib/supabase/admin';
 
+const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL ?? 'https://finance-tracker.xyz';
+
 const ONBOARDING_MESSAGE = `¡Hola! 👋 Soy Luca, tu asistente de finanzas personales.
 
-Para empezar, crea tu cuenta gratis en: ${process.env.NEXT_PUBLIC_BASE_URL}/signup
+Para empezar, crea tu cuenta gratis en: ${BASE_URL}/signup
 
 Solo toma 2 minutos. Después me cuentas tus gastos y yo me encargo del resto. ¡Te espero! 💪`;
 
@@ -29,19 +32,25 @@ export async function processIncomingMessage(payload: TwilioWebhookPayload): Pro
     return;
   }
 
-  // 2. Load or create conversation
-  const { data: existingConv } = await supabase
-    .from('conversations')
-    .select('id')
-    .eq('user_id', user.id)
-    .eq('phone_number', phoneNumber)
-    .single();
+  // 2. Load or create conversation + fetch category rules in parallel
+  const [convResult, rulesResult] = await Promise.all([
+    supabase
+      .from('conversations')
+      .select('id')
+      .eq('user_id', user.id)
+      .eq('phone_number', phoneNumber)
+      .single(),
+    supabase
+      .from('category_rules')
+      .select('keyword, category_slug')
+      .eq('user_id', user.id),
+  ]);
 
+  const categoryRules = rulesResult.data ?? [];
   let conversationId: string;
 
-  if (existingConv) {
-    conversationId = existingConv.id;
-    // fire-and-forget — don't block on timestamp update
+  if (convResult.data) {
+    conversationId = convResult.data.id;
     void Promise.resolve(
       supabase
         .from('conversations')
@@ -79,7 +88,7 @@ export async function processIncomingMessage(payload: TwilioWebhookPayload): Pro
   let replyText: string;
 
   try {
-    const result = await extractFromMessage(payload.Body, context.messages, user);
+    const result = await extractFromMessage(payload.Body, context.messages, user, { categoryRules });
 
     // 5. Execute intent
     switch (result.intent) {
@@ -97,7 +106,7 @@ export async function processIncomingMessage(payload: TwilioWebhookPayload): Pro
           .or(`user_id.is.null,user_id.eq.${user.id}`)
           .single();
 
-        const { data: tx } = await supabase
+        await supabase
           .from('transactions')
           .insert({
             user_id: user.id,
@@ -113,9 +122,7 @@ export async function processIncomingMessage(payload: TwilioWebhookPayload): Pro
             message_id: savedMessage?.id ?? null,
             confidence: result.confidence,
             is_recurring: result.transaction.is_recurring,
-          })
-          .select('id')
-          .single();
+          });
 
         // Check budget threshold
         if (result.intent === 'log_expense' && category?.id) {
@@ -126,24 +133,124 @@ export async function processIncomingMessage(payload: TwilioWebhookPayload): Pro
         break;
       }
 
+      case 'clarify_merchant': {
+        // Store the pending transaction temporarily in the reply and wait for user confirmation
+        replyText = result.reply_draft;
+        break;
+      }
+
+      case 'clarify_category': {
+        // Luca asks the user where to classify an ambiguous item
+        // Next message will contain the answer and we'll save a rule
+        replyText = result.reply_draft;
+        break;
+      }
+
+      case 'delete_last_transaction': {
+        // Find the most recent expense transaction for this user
+        const { data: lastTx } = await supabase
+          .from('transactions')
+          .select('id, amount, description, merchant')
+          .eq('user_id', user.id)
+          .order('created_at', { ascending: false })
+          .limit(1)
+          .single();
+
+        if (!lastTx) {
+          replyText = 'No encontré ningún gasto reciente para borrar 🤔';
+          break;
+        }
+
+        await supabase.from('transactions').delete().eq('id', lastTx.id);
+        const label = lastTx.merchant || lastTx.description || 'ese gasto';
+        replyText = `¡Listo! Borré ${formatCOPColoquial(lastTx.amount)} de ${label} 🗑️`;
+        break;
+      }
+
+      case 'edit_last_transaction': {
+        const { data: lastTx } = await supabase
+          .from('transactions')
+          .select('id, amount, description, merchant, category_id')
+          .eq('user_id', user.id)
+          .order('created_at', { ascending: false })
+          .limit(1)
+          .single();
+
+        if (!lastTx || !result.edit) {
+          replyText = result.reply_draft;
+          break;
+        }
+
+        if (result.edit.field === 'amount' && result.edit.new_value) {
+          await supabase
+            .from('transactions')
+            .update({ amount: Number(result.edit.new_value) })
+            .eq('id', lastTx.id);
+          replyText = `¡Actualizado! El gasto quedó en ${formatCOPColoquial(Number(result.edit.new_value))} ✏️`;
+        } else if (result.edit.field === 'category' && result.edit.new_value) {
+          const { data: cat } = await supabase
+            .from('categories')
+            .select('id')
+            .eq('slug', String(result.edit.new_value))
+            .or(`user_id.is.null,user_id.eq.${user.id}`)
+            .single();
+          if (cat) {
+            await supabase
+              .from('transactions')
+              .update({ category_id: cat.id })
+              .eq('id', lastTx.id);
+            const catName = SYSTEM_CATEGORIES.find((c) => c.slug === result.edit!.new_value)?.name ?? result.edit.new_value;
+            replyText = `¡Listo! Moví ese gasto a ${catName} ✏️`;
+          } else {
+            replyText = result.reply_draft;
+          }
+        } else {
+          replyText = result.reply_draft;
+        }
+        break;
+      }
+
       case 'query_spending':
       case 'query_balance': {
-        const range = result.query?.period === 'last_month'
-          ? getCurrentMonthRange() // TODO: last month
-          : getCurrentMonthRange();
+        const range = getCurrentMonthRange();
 
+        type TxRow = { amount: number; categories: { slug: string; name: string } | { slug: string; name: string }[] | null };
         const { data: transactions } = await supabase
           .from('transactions')
-          .select('amount, transaction_type')
+          .select('amount, categories(slug, name)')
           .eq('user_id', user.id)
           .eq('transaction_type', 'expense')
           .gte('occurred_at', range.start)
-          .lte('occurred_at', range.end);
+          .lte('occurred_at', range.end) as { data: TxRow[] | null; error: unknown };
 
         const total = transactions?.reduce((sum, t) => sum + t.amount, 0) ?? 0;
-        replyText = result.reply_draft.includes('total')
-          ? result.reply_draft
-          : `Este mes llevas ${formatCOPColoquial(total)} en gastos 📊 ${result.reply_draft}`;
+
+        // Build top-3 category breakdown
+        const byCat: Record<string, { name: string; total: number }> = {};
+        for (const t of transactions ?? []) {
+          const cat = Array.isArray(t.categories) ? t.categories[0] : t.categories;
+          const slug = cat?.slug ?? 'otros';
+          const name = cat?.name ?? 'Otros';
+          if (!byCat[slug]) byCat[slug] = { name, total: 0 };
+          byCat[slug].total += t.amount;
+        }
+
+        const top3 = Object.values(byCat)
+          .sort((a, b) => b.total - a.total)
+          .slice(0, 3);
+
+        const breakdown = top3.length > 0
+          ? '\n' + top3.map((c) => {
+              const pct = total > 0 ? Math.round((c.total / total) * 100) : 0;
+              return `• ${c.name}: ${formatCOPColoquial(c.total)} (${pct}%)`;
+            }).join('\n')
+          : '';
+
+        const period = result.query?.period === 'today' ? 'hoy'
+          : result.query?.period === 'this_week' ? 'esta semana'
+          : 'este mes';
+
+        replyText = `${period === 'hoy' ? 'Hoy' : period === 'esta semana' ? 'Esta semana' : 'Este mes'} llevas ${formatCOPColoquial(total)} en gastos 📊${breakdown}\n\nVer detalle: ${BASE_URL}/overview`;
         break;
       }
 
@@ -168,15 +275,15 @@ export async function processIncomingMessage(payload: TwilioWebhookPayload): Pro
         replyText = result.reply_draft;
     }
 
-    // Update intent on saved message (fire-and-forget — doesn't affect reply)
-    if (savedMessage?.id) {
-      void Promise.resolve(
-        supabase
-          .from('messages')
-          .update({ intent: result.intent, processed_at: new Date().toISOString() })
-          .eq('id', savedMessage.id)
-      ).catch(console.error);
-    }
+    void Promise.resolve(
+      savedMessage?.id
+        ? supabase
+            .from('messages')
+            .update({ intent: result.intent, processed_at: new Date().toISOString() })
+            .eq('id', savedMessage.id)
+        : Promise.resolve()
+    ).catch(console.error);
+
   } catch (err) {
     console.error('[message-processor] AI error:', err);
     replyText = 'Uy, tuve un problema procesando eso. ¿Me lo repites? 😅';
@@ -194,7 +301,7 @@ export async function processIncomingMessage(payload: TwilioWebhookPayload): Pro
     sendWhatsAppMessage(payload.From, replyText),
   ]);
 
-  // 8. Compress conversation if needed (fire-and-forget)
+  // 7. Compress conversation if needed (fire-and-forget)
   compressConversationIfNeeded(conversationId, supabase).catch(console.error);
 }
 
@@ -233,12 +340,12 @@ async function checkBudgetAlert(
     const pct = Math.round(ratio * 100);
     await sendWhatsAppMessage(
       to,
-      `⚠️ Ojo: ya llevas el ${pct}% de tu presupuesto en esta categoría (${formatCOPColoquial(spent)} de ${formatCOPColoquial(budget.amount_limit)}).`
+      `⚠️ Ojo: ya llevas el ${pct}% de tu presupuesto en esta categoría (${formatCOPColoquial(spent)} de ${formatCOPColoquial(budget.amount_limit)}).\n\nVer presupuestos: ${BASE_URL}/budgets`
     );
   } else if (ratio >= 1) {
     await sendWhatsAppMessage(
       to,
-      `🚨 ¡Superaste tu presupuesto en esta categoría! Llevas ${formatCOPColoquial(spent)} de ${formatCOPColoquial(budget.amount_limit)}.`
+      `🚨 ¡Superaste tu presupuesto en esta categoría! Llevas ${formatCOPColoquial(spent)} de ${formatCOPColoquial(budget.amount_limit)}.\n\nVer presupuestos: ${BASE_URL}/budgets`
     );
   }
 }

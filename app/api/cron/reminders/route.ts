@@ -97,7 +97,8 @@ async function buildDailySummary(
     .map((t) => `• ${t.merchant || t.description || 'Gasto'}: ${formatCOPColoquial(t.amount)}`)
     .join('\n');
 
-  return `📊 *Resumen de hoy*\n\n${lines}${txs.length > 5 ? `\n• +${txs.length - 5} más…` : ''}\n\n💸 Total del día: *${formatCOPColoquial(total)}*\n\n¡Buen trabajo registrando tus gastos! 💪`;
+  const dashboardUrl = process.env.NEXT_PUBLIC_BASE_URL ?? 'https://finance-tracker.xyz';
+  return `📊 *Resumen de hoy*\n\n${lines}${txs.length > 5 ? `\n• +${txs.length - 5} más…` : ''}\n\n💸 Total del día: *${formatCOPColoquial(total)}*\n\n¡Buen trabajo registrando tus gastos! 💪\n👉 ${dashboardUrl}/overview`;
 }
 
 async function buildWeeklySummary(
@@ -125,5 +126,6 @@ async function buildWeeklySummary(
     ? `\n💰 Ahorro neto: *${formatCOPColoquial(savings)}*`
     : '';
 
-  return `📅 *Resumen semanal de Luca*\n\n💸 Gastos esta semana: *${formatCOPColoquial(totalExpenses)}*${savingsLine}\n\n${totalExpenses > 0 ? '¡Sigue así! 💪' : 'Sin gastos esta semana — ¡excelente!'}\n\nEscríbeme cuando quieras saber más. 🤖`;
+  const dashboardUrl = process.env.NEXT_PUBLIC_BASE_URL ?? 'https://finance-tracker.xyz';
+  return `📅 *Resumen semanal de Luca*\n\n💸 Gastos esta semana: *${formatCOPColoquial(totalExpenses)}*${savingsLine}\n\n${totalExpenses > 0 ? '¡Sigue así! 💪' : 'Sin gastos esta semana — ¡excelente!'}\n\n👉 ${dashboardUrl}/overview`;
 }

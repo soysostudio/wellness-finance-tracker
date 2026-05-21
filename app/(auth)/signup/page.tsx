@@ -144,7 +144,7 @@ function AuthInput(props: React.InputHTMLAttributes<HTMLInputElement>) {
   return (
     <input
       {...props}
-      className="w-full h-12 px-4 rounded-2xl bg-white border border-foreground/8 text-sm text-foreground placeholder-[#1A1A1A]/30 outline-none focus:border-foreground/30 transition-colors"
+      className="w-full h-12 px-4 rounded-2xl bg-card border border-foreground/8 text-sm text-foreground placeholder-foreground/30 outline-none focus:border-foreground/30 transition-colors"
     />
   );
 }
