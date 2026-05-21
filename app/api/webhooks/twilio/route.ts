@@ -30,7 +30,9 @@ export async function POST(request: Request): Promise<Response> {
     ProfileName: params.get('ProfileName') ?? undefined,
   };
 
-  if (!payload.From || !payload.Body) {
+  // Allow audio messages through even if Body is empty
+  const hasAudio = payload.NumMedia > 0 && payload.MediaContentType0?.startsWith('audio');
+  if (!payload.From || (!payload.Body && !hasAudio)) {
     return new Response(TWIML_EMPTY, {
       headers: { 'Content-Type': 'text/xml' },
     });

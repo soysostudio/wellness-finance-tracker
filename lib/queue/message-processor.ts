@@ -1,6 +1,7 @@
 import { createAdminClient } from '@/lib/supabase/admin';
 import { extractFromMessage } from '@/lib/openai/extract-transaction';
 import { buildContextWindow, compressConversationIfNeeded } from '@/lib/openai/conversation-memory';
+import { transcribeAudio } from '@/lib/openai/transcribe-audio';
 import { sendWhatsAppMessage } from '@/lib/twilio/send-message';
 import { formatCOPColoquial } from '@/lib/utils/currency';
 import { getCurrentMonthRange } from '@/lib/utils/dates';
@@ -30,6 +31,28 @@ export async function processIncomingMessage(payload: TwilioWebhookPayload): Pro
   if (!user) {
     await sendWhatsAppMessage(payload.From, ONBOARDING_MESSAGE);
     return;
+  }
+
+  // 1b. Handle voice note — transcribe and confirm with user before processing
+  const hasAudio = payload.NumMedia > 0 && payload.MediaContentType0?.startsWith('audio') && payload.MediaUrl0;
+  if (hasAudio) {
+    try {
+      const transcription = await transcribeAudio(payload.MediaUrl0!);
+      if (!transcription) {
+        await sendWhatsAppMessage(payload.From, 'No pude entender la nota de voz 😕 ¿Me lo escribes?');
+        return;
+      }
+      // Confirm transcription with user, then process as text
+      const confirmMsg = `🎤 Entendí: _"${transcription}"_\n\n¿Lo registro? Responde *sí* para confirmarlo o corrígeme si me equivoqué.`;
+      await sendWhatsAppMessage(payload.From, confirmMsg);
+      // Store transcription as the pending body for next message (via conversation context)
+      // For now, save it as an inbound message so the next "sí" has context
+      payload.Body = transcription;
+    } catch (err) {
+      console.error('[message-processor] Audio transcription error:', err);
+      await sendWhatsAppMessage(payload.From, 'No pude procesar la nota de voz 😕 ¿Me lo escribes?');
+      return;
+    }
   }
 
   // 2. Load or create conversation + fetch category rules in parallel
