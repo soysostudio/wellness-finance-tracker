@@ -55,8 +55,8 @@ export async function processIncomingMessage(payload: TwilioWebhookPayload): Pro
     }
   }
 
-  // 2. Load or create conversation + fetch category rules in parallel
-  const [convResult, rulesResult] = await Promise.all([
+  // 2. Load or create conversation + fetch category rules + custom categories in parallel
+  const [convResult, rulesResult, customCatsResult] = await Promise.all([
     supabase
       .from('conversations')
       .select('id')
@@ -67,9 +67,14 @@ export async function processIncomingMessage(payload: TwilioWebhookPayload): Pro
       .from('category_rules')
       .select('keyword, category_slug')
       .eq('user_id', user.id),
+    supabase
+      .from('categories')
+      .select('slug, name, is_income')
+      .eq('user_id', user.id),
   ]);
 
-  const categoryRules = rulesResult.data ?? [];
+  const categoryRules    = rulesResult.data ?? [];
+  const customCategories = customCatsResult.data ?? [];
   let conversationId: string;
 
   if (convResult.data) {
@@ -130,7 +135,7 @@ export async function processIncomingMessage(payload: TwilioWebhookPayload): Pro
   let replyText: string;
 
   try {
-    const result = await extractFromMessage(payload.Body, context.messages, user, { categoryRules });
+    const result = await extractFromMessage(payload.Body, context.messages, user, { categoryRules, customCategories });
 
     // 5. Execute intent
     switch (result.intent) {
@@ -182,8 +187,17 @@ export async function processIncomingMessage(payload: TwilioWebhookPayload): Pro
       }
 
       case 'clarify_category': {
-        // Luca asks the user where to classify an ambiguous item
-        // Next message will contain the answer and we'll save a rule
+        // Luca asks the user where to classify an ambiguous item.
+        // Also save a category_rule so next time the same item goes straight to this category.
+        if (result.clarification?.original && result.transaction?.category_slug) {
+          void Promise.resolve(
+            (supabase.from('category_rules') as ReturnType<typeof supabase.from>).upsert({
+              user_id:       user.id,
+              keyword:       result.clarification.original.toLowerCase(),
+              category_slug: result.transaction.category_slug,
+            }, { onConflict: 'user_id,keyword' })
+          ).catch(console.error);
+        }
         replyText = result.reply_draft;
         break;
       }

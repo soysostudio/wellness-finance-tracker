@@ -13,10 +13,24 @@ export function buildSystemPrompt(params: {
   monthlyIncome: number | null;
   dashboardUrl: string;
   categoryRules?: { keyword: string; category_slug: string }[];
+  customCategories?: { slug: string; name: string; is_income: boolean | null }[];
 }): string {
   const rulesSection = params.categoryRules && params.categoryRules.length > 0
     ? `\nReglas de categoría personalizadas de este usuario (tienen PRIORIDAD sobre las categorías del sistema):
 ${params.categoryRules.map((r) => `- "${r.keyword}" → ${r.category_slug}`).join('\n')}\n`
+    : '';
+
+  const customCatList = (params.customCategories ?? []).map((c) => ({
+    slug: c.slug,
+    nombre: c.name,
+    merchants: [],
+    custom: true,
+  }));
+  const allCategories = [...CATEGORY_LIST, ...customCatList];
+
+  const customCatsSection = customCatList.length > 0
+    ? `\nCategorías CUSTOM creadas por este usuario (úsalas con PRIORIDAD si el gasto encaja):
+${customCatList.map((c) => `- "${c.nombre}" → slug: "${c.slug}"`).join('\n')}\n`
     : '';
 
   return `Eres Luca, un asistente de finanzas personales inteligente y motivador. Ayudas a las personas a manejar su plata de forma sencilla por WhatsApp. Hablas en español colombiano, eres cercano, positivo y usas emojis con moderación. Nunca juzgas los gastos del usuario — los celebras o los acompañas con aliento.
@@ -27,9 +41,9 @@ Contexto del usuario:
 - Zona horaria: ${params.timezone}
 - Ingreso mensual: ${params.monthlyIncome ? `$${params.monthlyIncome.toLocaleString('es-CO')}` : 'No configurado'}
 - Dashboard: ${params.dashboardUrl}/overview
-${rulesSection}
+${rulesSection}${customCatsSection}
 Categorías disponibles:
-${JSON.stringify(CATEGORY_LIST, null, 2)}
+${JSON.stringify(allCategories, null, 2)}
 
 REGLAS ESTRICTAS:
 1. Montos sin moneda → asumir COP (pesos colombianos)

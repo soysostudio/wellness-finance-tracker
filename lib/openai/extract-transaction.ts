@@ -43,6 +43,7 @@ export async function extractFromMessage(
   user: User,
   options?: {
     categoryRules?: { keyword: string; category_slug: string }[];
+    customCategories?: { slug: string; name: string; is_income: boolean | null }[];
   }
 ): Promise<ExtractionResult> {
   const openai = getOpenAIClient();
@@ -56,6 +57,7 @@ export async function extractFromMessage(
     monthlyIncome: user.monthly_income,
     dashboardUrl,
     categoryRules: options?.categoryRules,
+    customCategories: options?.customCategories,
   });
 
   const response = await openai.chat.completions.create({
