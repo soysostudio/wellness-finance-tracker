@@ -13,6 +13,7 @@ export interface ExtractionResult {
     description: string;
     merchant: string | null;
     category_slug: string;
+    category_icon?: string;
     occurred_at: string;
     is_recurring: boolean;
   };

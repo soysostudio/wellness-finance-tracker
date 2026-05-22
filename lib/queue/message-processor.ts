@@ -159,13 +159,14 @@ export async function processIncomingMessage(payload: TwilioWebhookPayload): Pro
         if (!categoryId && result.transaction.category_slug && result.transaction.category_slug !== 'otros') {
           const newSlug = result.transaction.category_slug.toLowerCase().replace(/\s+/g, '-');
           const newName = newSlug.charAt(0).toUpperCase() + newSlug.slice(1).replace(/-/g, ' ');
+          const newIcon = result.transaction.category_icon ?? '📦';
           const { data: newCat } = await supabase
             .from('categories')
             .insert({
               user_id:   user.id,
               slug:      newSlug,
               name:      newName,
-              icon:      '📦',
+              icon:      newIcon,
               color:     '#C8CAD8',
               is_income: result.intent === 'log_income',
             })
