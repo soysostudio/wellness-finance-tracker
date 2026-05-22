@@ -153,11 +153,32 @@ export async function processIncomingMessage(payload: TwilioWebhookPayload): Pro
           .or(`user_id.is.null,user_id.eq.${user.id}`)
           .single();
 
+        let categoryId = category?.id ?? null;
+
+        // Auto-create custom category if AI used a slug that doesn't exist yet
+        if (!categoryId && result.transaction.category_slug && result.transaction.category_slug !== 'otros') {
+          const newSlug = result.transaction.category_slug.toLowerCase().replace(/\s+/g, '-');
+          const newName = newSlug.charAt(0).toUpperCase() + newSlug.slice(1).replace(/-/g, ' ');
+          const { data: newCat } = await supabase
+            .from('categories')
+            .insert({
+              user_id:   user.id,
+              slug:      newSlug,
+              name:      newName,
+              icon:      '📦',
+              color:     '#C8CAD8',
+              is_income: result.intent === 'log_income',
+            })
+            .select('id')
+            .single();
+          categoryId = newCat?.id ?? null;
+        }
+
         await supabase
           .from('transactions')
           .insert({
             user_id: user.id,
-            category_id: category?.id ?? null,
+            category_id: categoryId,
             amount: result.transaction.amount,
             currency: result.transaction.currency,
             description: result.transaction.description,
@@ -172,8 +193,8 @@ export async function processIncomingMessage(payload: TwilioWebhookPayload): Pro
           });
 
         // Check budget threshold
-        if (result.intent === 'log_expense' && category?.id) {
-          await checkBudgetAlert(user.id, category.id, result.transaction.amount, supabase, payload.From);
+        if (result.intent === 'log_expense' && categoryId) {
+          await checkBudgetAlert(user.id, categoryId, result.transaction.amount, supabase, payload.From);
         }
 
         replyText = result.reply_draft;
