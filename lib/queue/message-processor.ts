@@ -159,7 +159,9 @@ export async function processIncomingMessage(payload: TwilioWebhookPayload): Pro
         if (!categoryId && result.transaction.category_slug && result.transaction.category_slug !== 'otros') {
           const newSlug = result.transaction.category_slug.toLowerCase().replace(/\s+/g, '-');
           const newName = newSlug.charAt(0).toUpperCase() + newSlug.slice(1).replace(/-/g, ' ');
-          const newIcon = result.transaction.category_icon ?? '📦';
+          const PALETTE = ['#D4E8A0', '#C8CAD8', '#E8673C', '#4A7C6F', '#F5C540', '#FEFF6E', '#FFB0FF', '#ADDEFF'];
+          const newIcon  = result.transaction.category_icon ?? '📦';
+          const newColor = PALETTE[Math.floor(Math.random() * PALETTE.length)];
           const { data: newCat } = await supabase
             .from('categories')
             .insert({
@@ -167,7 +169,7 @@ export async function processIncomingMessage(payload: TwilioWebhookPayload): Pro
               slug:      newSlug,
               name:      newName,
               icon:      newIcon,
-              color:     '#C8CAD8',
+              color:     newColor,
               is_income: result.intent === 'log_income',
             })
             .select('id')
