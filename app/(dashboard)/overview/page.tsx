@@ -81,12 +81,18 @@ export default async function OverviewPage() {
 
   const { data: profile } = await supabase
     .from("users")
-    .select("full_name")
+    .select("full_name, monthly_income")
     .eq("id", user.id)
     .single();
 
   const overview = await getOverviewData(user.id);
   const firstName = profile?.full_name?.split(" ")[0] ?? "tú";
+
+  // Use configured monthly_income as fallback when no income transactions exist yet
+  const displayIncome = overview.totalIncome > 0
+    ? overview.totalIncome
+    : (profile?.monthly_income ?? 0);
+  const incomeIsSalary = overview.totalIncome === 0 && (profile?.monthly_income ?? 0) > 0;
 
   const now = new Date();
   const monthName = now.toLocaleDateString("es-CO", { month: "long" });
@@ -109,11 +115,15 @@ export default async function OverviewPage() {
       <AnimateIn>
         <div className="grid grid-cols-3 gap-6 py-6 border-t border-b border-foreground/8">
           <StatBlock label="Gastos del mes"   value={formatCOP(overview.totalExpenses)} />
-          <StatBlock label="Ingresos del mes" value={formatCOP(overview.totalIncome)} />
+          <StatBlock
+            label="Ingresos del mes"
+            value={formatCOP(displayIncome)}
+            sublabel={incomeIsSalary ? "salario configurado" : undefined}
+          />
           <StatBlock
             label="Balance neto"
-            value={formatCOP(overview.net)}
-            muted={overview.net < 0}
+            value={formatCOP(displayIncome - overview.totalExpenses)}
+            muted={(displayIncome - overview.totalExpenses) < 0}
           />
         </div>
       </AnimateIn>
@@ -231,13 +241,16 @@ export default async function OverviewPage() {
 
 /* ── Sub-components ─────────────────────────────────── */
 
-function StatBlock({ label, value, muted }: { label: string; value: string; muted?: boolean }) {
+function StatBlock({ label, value, muted, sublabel }: { label: string; value: string; muted?: boolean; sublabel?: string }) {
   return (
     <div className="space-y-1.5">
       <p className="text-[10px] uppercase tracking-widest text-foreground/40">{label}</p>
       <p className={`font-serif text-xl md:text-2xl font-normal ${muted ? "text-[#E8673C]" : "text-foreground"}`}>
         {value}
       </p>
+      {sublabel && (
+        <p className="text-[9px] uppercase tracking-widest text-foreground/30">{sublabel}</p>
+      )}
     </div>
   );
 }

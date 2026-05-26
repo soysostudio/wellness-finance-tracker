@@ -157,3 +157,16 @@
 .luca-blue    { background-color: #ADDEFF; }
 .luca-pink    { background-color: #FFB0FF; }
 .luca-cream   { background-color: #FEF3D6; }
+/* AnimateIn keyframes — GPU-accelerated, no JS during scroll */
+@keyframes animate-in-bottom {
+  from { opacity: 0; transform: translateY(24px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes animate-in-left {
+  from { opacity: 0; transform: translateX(-16px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+@keyframes animate-in-fade {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}

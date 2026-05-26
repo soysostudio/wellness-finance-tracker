@@ -3,7 +3,6 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Pencil, Trash2, X } from "lucide-react";
-import { SwipeActions } from "@/components/ui/swipe-actions";
 import { formatCOP, formatAmountInput, parseAmountInput } from "@/lib/utils/currency";
 
 interface Goal {
@@ -77,24 +76,9 @@ export function GoalRow({ goal }: { goal: Goal }) {
     }
   }
 
-  const swipeActions = [
-    {
-      icon:    <Pencil size={18} strokeWidth={1.5} />,
-      label:   "Editar",
-      bg:      "#4A7C6F",
-      onClick: () => setEditing(true),
-    },
-    {
-      icon:    <Trash2 size={18} strokeWidth={1.5} />,
-      label:   "Eliminar",
-      bg:      "#E8673C",
-      onClick: () => setConfirming(true),
-    },
-  ];
-
   return (
     <>
-      <SwipeActions actions={swipeActions} className="rounded-2xl group">
+      <div className="rounded-2xl group">
       <div className="bg-card border border-foreground/5 rounded-2xl p-5 space-y-4">
         <div className="flex items-start justify-between gap-3">
           <div>
@@ -165,7 +149,7 @@ export function GoalRow({ goal }: { goal: Goal }) {
           )}
         </div>
       </div>
-      </SwipeActions>
+      </div>
 
       {/* Edit modal */}
       {editing && (
