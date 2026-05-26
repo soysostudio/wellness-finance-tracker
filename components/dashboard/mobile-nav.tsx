@@ -35,7 +35,7 @@ export function MobileNav({ userName }: { userName: string }) {
     <>
       {/* Top bar */}
       <div className="md:hidden flex items-center justify-between px-4 py-3 border-b border-border bg-card sticky top-0 z-40">
-        <span className="font-serif text-lg font-normal tracking-tight">Luca</span>
+        <Link href="/overview" className="font-serif text-lg font-normal tracking-tight no-underline text-foreground">Luca</Link>
         <button
           onClick={() => setOpen(true)}
           className="p-2 rounded-lg hover:bg-muted transition-colors text-foreground/50"
@@ -59,7 +59,7 @@ export function MobileNav({ userName }: { userName: string }) {
         open ? "translate-x-0" : "-translate-x-full"
       )}>
         <div className="flex items-center justify-between px-6 py-5 border-b border-border">
-          <span className="font-serif text-xl font-normal tracking-tight">Luca</span>
+          <Link href="/overview" onClick={() => setOpen(false)} className="font-serif text-xl font-normal tracking-tight no-underline text-foreground">Luca</Link>
           <button
             onClick={() => setOpen(false)}
             className="p-1.5 rounded-lg hover:bg-muted transition-colors text-foreground/40"

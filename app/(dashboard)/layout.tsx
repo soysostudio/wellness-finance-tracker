@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { SidebarNav } from "@/components/dashboard/sidebar-nav";
@@ -27,7 +28,7 @@ export default async function DashboardLayout({
       {/* Sidebar */}
       <aside className="hidden md:flex w-56 flex-col border-r border-foreground/8 bg-background shrink-0">
         <div className="px-6 py-5 border-b border-foreground/8">
-          <span className="font-serif text-xl font-normal tracking-tight">Luca</span>
+          <Link href="/overview" className="font-serif text-xl font-normal tracking-tight no-underline text-foreground hover:opacity-70 transition-opacity">Luca</Link>
         </div>
         <SidebarNav />
         <div className="mt-auto px-4 py-4 text-xs text-foreground/40 truncate">
