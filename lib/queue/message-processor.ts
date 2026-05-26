@@ -146,12 +146,13 @@ export async function processIncomingMessage(payload: TwilioWebhookPayload): Pro
           break;
         }
 
+        // 1. Try exact slug match (system categories have user_id null, custom have user_id set)
         const { data: category } = await supabase
           .from('categories')
           .select('id')
           .eq('slug', result.transaction.category_slug)
           .or(`user_id.is.null,user_id.eq.${user.id}`)
-          .single();
+          .maybeSingle();
 
         let categoryId = category?.id ?? null;
 
@@ -159,22 +160,49 @@ export async function processIncomingMessage(payload: TwilioWebhookPayload): Pro
         if (!categoryId && result.transaction.category_slug && result.transaction.category_slug !== 'otros') {
           const newSlug = result.transaction.category_slug.toLowerCase().replace(/\s+/g, '-');
           const newName = newSlug.charAt(0).toUpperCase() + newSlug.slice(1).replace(/-/g, ' ');
-          const PALETTE = ['#D4E8A0', '#C8CAD8', '#E8673C', '#4A7C6F', '#F5C540', '#FEFF6E', '#FFB0FF', '#ADDEFF'];
-          const newIcon  = result.transaction.category_icon ?? '📦';
-          const newColor = PALETTE[Math.floor(Math.random() * PALETTE.length)];
-          const { data: newCat } = await supabase
+
+          // 2. Before creating, check if user already has a category with the same name (avoids duplicates
+          //    when the AI uses the right name but the slug lookup missed it for any reason)
+          const { data: existingByName } = await supabase
             .from('categories')
-            .insert({
-              user_id:   user.id,
-              slug:      newSlug,
-              name:      newName,
-              icon:      newIcon,
-              color:     newColor,
-              is_income: result.intent === 'log_income',
-            })
             .select('id')
-            .single();
-          categoryId = newCat?.id ?? null;
+            .eq('user_id', user.id)
+            .ilike('name', newName)
+            .maybeSingle();
+
+          if (existingByName) {
+            categoryId = existingByName.id;
+          } else {
+            // 3. Also try matching the raw AI slug against existing user category slugs
+            const { data: existingBySlug } = await supabase
+              .from('categories')
+              .select('id')
+              .eq('user_id', user.id)
+              .eq('slug', newSlug)
+              .maybeSingle();
+
+            if (existingBySlug) {
+              categoryId = existingBySlug.id;
+            } else {
+              // 4. Nothing found — create it
+              const PALETTE = ['#D4E8A0', '#C8CAD8', '#E8673C', '#4A7C6F', '#F5C540', '#FEFF6E', '#FFB0FF', '#ADDEFF'];
+              const newIcon  = result.transaction.category_icon ?? '📦';
+              const newColor = PALETTE[Math.floor(Math.random() * PALETTE.length)];
+              const { data: newCat } = await supabase
+                .from('categories')
+                .insert({
+                  user_id:   user.id,
+                  slug:      newSlug,
+                  name:      newName,
+                  icon:      newIcon,
+                  color:     newColor,
+                  is_income: result.intent === 'log_income',
+                })
+                .select('id')
+                .maybeSingle();
+              categoryId = newCat?.id ?? null;
+            }
+          }
         }
 
         await supabase

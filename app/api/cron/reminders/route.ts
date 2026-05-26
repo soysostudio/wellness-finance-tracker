@@ -34,8 +34,10 @@ export async function GET(request: Request) {
     }
 
     // Check schedule
-    const isDailyTime = reminder.reminder_type === 'daily_summary' && hourUTC === 1; // 8pm Bogota
-    const isWeeklyTime = reminder.reminder_type === 'weekly_summary' && dayUTC === 0 && hourUTC === 1;
+    // Cron runs at 01:00 UTC = 8pm Bogota (UTC-5)
+    const isDailyTime  = reminder.reminder_type === 'daily_summary'  && hourUTC === 1;
+    // dayUTC===1 (lunes UTC) = domingo 8pm Bogota — corrección de zona horaria
+    const isWeeklyTime = reminder.reminder_type === 'weekly_summary' && dayUTC === 1 && hourUTC === 1;
     if (!isDailyTime && !isWeeklyTime) continue;
 
     // Get user phone
