@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { formatAmountInput, parseAmountInput } from "@/lib/utils/currency";
 
 export function NewGoalForm() {
   const router = useRouter();
@@ -17,7 +18,7 @@ export function NewGoalForm() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    const amount = parseFloat(targetAmount);
+    const amount = parseAmountInput(targetAmount);
     if (!name.trim() || !amount) return;
 
     setSaving(true);
@@ -31,7 +32,7 @@ export function NewGoalForm() {
           icon,
           description:    description || undefined,
           target_amount:  amount,
-          current_amount: parseFloat(currentAmount) || 0,
+          current_amount: parseAmountInput(currentAmount),
           target_date:    targetDate ? new Date(targetDate).toISOString() : null,
         }),
       });
@@ -117,10 +118,11 @@ export function NewGoalForm() {
       <div className="space-y-1">
         <label className="text-[10px] uppercase tracking-widest text-foreground/40">Meta de ahorro (COP)</label>
         <input
-          type="number"
+          type="text"
+          inputMode="numeric"
           value={targetAmount}
-          onChange={(e) => setTargetAmount(e.target.value)}
-          placeholder="ej: 2000000"
+          onChange={(e) => setTargetAmount(formatAmountInput(e.target.value))}
+          placeholder="ej: 2,000,000"
           required
           className="w-full h-11 px-4 rounded-xl bg-background border border-foreground/8 text-sm text-foreground placeholder-foreground/30 outline-none focus:border-foreground/30 transition-colors"
         />
@@ -130,10 +132,11 @@ export function NewGoalForm() {
       <div className="space-y-1">
         <label className="text-[10px] uppercase tracking-widest text-foreground/40">Ya tengo ahorrado (opcional)</label>
         <input
-          type="number"
+          type="text"
+          inputMode="numeric"
           value={currentAmount}
-          onChange={(e) => setCurrentAmount(e.target.value)}
-          placeholder="ej: 500000"
+          onChange={(e) => setCurrentAmount(formatAmountInput(e.target.value))}
+          placeholder="ej: 500,000"
           className="w-full h-11 px-4 rounded-xl bg-background border border-foreground/8 text-sm text-foreground placeholder-foreground/30 outline-none focus:border-foreground/30 transition-colors"
         />
       </div>

@@ -33,6 +33,18 @@ export function formatCurrency(amount: number, currency: string = 'COP'): string
   }).format(amount);
 }
 
+/** Format a raw input string into a comma-separated display value (e.g. "300,000"). */
+export function formatAmountInput(raw: string): string {
+  const digits = raw.replace(/\D/g, "");
+  if (!digits) return "";
+  return parseInt(digits, 10).toLocaleString("en-US");
+}
+
+/** Strip commas and parse back to a number for submission. */
+export function parseAmountInput(formatted: string): number {
+  return parseFloat(formatted.replace(/,/g, "")) || 0;
+}
+
 export function parseCOPInput(input: string): number | null {
   const cleaned = input
     .replace(/\$/g, '')

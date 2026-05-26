@@ -6,7 +6,7 @@ import { Pencil, Trash2, X } from "lucide-react";
 import { CategoryIcon } from "@/components/ui/category-icon";
 import { SwipeActions } from "@/components/ui/swipe-actions";
 import { getCategoryColor } from "@/lib/utils/categories";
-import { formatCOP } from "@/lib/utils/currency";
+import { formatCOP, formatAmountInput, parseAmountInput } from "@/lib/utils/currency";
 
 interface Budget {
   id: string;
@@ -42,7 +42,7 @@ export function BudgetRow({ budget, spent }: { budget: Budget; spent: number }) 
     "var(--foreground)";
 
   // Edit form state
-  const [amountLimit, setAmountLimit] = useState(String(budget.amount_limit));
+  const [amountLimit, setAmountLimit] = useState(formatAmountInput(String(budget.amount_limit)));
   const [alertAt, setAlertAt]         = useState(budget.alert_at ?? 0.8);
 
   async function handleDelete() {
@@ -56,7 +56,7 @@ export function BudgetRow({ budget, spent }: { budget: Budget; spent: number }) 
   }
 
   async function handleSave() {
-    const amount = parseFloat(amountLimit.replace(/\D/g, ""));
+    const amount = parseAmountInput(amountLimit);
     if (!amount) return;
     setSaving(true);
     try {
@@ -181,9 +181,10 @@ export function BudgetRow({ budget, spent }: { budget: Budget; spent: number }) 
               <div className="space-y-1">
                 <label className="text-[10px] uppercase tracking-widest text-foreground/40">Límite mensual (COP)</label>
                 <input
-                  type="number"
+                  type="text"
+                  inputMode="numeric"
                   value={amountLimit}
-                  onChange={(e) => setAmountLimit(e.target.value)}
+                  onChange={(e) => setAmountLimit(formatAmountInput(e.target.value))}
                   className="w-full h-11 px-4 rounded-xl bg-background border border-foreground/8 text-sm text-foreground outline-none focus:border-foreground/30 transition-colors"
                 />
               </div>

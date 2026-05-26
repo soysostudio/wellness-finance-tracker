@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { SYSTEM_CATEGORIES } from "@/lib/utils/categories";
+import { formatAmountInput, parseAmountInput } from "@/lib/utils/currency";
 
 const expenseCategories = SYSTEM_CATEGORIES.filter((c) => !c.isIncome);
 const incomeCategories  = SYSTEM_CATEGORIES.filter((c) => c.isIncome);
@@ -28,7 +29,7 @@ export function NewTransactionForm() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    const amt = parseFloat(amount);
+    const amt = parseAmountInput(amount);
     if (!amt) return;
 
     setSaving(true);
@@ -109,10 +110,11 @@ export function NewTransactionForm() {
       <div className="space-y-1">
         <label className="text-[10px] uppercase tracking-widest text-foreground/40">Monto (COP)</label>
         <input
-          type="number"
+          type="text"
+          inputMode="numeric"
           value={amount}
-          onChange={(e) => setAmount(e.target.value)}
-          placeholder="ej: 45000"
+          onChange={(e) => setAmount(formatAmountInput(e.target.value))}
+          placeholder="ej: 45,000"
           required
           autoFocus
           className="w-full h-11 px-4 rounded-xl bg-background border border-foreground/8 text-sm text-foreground placeholder-foreground/30 outline-none focus:border-foreground/30 transition-colors"

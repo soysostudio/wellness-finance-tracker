@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Pencil, Trash2, X } from "lucide-react";
 import { SwipeActions } from "@/components/ui/swipe-actions";
-import { formatCOP } from "@/lib/utils/currency";
+import { formatCOP, formatAmountInput, parseAmountInput } from "@/lib/utils/currency";
 
 interface Goal {
   id: string;
@@ -36,8 +36,8 @@ export function GoalRow({ goal }: { goal: Goal }) {
   const [name,          setName]          = useState(goal.name);
   const [description,   setDescription]   = useState(goal.description ?? "");
   const [icon,          setIcon]          = useState(goal.icon ?? "🎯");
-  const [targetAmount,  setTargetAmount]  = useState(String(goal.target_amount));
-  const [currentAmount, setCurrentAmount] = useState(String(goal.current_amount));
+  const [targetAmount,  setTargetAmount]  = useState(formatAmountInput(String(goal.target_amount)));
+  const [currentAmount, setCurrentAmount] = useState(formatAmountInput(String(goal.current_amount)));
   const [targetDate,    setTargetDate]    = useState(goal.target_date?.slice(0, 10) ?? "");
   const [status,        setStatus]        = useState(goal.status ?? "active");
 
@@ -62,8 +62,8 @@ export function GoalRow({ goal }: { goal: Goal }) {
           name:           name.trim(),
           description:    description || null,
           icon,
-          target_amount:  parseFloat(targetAmount) || goal.target_amount,
-          current_amount: parseFloat(currentAmount) || 0,
+          target_amount:  parseAmountInput(targetAmount) || goal.target_amount,
+          current_amount: parseAmountInput(currentAmount),
           target_date:    targetDate ? new Date(targetDate).toISOString() : null,
           status,
         }),
@@ -221,9 +221,10 @@ export function GoalRow({ goal }: { goal: Goal }) {
               <div className="space-y-1">
                 <label className="text-[10px] uppercase tracking-widest text-foreground/40">Meta (COP)</label>
                 <input
-                  type="number"
+                  type="text"
+                  inputMode="numeric"
                   value={targetAmount}
-                  onChange={(e) => setTargetAmount(e.target.value)}
+                  onChange={(e) => setTargetAmount(formatAmountInput(e.target.value))}
                   className="w-full h-11 px-4 rounded-xl bg-background border border-foreground/8 text-sm text-foreground outline-none focus:border-foreground/30 transition-colors"
                 />
               </div>
@@ -232,9 +233,10 @@ export function GoalRow({ goal }: { goal: Goal }) {
               <div className="space-y-1">
                 <label className="text-[10px] uppercase tracking-widest text-foreground/40">Ya ahorrado (COP)</label>
                 <input
-                  type="number"
+                  type="text"
+                  inputMode="numeric"
                   value={currentAmount}
-                  onChange={(e) => setCurrentAmount(e.target.value)}
+                  onChange={(e) => setCurrentAmount(formatAmountInput(e.target.value))}
                   className="w-full h-11 px-4 rounded-xl bg-background border border-foreground/8 text-sm text-foreground outline-none focus:border-foreground/30 transition-colors"
                 />
               </div>

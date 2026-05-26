@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { SYSTEM_CATEGORIES } from "@/lib/utils/categories";
+import { formatAmountInput, parseAmountInput } from "@/lib/utils/currency";
 
 interface SystemCat { slug: string; name: string }
 interface CustomCat  { id: string; slug: string; name: string }
@@ -29,7 +30,7 @@ export function NewBudgetForm({ systemCategories, customCategories }: Props) {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    const amount = parseFloat(amountLimit.replace(/\D/g, ""));
+    const amount = parseAmountInput(amountLimit);
     if (!amount || !categorySlug) return;
 
     setSaving(true);
@@ -103,10 +104,11 @@ export function NewBudgetForm({ systemCategories, customCategories }: Props) {
       <div className="space-y-1">
         <label className="text-[10px] uppercase tracking-widest text-foreground/40">Límite mensual (COP)</label>
         <input
-          type="number"
+          type="text"
+          inputMode="numeric"
           value={amountLimit}
-          onChange={(e) => setAmountLimit(e.target.value)}
-          placeholder="ej: 300000"
+          onChange={(e) => setAmountLimit(formatAmountInput(e.target.value))}
+          placeholder="ej: 300,000"
           className="w-full h-11 px-4 rounded-xl bg-background border border-foreground/8 text-sm text-foreground placeholder-foreground/30 outline-none focus:border-foreground/30 transition-colors"
           required
         />

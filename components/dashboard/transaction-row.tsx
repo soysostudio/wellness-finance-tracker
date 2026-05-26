@@ -6,7 +6,7 @@ import { Trash2, Pencil, X } from "lucide-react";
 import { CategoryIcon } from "@/components/ui/category-icon";
 import { SwipeActions } from "@/components/ui/swipe-actions";
 import { getCategoryColor, SYSTEM_CATEGORIES } from "@/lib/utils/categories";
-import { formatCOP } from "@/lib/utils/currency";
+import { formatCOP, formatAmountInput, parseAmountInput } from "@/lib/utils/currency";
 
 interface Transaction {
   id: string;
@@ -35,7 +35,7 @@ export function TransactionRow({ t }: { t: Transaction }) {
   });
 
   // Edit form state
-  const [amount,      setAmount]      = useState(String(t.amount));
+  const [amount,      setAmount]      = useState(formatAmountInput(String(t.amount)));
   const [merchant,    setMerchant]    = useState(t.merchant ?? "");
   const [description, setDescription] = useState(t.description ?? "");
   const [categorySlug, setCategorySlug] = useState(slug);
@@ -58,7 +58,7 @@ export function TransactionRow({ t }: { t: Transaction }) {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          amount:        parseFloat(amount.replace(/\D/g, "")),
+          amount:        parseAmountInput(amount),
           merchant:      merchant || null,
           description:   description || null,
           category_slug: categorySlug,
@@ -170,9 +170,10 @@ export function TransactionRow({ t }: { t: Transaction }) {
               <div className="space-y-1">
                 <label className="text-[10px] uppercase tracking-widest text-foreground/40">Monto (COP)</label>
                 <input
-                  type="number"
+                  type="text"
+                  inputMode="numeric"
                   value={amount}
-                  onChange={(e) => setAmount(e.target.value)}
+                  onChange={(e) => setAmount(formatAmountInput(e.target.value))}
                   className="w-full h-11 px-4 rounded-xl bg-background border border-foreground/8 text-sm text-foreground outline-none focus:border-foreground/30 transition-colors"
                 />
               </div>
