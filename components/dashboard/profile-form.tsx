@@ -5,6 +5,7 @@ import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useRouter } from "next/navigation";
+import { formatAmountInput, parseAmountInput } from "@/lib/utils/currency";
 
 interface Props {
   userId: string;
@@ -28,7 +29,7 @@ export function ProfileForm({
   const [name, setName] = useState(initialName);
   const [phone, setPhone] = useState(initialPhone);
   const [currency, setCurrency] = useState(initialCurrency);
-  const [income, setIncome] = useState(initialIncome?.toString() ?? "");
+  const [income, setIncome] = useState(initialIncome ? formatAmountInput(String(initialIncome)) : "");
   const [loading, setLoading] = useState(false);
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState("");
@@ -47,7 +48,7 @@ export function ProfileForm({
         full_name: name.trim(),
         phone_number: phone.trim() || null,
         currency,
-        monthly_income: income ? parseFloat(income) : null,
+        monthly_income: income ? parseAmountInput(income) : null,
       })
       .eq("id", userId);
 
@@ -114,10 +115,10 @@ export function ProfileForm({
           </label>
           <Input
             value={income}
-            onChange={(e) => setIncome(e.target.value)}
-            placeholder="Ej: 3000000"
-            type="number"
-            min={0}
+            onChange={(e) => setIncome(formatAmountInput(e.target.value))}
+            placeholder="Ej: 3,000,000"
+            type="text"
+            inputMode="numeric"
             className="h-11"
           />
           <p className="text-xs text-muted-foreground px-1">
