@@ -26,6 +26,12 @@ export interface ExtractionResult {
     target_amount: number;
     target_date?: string;
   };
+  budget?: {
+    category_slug: string;
+    amount_limit: number;
+    period: string;
+    alert_at?: number;
+  };
   clarification?: {
     type: 'merchant' | 'category';
     original: string;
@@ -82,6 +88,7 @@ export async function extractFromMessage(
     transaction: parsed.transaction ?? undefined,
     query: parsed.query ?? undefined,
     goal: parsed.goal ?? undefined,
+    budget: parsed.budget ?? undefined,
     clarification: parsed.clarification ?? undefined,
     edit: parsed.edit ?? undefined,
     reply_draft: parsed.reply_draft ?? 'Uy, no entendí bien. ¿Me lo repites? 😅',

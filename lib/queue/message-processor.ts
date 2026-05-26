@@ -267,6 +267,13 @@ export async function processIncomingMessage(payload: TwilioWebhookPayload): Pro
             .update({ amount: Number(result.edit.new_value) })
             .eq('id', lastTx.id);
           replyText = `¡Actualizado! El gasto quedó en ${formatCOPColoquial(Number(result.edit.new_value))} ✏️`;
+        } else if (result.edit.field === 'description' && result.edit.new_value) {
+          const newDesc = String(result.edit.new_value);
+          await supabase
+            .from('transactions')
+            .update({ description: newDesc, merchant: newDesc })
+            .eq('id', lastTx.id);
+          replyText = `¡Corregido! Lo dejé como "${newDesc}" ✏️`;
         } else if (result.edit.field === 'category' && result.edit.new_value) {
           const { data: cat } = await supabase
             .from('categories')
@@ -348,6 +355,61 @@ export async function processIncomingMessage(payload: TwilioWebhookPayload): Pro
         });
 
         replyText = result.reply_draft;
+        break;
+      }
+
+      case 'set_budget': {
+        if (!result.budget) {
+          replyText = result.reply_draft;
+          break;
+        }
+
+        // Resolve category_id
+        const { data: budgetCat } = await supabase
+          .from('categories')
+          .select('id, name')
+          .eq('slug', result.budget.category_slug)
+          .or(`user_id.is.null,user_id.eq.${user.id}`)
+          .single();
+
+        if (!budgetCat) {
+          replyText = `No reconocí esa categoría. ¿Me puedes dar más detalles? 🤔`;
+          break;
+        }
+
+        // Upsert: replace active budget for same category if one already exists
+        const { data: existing } = await supabase
+          .from('budgets')
+          .select('id')
+          .eq('user_id', user.id)
+          .eq('category_id', budgetCat.id)
+          .eq('is_active', true)
+          .single();
+
+        if (existing) {
+          await supabase
+            .from('budgets')
+            .update({
+              amount_limit: result.budget.amount_limit,
+              alert_at: result.budget.alert_at ?? 0.8,
+            })
+            .eq('id', existing.id);
+        } else {
+          const { start: pStart, end: pEnd } = getCurrentMonthRange();
+          await supabase.from('budgets').insert({
+            user_id:      user.id,
+            category_id:  budgetCat.id,
+            amount_limit: result.budget.amount_limit,
+            period:       result.budget.period ?? 'monthly',
+            period_start: pStart,
+            period_end:   pEnd,
+            alert_at:     result.budget.alert_at ?? 0.8,
+            is_active:    true,
+          });
+        }
+
+        const action = existing ? 'actualicé' : 'creé';
+        replyText = `¡Listo! ${action === 'creé' ? 'Creé' : 'Actualicé'} tu presupuesto de ${budgetCat.name}: ${formatCOPColoquial(result.budget.amount_limit)} al mes 📊 Ver presupuestos: ${BASE_URL}/budgets`;
         break;
       }
 
