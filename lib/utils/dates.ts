@@ -45,10 +45,12 @@ export function getLastMonthRange(timezone = DEFAULT_TIMEZONE) {
 /** Returns start/end for a specific "YYYY-MM" string, in Bogota timezone. */
 export function getMonthRange(yearMonth: string, timezone = DEFAULT_TIMEZONE) {
   const [year, month] = yearMonth.split("-").map(Number);
-  const date = toZonedTime(new Date(year, month - 1, 1), timezone);
+  // Use the 15th in UTC — converting to Bogota (UTC-5) can never push the
+  // 15th into a different month, so startOfMonth/endOfMonth land correctly.
+  const midMonth = toZonedTime(new Date(Date.UTC(year, month - 1, 15)), timezone);
   return {
-    start: startOfMonth(date).toISOString(),
-    end:   endOfMonth(date).toISOString(),
+    start: startOfMonth(midMonth).toISOString(),
+    end:   endOfMonth(midMonth).toISOString(),
   };
 }
 
