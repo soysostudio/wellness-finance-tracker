@@ -59,9 +59,9 @@ export function RemindersForm({ userId, active, reminderIds }: Props) {
   return (
     <div className="bg-card rounded-2xl p-5 space-y-4">
       <div className="flex items-center justify-between">
-        <h2 className="text-xs uppercase tracking-widest font-semibold text-muted-foreground">
+        <p className="text-[10px] uppercase tracking-widest text-foreground/40">
           Recordatorios de Luca
-        </h2>
+        </p>
         {saved && <span className="text-xs text-green-600 font-semibold">✓ Guardado</span>}
         {error && <span className="text-xs text-destructive">{error}</span>}
       </div>

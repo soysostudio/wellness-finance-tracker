@@ -65,9 +65,9 @@ export function ProfileForm({
 
   return (
     <form onSubmit={handleSubmit} className="bg-card rounded-2xl p-5 space-y-4">
-      <h2 className="text-xs uppercase tracking-widest font-semibold text-muted-foreground">
+      <p className="text-[10px] uppercase tracking-widest text-foreground/40">
         Tu perfil
-      </h2>
+      </p>
 
       <div className="space-y-3">
         <div className="space-y-1">
