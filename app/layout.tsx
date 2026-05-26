@@ -23,6 +23,11 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "Luca — Tu asistente de finanzas",
   description: "Maneja tu plata de forma sencilla por WhatsApp. Luca registra tus gastos, controla tus presupuestos y te ayuda a ahorrar.",
+  // Disable iOS Safari data detectors (phone, date, address, name → contact)
+  // that auto-underline text like names with a dotted link style
+  other: {
+    "format-detection": "telephone=no, date=no, address=no, email=no, url=no",
+  },
 };
 
 export default function RootLayout({

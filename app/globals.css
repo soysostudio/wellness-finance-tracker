@@ -159,6 +159,14 @@
   }
 }
 
+/* Neutralize iOS Safari data-detector auto-links (names, phones, addresses)
+   that appear as dotted underlines on text like "Hola, Sofia" */
+a[x-apple-data-detectors] {
+  color: inherit !important;
+  text-decoration: none !important;
+  pointer-events: none !important;
+}
+
 /* Luca brand palette utilities */
 .luca-yellow  { background-color: #FEFF6E; }
 .luca-blue    { background-color: #ADDEFF; }
