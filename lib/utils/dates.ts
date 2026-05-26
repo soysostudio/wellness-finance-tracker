@@ -42,6 +42,16 @@ export function getLastMonthRange(timezone = DEFAULT_TIMEZONE) {
   };
 }
 
+/** Returns start/end for a specific "YYYY-MM" string, in Bogota timezone. */
+export function getMonthRange(yearMonth: string, timezone = DEFAULT_TIMEZONE) {
+  const [year, month] = yearMonth.split("-").map(Number);
+  const date = toZonedTime(new Date(year, month - 1, 1), timezone);
+  return {
+    start: startOfMonth(date).toISOString(),
+    end:   endOfMonth(date).toISOString(),
+  };
+}
+
 export function getCurrentWeekRange(timezone = DEFAULT_TIMEZONE) {
   const now = toZonedTime(new Date(), timezone);
   return {

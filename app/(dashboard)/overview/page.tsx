@@ -1,17 +1,18 @@
 import { createClient } from "@/lib/supabase/server";
 import { formatCOP } from "@/lib/utils/currency";
-import { getCurrentMonthRange } from "@/lib/utils/dates";
+import { getMonthRange } from "@/lib/utils/dates";
 import { getCategoryColor, getCategoryIcon } from "@/lib/utils/categories";
 import { redirect } from "next/navigation";
 import { TransactionRow } from "@/components/dashboard/transaction-row";
 import { AnimateIn } from "@/components/ui/animate-in";
 import { CategoryIcon } from "@/components/ui/category-icon";
+import { MonthNav } from "@/components/dashboard/month-nav";
 
 export const revalidate = 0;
 
-async function getOverviewData(userId: string) {
+async function getOverviewData(userId: string, yearMonth: string) {
   const supabase = await createClient();
-  const { start, end } = getCurrentMonthRange();
+  const { start, end } = getMonthRange(yearMonth);
 
   const [{ data: transactions }, { data: goals }, { data: budgets }] =
     await Promise.all([
@@ -38,20 +39,20 @@ async function getOverviewData(userId: string) {
     ]);
 
   const expenses = (transactions ?? []).filter((t) => t.transaction_type === "expense");
-  const income = (transactions ?? []).filter((t) => t.transaction_type === "income");
+  const income   = (transactions ?? []).filter((t) => t.transaction_type === "income");
 
   const totalExpenses = expenses.reduce((s, t) => s + t.amount, 0);
-  const totalIncome = income.reduce((s, t) => s + t.amount, 0);
+  const totalIncome   = income.reduce((s, t) => s + t.amount, 0);
 
   const byCat: Record<string, { name: string; slug: string; color: string; icon: string; total: number }> = {};
   for (const t of expenses) {
-    const cat = Array.isArray(t.categories) ? t.categories[0] : t.categories;
+    const cat  = Array.isArray(t.categories) ? t.categories[0] : t.categories;
     const slug = cat?.slug ?? "otros";
     if (!byCat[slug]) {
       byCat[slug] = {
         name:  cat?.name ?? "Otros",
         slug,
-        color: getCategoryColor(slug), // always use code palette, not stale DB color
+        color: getCategoryColor(slug),
         icon:  getCategoryIcon(slug),
         total: 0,
       };
@@ -66,18 +67,28 @@ async function getOverviewData(userId: string) {
   return {
     totalExpenses,
     totalIncome,
-    net: totalIncome - totalExpenses,
     categoryBreakdown,
     recentTransactions: (transactions ?? []).slice(0, 8),
-    goals: goals ?? [],
+    goals:   goals ?? [],
     budgets: budgets ?? [],
   };
 }
 
-export default async function OverviewPage() {
+export default async function OverviewPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ month?: string }>;
+}) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect("/login");
+
+  // Resolve month — default to current month
+  const { month: monthParam } = await searchParams;
+  const now = new Date();
+  const currentYM = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
+  const yearMonth = /^\d{4}-\d{2}$/.test(monthParam ?? "") ? monthParam! : currentYM;
+  const isCurrentMonth = yearMonth === currentYM;
 
   const { data: profile } = await supabase
     .from("users")
@@ -85,45 +96,46 @@ export default async function OverviewPage() {
     .eq("id", user.id)
     .single();
 
-  const overview = await getOverviewData(user.id);
-  const firstName = profile?.full_name?.split(" ")[0] ?? "tú";
+  const overview   = await getOverviewData(user.id, yearMonth);
+  const firstName  = profile?.full_name?.split(" ")[0] ?? "tú";
 
-  // Use configured monthly_income as fallback when no income transactions exist yet
-  const displayIncome = overview.totalIncome > 0
+  // Use configured monthly_income as fallback only for current month
+  const displayIncome  = overview.totalIncome > 0
     ? overview.totalIncome
-    : (profile?.monthly_income ?? 0);
-  const incomeIsSalary = overview.totalIncome === 0 && (profile?.monthly_income ?? 0) > 0;
-
-  const now = new Date();
-  const monthName = now.toLocaleDateString("es-CO", { month: "long" });
-  const year = now.getFullYear();
+    : isCurrentMonth ? (profile?.monthly_income ?? 0) : 0;
+  const incomeIsSalary = overview.totalIncome === 0 && isCurrentMonth && (profile?.monthly_income ?? 0) > 0;
+  const displayNet     = displayIncome - overview.totalExpenses;
 
   return (
     <div className="p-6 md:p-8 max-w-5xl mx-auto space-y-10">
 
       {/* ── Header ─────────────────────────────────── */}
       <AnimateIn>
-        <p className="text-xs text-foreground/40 uppercase tracking-widest">
-          {monthName} {year}
-        </p>
-        <h1 className="font-serif text-4xl md:text-5xl font-normal mt-1 text-foreground">
-          Hola, {firstName} 👋
-        </h1>
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <h1 className="font-serif text-4xl md:text-5xl font-normal text-foreground">
+              {isCurrentMonth ? `Hola, ${firstName} 👋` : "Resumen"}
+            </h1>
+          </div>
+          <div className="pt-1">
+            <MonthNav yearMonth={yearMonth} />
+          </div>
+        </div>
       </AnimateIn>
 
       {/* ── Summary stats ──────────────────────────── */}
       <AnimateIn>
         <div className="grid grid-cols-3 gap-6 py-6 border-t border-b border-foreground/8">
-          <StatBlock label="Gastos del mes"   value={formatCOP(overview.totalExpenses)} />
+          <StatBlock label="Gastos"   value={formatCOP(overview.totalExpenses)} />
           <StatBlock
-            label="Ingresos del mes"
+            label="Ingresos"
             value={formatCOP(displayIncome)}
             sublabel={incomeIsSalary ? "salario configurado" : undefined}
           />
           <StatBlock
             label="Balance neto"
-            value={formatCOP(displayIncome - overview.totalExpenses)}
-            muted={(displayIncome - overview.totalExpenses) < 0}
+            value={formatCOP(displayNet)}
+            muted={displayNet < 0}
           />
         </div>
       </AnimateIn>
@@ -170,7 +182,9 @@ export default async function OverviewPage() {
         </AnimateIn>
         <AnimateIn delay={60}>
           {overview.recentTransactions.length === 0 ? (
-            <div className="text-center py-8 text-foreground/40 text-sm">Sin transacciones aún</div>
+            <div className="text-center py-8 text-foreground/40 text-sm">
+              Sin transacciones en {new Date(yearMonth + "-01").toLocaleDateString("es-CO", { month: "long", year: "numeric" })}
+            </div>
           ) : (
             <div className="space-y-1.5">
               {overview.recentTransactions.map((t) => (
@@ -181,8 +195,8 @@ export default async function OverviewPage() {
         </AnimateIn>
       </section>
 
-      {/* ── Goals ──────────────────────────────────── */}
-      {overview.goals.length > 0 && (
+      {/* ── Goals (solo mes actual) ─────────────────── */}
+      {isCurrentMonth && overview.goals.length > 0 && (
         <section>
           <AnimateIn>
             <SectionLabel className="mb-3">Tus metas activas</SectionLabel>
@@ -224,14 +238,18 @@ export default async function OverviewPage() {
           <div className="text-center py-16 space-y-4">
             <p className="text-5xl">💬</p>
             <p className="font-serif text-2xl font-normal text-foreground">
-              Sin movimientos este mes
+              {isCurrentMonth ? "Sin movimientos este mes" : "Sin movimientos ese mes"}
             </p>
-            <p className="text-foreground/50 text-sm max-w-xs mx-auto leading-relaxed">
-              Cuéntale a Luca tu primer gasto por WhatsApp y aparecerá aquí al instante.
-            </p>
-            <p className="text-sm font-mono bg-[#FEFF6E] rounded-xl px-4 py-2 inline-block text-foreground">
-              &quot;gasté 45 mil en Rappi&quot;
-            </p>
+            {isCurrentMonth && (
+              <>
+                <p className="text-foreground/50 text-sm max-w-xs mx-auto leading-relaxed">
+                  Cuéntale a Luca tu primer gasto por WhatsApp y aparecerá aquí al instante.
+                </p>
+                <p className="text-sm font-mono bg-[#FEFF6E] rounded-xl px-4 py-2 inline-block text-foreground">
+                  &quot;gasté 45 mil en Rappi&quot;
+                </p>
+              </>
+            )}
           </div>
         </AnimateIn>
       )}

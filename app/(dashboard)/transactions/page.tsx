@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { AnimateIn } from "@/components/ui/animate-in";
 import { NewTransactionForm } from "@/components/dashboard/new-transaction-form";
 import { TransactionFilterList } from "@/components/dashboard/transaction-filter-list";
+import { ExportCsvButton } from "@/components/dashboard/export-csv-button";
 
 export const revalidate = 0;
 
@@ -33,10 +34,17 @@ export default async function TransactionsPage() {
 
       {/* Header */}
       <AnimateIn>
-        <p className="text-[10px] uppercase tracking-widest text-foreground/40">Historial</p>
-        <h1 className="font-serif text-4xl md:text-5xl font-normal mt-1 text-foreground">
-          Transacciones
-        </h1>
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <p className="text-[10px] uppercase tracking-widest text-foreground/40">Historial</p>
+            <h1 className="font-serif text-4xl md:text-5xl font-normal mt-1 text-foreground">
+              Transacciones
+            </h1>
+          </div>
+          <div className="pt-3">
+            <ExportCsvButton />
+          </div>
+        </div>
       </AnimateIn>
 
       {/* New transaction */}

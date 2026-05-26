@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { ProfileForm } from "@/components/dashboard/profile-form";
 import { RemindersForm } from "@/components/dashboard/reminders-form";
 import { AnimateIn } from "@/components/ui/animate-in";
+import { LogoutButton } from "@/components/dashboard/logout-button";
 
 export const revalidate = 0;
 
@@ -93,6 +94,9 @@ export default async function SettingsPage() {
           <div className="flex items-center justify-between text-sm">
             <span className="text-foreground/50">ID de usuario</span>
             <span className="font-mono text-xs text-foreground/40">{user.id.slice(0, 8)}…</span>
+          </div>
+          <div className="pt-1 border-t border-foreground/6">
+            <LogoutButton />
           </div>
         </div>
       </AnimateIn>
