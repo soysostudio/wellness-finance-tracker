@@ -50,7 +50,8 @@ export async function extractFromMessage(
   user: User,
   options?: {
     categoryRules?: { keyword: string; category_slug: string }[];
-    customCategories?: { slug: string; name: string; is_income: boolean | null }[];
+    customCategories?: { id: string; slug: string; name: string; is_income: boolean | null }[];
+    activeGroup?: { id: string; name: string; icon: string } | null;
   }
 ): Promise<ExtractionResult> {
   const openai = getOpenAIClient();
@@ -65,6 +66,7 @@ export async function extractFromMessage(
     dashboardUrl,
     categoryRules: options?.categoryRules,
     customCategories: options?.customCategories,
+    activeGroup: options?.activeGroup,
   });
 
   const response = await openai.chat.completions.create({

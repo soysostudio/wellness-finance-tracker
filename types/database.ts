@@ -15,6 +15,7 @@ export type MessageIntent =
   | 'clarify_category'
   | 'delete_last_transaction'
   | 'edit_last_transaction'
+  | 'switch_group_context'
   | 'chat'
   | 'unknown';
 
@@ -27,6 +28,7 @@ export interface User {
   timezone: string;
   monthly_income: number | null;
   onboarded_at: string | null;
+  active_group_id: string | null;
   created_at: string;
   updated_at: string;
 }

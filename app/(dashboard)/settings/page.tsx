@@ -2,6 +2,7 @@ import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import { ProfileForm } from "@/components/dashboard/profile-form";
 import { RemindersForm } from "@/components/dashboard/reminders-form";
+import { GroupsManager } from "@/components/dashboard/groups-manager";
 import { AnimateIn } from "@/components/ui/animate-in";
 import { LogoutButton } from "@/components/dashboard/logout-button";
 
@@ -83,8 +84,13 @@ export default async function SettingsPage() {
         />
       </AnimateIn>
 
+      {/* Groups */}
+      <AnimateIn delay={160}>
+        <GroupsManager userId={user.id} />
+      </AnimateIn>
+
       {/* Account */}
-      <AnimateIn delay={180}>
+      <AnimateIn delay={200}>
         <div className="bg-card border border-foreground/5 rounded-2xl p-5 space-y-3">
           <p className="text-[10px] uppercase tracking-widest text-foreground/40">Cuenta</p>
           <div className="flex items-center justify-between text-sm">

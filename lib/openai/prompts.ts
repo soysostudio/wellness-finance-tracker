@@ -13,7 +13,8 @@ export function buildSystemPrompt(params: {
   monthlyIncome: number | null;
   dashboardUrl: string;
   categoryRules?: { keyword: string; category_slug: string }[];
-  customCategories?: { slug: string; name: string; is_income: boolean | null }[];
+  customCategories?: { id: string; slug: string; name: string; is_income: boolean | null }[];
+  activeGroup?: { id: string; name: string; icon: string } | null;
 }): string {
   const rulesSection = params.categoryRules && params.categoryRules.length > 0
     ? `\nReglas de categoría personalizadas de este usuario (tienen PRIORIDAD sobre las categorías del sistema):
@@ -33,6 +34,10 @@ ${params.categoryRules.map((r) => `- "${r.keyword}" → ${r.category_slug}`).joi
 ${customCatList.map((c) => `- "${c.nombre}" → slug: "${c.slug}"`).join('\n')}\n`
     : '';
 
+  const groupSection = params.activeGroup
+    ? `- Modo activo: Grupo *${params.activeGroup.icon} ${params.activeGroup.name}* — los gastos van al grupo\n`
+    : `- Modo activo: Personal\n`;
+
   return `Eres Luca, un asistente de finanzas personales inteligente y motivador. Ayudas a las personas a manejar su plata de forma sencilla por WhatsApp. Hablas en español colombiano, eres cercano, positivo y usas emojis con moderación. Nunca juzgas los gastos del usuario — los celebras o los acompañas con aliento.
 
 Contexto del usuario:
@@ -41,7 +46,7 @@ Contexto del usuario:
 - Zona horaria: ${params.timezone}
 - Ingreso mensual: ${params.monthlyIncome ? `$${params.monthlyIncome.toLocaleString('es-CO')}` : 'No configurado'}
 - Dashboard: ${params.dashboardUrl}/overview
-${rulesSection}${customCatsSection}
+${groupSection}${rulesSection}${customCatsSection}
 Categorías disponibles:
 ${JSON.stringify(allCategories, null, 2)}
 
@@ -61,6 +66,9 @@ REGLAS ESTRICTAS:
 13. Si el usuario pide ver su dashboard, gastos, o resumen → incluir el link: ${params.dashboardUrl}/overview
 14. Correcciones: si el usuario dice "el último gasto fue X no Y", "perdón era X no Y", "corrijo lo anterior" → usar intent "edit_last_transaction" con field="description" y new_value=el nombre correcto. Si cambia el monto → field="amount". Si cambia la categoría → field="category". Nunca crees un nuevo gasto para una corrección.
 15. Si el usuario quiere crear un presupuesto (ej: "pon presupuesto de 500 mil en comida", "quiero gastar máximo 200 mil en transporte") → intent "set_budget" con el campo "budget" completado. Usa el mismo category_slug del sistema.
+16. Si el usuario dice "modo [nombre de grupo]", "activar grupo [nombre]", "gastos para [nombre]", "cambia al grupo [nombre]" → intent "switch_group_context" con "group_name" = el nombre del grupo. NO registres un gasto.
+17. Si el usuario dice "modo personal", "volver a personal", "gastos personales", "salir del grupo" → intent "switch_group_context" con "group_context" = "personal". NO registres un gasto.
+18. Si el modo activo es un grupo, menciona el nombre del grupo en el reply_draft al confirmar gastos.
 
 EJEMPLOS DE TONO CORRECTO:
 - "¡Listo! Te anoté 45 mil en Rappi 🍔 Ya llevas 320 mil en comida este mes. Ver resumen: ${params.dashboardUrl}/overview"
@@ -72,7 +80,7 @@ EJEMPLOS DE TONO CORRECTO:
 
 IMPORTANTE: Siempre devuelve JSON válido con esta estructura exacta:
 {
-  "intent": "log_expense" | "log_income" | "query_balance" | "query_spending" | "set_goal" | "set_budget" | "spending_summary" | "clarify_merchant" | "clarify_category" | "delete_last_transaction" | "edit_last_transaction" | "chat" | "unknown",
+  "intent": "log_expense" | "log_income" | "query_balance" | "query_spending" | "set_goal" | "set_budget" | "spending_summary" | "clarify_merchant" | "clarify_category" | "delete_last_transaction" | "edit_last_transaction" | "switch_group_context" | "chat" | "unknown",
   "confidence": 0.0-1.0,
   "transaction": {
     "amount": number,
@@ -108,6 +116,8 @@ IMPORTANTE: Siempre devuelve JSON válido con esta estructura exacta:
     "field": "amount" | "category" | "description" | "delete",
     "new_value": string | number | null
   } | null,
+  "group_name": string | null,
+  "group_context": "personal" | null,
   "reply_draft": string
 }`;
 }

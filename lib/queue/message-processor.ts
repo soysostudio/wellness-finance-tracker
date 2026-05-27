@@ -22,11 +22,12 @@ export async function processIncomingMessage(payload: TwilioWebhookPayload): Pro
   const phoneNumber = payload.From.replace('whatsapp:', '');
 
   // 1. Find user by phone number
-  const { data: user } = await supabase
+  const { data: userRaw } = await supabase
     .from('users')
     .select('*')
     .eq('phone_number', phoneNumber)
     .single();
+  const user = userRaw as import('@/types/database').User | null;
 
   if (!user) {
     await sendWhatsAppMessage(payload.From, ONBOARDING_MESSAGE);
@@ -69,12 +70,13 @@ export async function processIncomingMessage(payload: TwilioWebhookPayload): Pro
       .eq('user_id', user.id),
     supabase
       .from('categories')
-      .select('slug, name, is_income')
+      .select('id, slug, name, is_income')
       .eq('user_id', user.id),
   ]);
 
+  type CustomCatRow = { id: string; slug: string; name: string; is_income: boolean | null };
   const categoryRules    = rulesResult.data ?? [];
-  const customCategories = customCatsResult.data ?? [];
+  const customCategories = (customCatsResult.data ?? []) as CustomCatRow[];
   let conversationId: string;
 
   if (convResult.data) {
@@ -135,7 +137,24 @@ export async function processIncomingMessage(payload: TwilioWebhookPayload): Pro
   let replyText: string;
 
   try {
-    const result = await extractFromMessage(payload.Body, context.messages, user, { categoryRules, customCategories });
+    // Fetch active group context if set
+    type GroupCtx = { id: string; name: string; icon: string };
+    let activeGroup: GroupCtx | null = null;
+    if (user.active_group_id) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { data: grp } = await (supabase as any)
+        .from('expense_groups')
+        .select('id, name, icon')
+        .eq('id', user.active_group_id)
+        .single() as { data: GroupCtx | null };
+      activeGroup = grp ?? null;
+    }
+
+    const result = await extractFromMessage(payload.Body, context.messages, user, {
+      categoryRules,
+      customCategories,
+      activeGroup,
+    });
 
     // 5. Execute intent
     switch (result.intent) {
@@ -146,89 +165,92 @@ export async function processIncomingMessage(payload: TwilioWebhookPayload): Pro
           break;
         }
 
-        // 1. Try exact slug match (system categories have user_id null, custom have user_id set)
-        const { data: category } = await supabase
-          .from('categories')
-          .select('id')
-          .eq('slug', result.transaction.category_slug)
-          .or(`user_id.is.null,user_id.eq.${user.id}`)
-          .maybeSingle();
+        // ── Category resolution ─────────────────────────────────────────────
+        // Helper: lowercase + strip accents for flexible comparison
+        const normCat = (s: string) =>
+          s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
 
-        let categoryId = category?.id ?? null;
+        const aiSlug           = (result.transaction.category_slug ?? 'otros').toLowerCase();
+        const normalizedAiSlug = normCat(aiSlug.replace(/-/g, ' '));
 
-        // Auto-create custom category if AI used a slug that doesn't exist yet
-        if (!categoryId && result.transaction.category_slug && result.transaction.category_slug !== 'otros') {
-          const newSlug = result.transaction.category_slug.toLowerCase().replace(/\s+/g, '-');
-          const newName = newSlug.charAt(0).toUpperCase() + newSlug.slice(1).replace(/-/g, ' ');
+        // 1. Match against already-loaded user custom categories (in memory, 0 extra DB calls).
+        //    Compares both slug and name with accent-normalization to tolerate AI slug variations
+        //    (e.g. AI says "deporte" but user has "Deportes", or "futbol" vs "Fútbol").
+        type CustomCat = { id: string; slug: string; name: string; is_income: boolean | null };
+        const matchedCustom = (customCategories as CustomCat[]).find((cat) =>
+          normCat(cat.slug.replace(/-/g, ' ')) === normalizedAiSlug ||
+          normCat(cat.name) === normalizedAiSlug
+        );
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        let categoryId: any = (matchedCustom?.id as string | undefined) ?? null;
 
-          // 2. Before creating, check if user already has a category with the same name (avoids duplicates
-          //    when the AI uses the right name but the slug lookup missed it for any reason)
-          const { data: existingByName } = await supabase
+        // 2. No custom match — check system categories (user_id IS NULL)
+        if (!categoryId) {
+          const { data: sysCat } = await supabase
             .from('categories')
             .select('id')
-            .eq('user_id', user.id)
-            .ilike('name', newName)
+            .eq('slug', aiSlug)
+            .is('user_id', null)
             .maybeSingle();
-
-          if (existingByName) {
-            categoryId = existingByName.id;
-          } else {
-            // 3. Also try matching the raw AI slug against existing user category slugs
-            const { data: existingBySlug } = await supabase
-              .from('categories')
-              .select('id')
-              .eq('user_id', user.id)
-              .eq('slug', newSlug)
-              .maybeSingle();
-
-            if (existingBySlug) {
-              categoryId = existingBySlug.id;
-            } else {
-              // 4. Nothing found — create it
-              const PALETTE = ['#D4E8A0', '#C8CAD8', '#E8673C', '#4A7C6F', '#F5C540', '#FEFF6E', '#FFB0FF', '#ADDEFF'];
-              const newIcon  = result.transaction.category_icon ?? '📦';
-              const newColor = PALETTE[Math.floor(Math.random() * PALETTE.length)];
-              const { data: newCat } = await supabase
-                .from('categories')
-                .insert({
-                  user_id:   user.id,
-                  slug:      newSlug,
-                  name:      newName,
-                  icon:      newIcon,
-                  color:     newColor,
-                  is_income: result.intent === 'log_income',
-                })
-                .select('id')
-                .maybeSingle();
-              categoryId = newCat?.id ?? null;
-            }
-          }
+          categoryId = sysCat?.id ?? null;
         }
 
-        await supabase
-          .from('transactions')
-          .insert({
-            user_id: user.id,
-            category_id: categoryId,
-            amount: result.transaction.amount,
-            currency: result.transaction.currency,
-            description: result.transaction.description,
-            merchant: result.transaction.merchant,
-            transaction_type: result.intent === 'log_income' ? 'income' : 'expense',
-            source: 'whatsapp',
-            raw_input: payload.Body,
-            occurred_at: result.transaction.occurred_at,
-            message_id: savedMessage?.id ?? null,
-            confidence: result.confidence,
-            is_recurring: result.transaction.is_recurring,
-          });
+        // 3. Still nothing — create a new custom category
+        if (!categoryId && aiSlug && aiSlug !== 'otros') {
+          const newSlug  = aiSlug.replace(/\s+/g, '-');
+          const newName  = newSlug.charAt(0).toUpperCase() + newSlug.slice(1).replace(/-/g, ' ');
+          const PALETTE  = ['#D4E8A0', '#C8CAD8', '#E8673C', '#4A7C6F', '#F5C540', '#FEFF6E', '#FFB0FF', '#ADDEFF'];
+          const { data: newCat } = await supabase
+            .from('categories')
+            .insert({
+              user_id:   user.id,
+              slug:      newSlug,
+              name:      newName,
+              icon:      result.transaction.category_icon ?? '📦',
+              color:     PALETTE[Math.floor(Math.random() * PALETTE.length)],
+              is_income: result.intent === 'log_income',
+            })
+            .select('id')
+            .maybeSingle();
+          categoryId = (newCat?.id as string | undefined) ?? null;
+        }
 
-        // Check budget threshold
-        if (result.intent === 'log_expense' && categoryId) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        await supabase.from('transactions').insert({
+          user_id:          user.id,
+          category_id:      categoryId,
+          amount:           result.transaction.amount,
+          currency:         result.transaction.currency,
+          description:      result.transaction.description,
+          merchant:         result.transaction.merchant,
+          transaction_type: result.intent === 'log_income' ? 'income' : 'expense',
+          source:           'whatsapp',
+          raw_input:        payload.Body,
+          occurred_at:      result.transaction.occurred_at,
+          message_id:       savedMessage?.id ?? null,
+          confidence:       result.confidence,
+          is_recurring:     result.transaction.is_recurring,
+          group_id:         activeGroup?.id ?? null,
+        } as any);
+
+        // Check budget threshold (personal only)
+        if (result.intent === 'log_expense' && categoryId && !activeGroup) {
           await checkBudgetAlert(user.id, categoryId, result.transaction.amount, supabase, payload.From);
         }
 
-        replyText = result.reply_draft;
+        // If group mode active, append group context to the reply
+        if (activeGroup) {
+          replyText = result.reply_draft.replace(
+            /Ver resumen:.*$/,
+            `Registrado para *${activeGroup.icon} ${activeGroup.name}* 👥 Ver grupo: ${BASE_URL}/overview`
+          );
+          // Fallback if the regex didn't match anything
+          if (replyText === result.reply_draft) {
+            replyText = `${result.reply_draft}\nRegistrado para *${activeGroup.icon} ${activeGroup.name}* 👥`;
+          }
+        } else {
+          replyText = result.reply_draft;
+        }
         break;
       }
 
@@ -438,6 +460,43 @@ export async function processIncomingMessage(payload: TwilioWebhookPayload): Pro
 
         const action = existing ? 'actualicé' : 'creé';
         replyText = `¡Listo! ${action === 'creé' ? 'Creé' : 'Actualicé'} tu presupuesto de ${budgetCat.name}: ${formatCOPColoquial(result.budget.amount_limit)} al mes 📊 Ver presupuestos: ${BASE_URL}/budgets`;
+        break;
+      }
+
+      case 'switch_group_context': {
+        const groupContext = (result as unknown as { group_context?: string; group_name?: string });
+
+        if (!groupContext.group_name || groupContext.group_context === 'personal') {
+          // Switch to personal mode
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          await supabase.from('users').update({ active_group_id: null } as any).eq('id', user.id);
+          replyText = 'Listo, volviste al modo *personal* 👤 Tus próximos gastos son solo tuyos.';
+        } else {
+          // Find group by name (case-insensitive, accent-tolerant)
+          const normStr = (s: string) =>
+            s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
+          const targetName = normStr(groupContext.group_name);
+
+          type GroupRow = { id: string; name: string; icon: string };
+          type MembershipRow = { group_id: string; expense_groups: GroupRow | null };
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          const { data: memberships } = await (supabase as any)
+            .from('group_members')
+            .select('group_id, expense_groups(id, name, icon)')
+            .eq('user_id', user.id) as { data: MembershipRow[] | null };
+
+          const found = (memberships ?? [])
+            .map((m) => m.expense_groups)
+            .find((g): g is GroupRow => !!g && normStr(g.name) === targetName);
+
+          if (!found) {
+            replyText = `No encontré el grupo "${groupContext.group_name}" 🤔 Revisa el nombre en tu dashboard: ${BASE_URL}/settings`;
+          } else {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            await supabase.from('users').update({ active_group_id: found.id } as any).eq('id', user.id);
+            replyText = `Listo, modo *${found.icon} ${found.name}* activado 👥 Tus próximos gastos irán al grupo.\n\nPara volver a modo personal escribe _"modo personal"_.`;
+          }
+        }
         break;
       }
 
