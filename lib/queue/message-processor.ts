@@ -488,7 +488,13 @@ export async function processIncomingMessage(payload: TwilioWebhookPayload): Pro
           break;
         }
 
-        // Create the group directly via admin client (bypasses RLS)
+        // PASO 1: pending = true → Luca está recolectando info, no crear aún
+        if (result.new_group.pending) {
+          replyText = result.reply_draft;
+          break;
+        }
+
+        // PASO 2: pending = false → crear el grupo con toda la info
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const { data: newGroup, error: createErr } = await (supabase as any)
           .from('expense_groups')
@@ -497,13 +503,15 @@ export async function processIncomingMessage(payload: TwilioWebhookPayload): Pro
             icon:     result.new_group.icon ?? '👥',
             color:    '#6366F1',
             owner_id: user.id,
+            budget:   result.new_group.budget   ?? null,
+            end_date: result.new_group.end_date  ?? null,
           })
           .select('id, name, icon')
           .single() as { data: GroupRow | null; error: unknown };
 
         if (createErr || !newGroup) {
           console.error('[message-processor] create_group error:', createErr);
-          replyText = 'No pude crear el grupo 😕 Intenta desde tu dashboard: ' + BASE_URL + '/settings';
+          replyText = 'No pude crear el grupo 😕 Intenta desde tu dashboard: ' + BASE_URL + '/groups';
           break;
         }
 
@@ -515,7 +523,41 @@ export async function processIncomingMessage(payload: TwilioWebhookPayload): Pro
           role:     'owner',
         });
 
-        replyText = `¡Listo! Creé el grupo *${newGroup.icon} ${newGroup.name}* 🎉\n\nPara anotar gastos del grupo, solo mencionalo:\n_"40 mil en mercado para ${newGroup.name}"_\n\nVer grupo: ${BASE_URL}/groups`;
+        // Invite members by phone number (fire-and-forget, best effort)
+        const memberPhones = result.new_group.members ?? [];
+        let membersAdded = 0;
+        for (const phone of memberPhones) {
+          const { data: memberUser } = await supabase
+            .from('users')
+            .select('id, full_name, phone_number')
+            .eq('phone_number', phone)
+            .maybeSingle();
+
+          if (!memberUser) continue;
+
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          const { error: memErr } = await (supabase as any).from('group_members').insert({
+            group_id: newGroup.id,
+            user_id:  memberUser.id,
+            role:     'member',
+          });
+
+          if (!memErr) {
+            membersAdded++;
+            const memberName = memberUser.full_name?.split(' ')[0] ?? 'tú';
+            const ownerName  = user.full_name?.split(' ')[0] ?? 'Alguien';
+            sendWhatsAppMessage(
+              phone,
+              `👋 ¡Hola, ${memberName}! *${ownerName}* te agregó al grupo *${newGroup.icon} ${newGroup.name}* en Luca.\n\nPara registrar gastos del grupo escríbeme:\n_"40 mil en [gasto] para ${newGroup.name}"_\n\nVer el grupo: ${BASE_URL}/groups`
+            ).catch(console.error);
+          }
+        }
+
+        const memberLine = membersAdded > 0
+          ? `\n\nYa invité a ${membersAdded} ${membersAdded === 1 ? 'miembro' : 'miembros'} por WhatsApp 👥`
+          : '';
+
+        replyText = `¡Listo! Creé el grupo *${newGroup.icon} ${newGroup.name}* 🎉${memberLine}\n\nPara anotar gastos del grupo, solo mencionalo:\n_"40 mil en mercado para ${newGroup.name}"_\n\nVer grupo: ${BASE_URL}/groups`;
         break;
       }
 

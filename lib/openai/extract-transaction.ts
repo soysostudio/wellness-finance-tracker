@@ -45,6 +45,10 @@ export interface ExtractionResult {
   new_group?: {
     name: string;
     icon: string;
+    pending?: boolean;       // true = still collecting info, don't create yet
+    budget?: number | null;
+    end_date?: string | null;
+    members?: string[];      // phone numbers to invite
   };
   reply_draft: string;
 }
