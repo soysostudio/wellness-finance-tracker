@@ -126,7 +126,7 @@ export async function processIncomingMessage(payload: TwilioWebhookPayload): Pro
 
   // 3b. Onboarding flow — if user has never been onboarded, guide them first
   if (!user.onboarded_at) {
-    const handled = await handleOnboarding(user, payload.Body, conversationId, supabase);
+    const handled = await handleOnboarding(user, payload.Body, conversationId, supabase, phoneNumber);
     if (handled) {
       await Promise.all([
         supabase.from('messages').insert({
@@ -526,6 +526,9 @@ export async function processIncomingMessage(payload: TwilioWebhookPayload): Pro
         // Invite members by phone number (fire-and-forget, best effort)
         const memberPhones = result.new_group.members ?? [];
         let membersAdded = 0;
+        let membersPending = 0;
+        const ownerName = user.full_name?.split(' ')[0] ?? 'Alguien';
+
         for (const phone of memberPhones) {
           const { data: memberUser } = await supabase
             .from('users')
@@ -533,28 +536,46 @@ export async function processIncomingMessage(payload: TwilioWebhookPayload): Pro
             .eq('phone_number', phone)
             .maybeSingle();
 
-          if (!memberUser) continue;
+          if (memberUser) {
+            // User already has a Luca account → add directly to group
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            const { error: memErr } = await (supabase as any).from('group_members').insert({
+              group_id: newGroup.id,
+              user_id:  memberUser.id,
+              role:     'member',
+            });
 
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          const { error: memErr } = await (supabase as any).from('group_members').insert({
-            group_id: newGroup.id,
-            user_id:  memberUser.id,
-            role:     'member',
-          });
+            if (!memErr) {
+              membersAdded++;
+              const memberName = memberUser.full_name?.split(' ')[0] ?? 'tú';
+              sendWhatsAppMessage(
+                `whatsapp:${phone}`,
+                `👋 ¡Hola, ${memberName}! *${ownerName}* te agregó al grupo *${newGroup.icon} ${newGroup.name}* en Luca.\n\nPara registrar gastos del grupo escríbeme:\n_"40 mil en [gasto] para ${newGroup.name}"_\n\nVer el grupo: ${BASE_URL}/groups`
+              ).catch(console.error);
+            }
+          } else {
+            // User doesn't have a Luca account yet → store pending invite + send signup invite
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            await (supabase as any)
+              .from('pending_group_invitations')
+              .upsert(
+                { phone_number: phone, group_id: newGroup.id, invited_by: user.id },
+                { onConflict: 'phone_number,group_id' }
+              )
+              .catch(console.error);
 
-          if (!memErr) {
-            membersAdded++;
-            const memberName = memberUser.full_name?.split(' ')[0] ?? 'tú';
-            const ownerName  = user.full_name?.split(' ')[0] ?? 'Alguien';
+            membersPending++;
             sendWhatsAppMessage(
-              phone,
-              `👋 ¡Hola, ${memberName}! *${ownerName}* te agregó al grupo *${newGroup.icon} ${newGroup.name}* en Luca.\n\nPara registrar gastos del grupo escríbeme:\n_"40 mil en [gasto] para ${newGroup.name}"_\n\nVer el grupo: ${BASE_URL}/groups`
+              `whatsapp:${phone}`,
+              `👋 ¡Hola! *${ownerName}* te invitó al grupo *${newGroup.icon} ${newGroup.name}* en Luca, su asistente de finanzas por WhatsApp.\n\n` +
+              `Crea tu cuenta gratis (solo 2 minutos) y te unirás automáticamente al grupo:\n${BASE_URL}/signup\n\n` +
+              `Con Luca puedes registrar gastos por chat, ver reportes y llevar tus finanzas sin esfuerzo 💚`
             ).catch(console.error);
           }
         }
 
-        const memberLine = membersAdded > 0
-          ? `\n\nYa invité a ${membersAdded} ${membersAdded === 1 ? 'miembro' : 'miembros'} por WhatsApp 👥`
+        const memberLine = (membersAdded + membersPending) > 0
+          ? `\n\n${membersAdded > 0 ? `✅ Ya agregué a ${membersAdded} ${membersAdded === 1 ? 'miembro' : 'miembros'} con cuenta Luca.` : ''}${membersPending > 0 ? `\n📲 Le envié invitación de registro a ${membersPending} ${membersPending === 1 ? 'persona' : 'personas'} — se unirán automáticamente cuando creen su cuenta.` : ''}`
           : '';
 
         replyText = `¡Listo! Creé el grupo *${newGroup.icon} ${newGroup.name}* 🎉${memberLine}\n\nPara anotar gastos del grupo, solo mencionalo:\n_"40 mil en mercado para ${newGroup.name}"_\n\nVer grupo: ${BASE_URL}/groups`;
@@ -604,7 +625,8 @@ async function handleOnboarding(
   user: { id: string; full_name: string | null },
   inboundText: string,
   conversationId: string,
-  supabase: AdminClient
+  supabase: AdminClient,
+  phoneNumber: string
 ): Promise<string | null> {
   const firstName = user.full_name?.split(' ')[0] ?? 'tú';
 
@@ -669,9 +691,45 @@ Voy a hacerte 3 preguntas rápidas para personalizarte la experiencia. Primero: 
       .update({ onboarded_at: new Date().toISOString() })
       .eq('id', user.id);
 
+    // Check for pending group invitations and auto-join
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data: pendingInvites } = await (supabase as any)
+      .from('pending_group_invitations')
+      .select('group_id, expense_groups(name, icon), invited_by, users!invited_by(full_name)')
+      .eq('phone_number', phoneNumber);
+
+    let groupJoinLine = '';
+    if (pendingInvites && pendingInvites.length > 0) {
+      const joinedNames: string[] = [];
+      for (const invite of pendingInvites as any[]) {
+        const group = invite.expense_groups;
+        if (!group) continue;
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        await (supabase as any).from('group_members').insert({
+          group_id: invite.group_id,
+          user_id:  user.id,
+          role:     'member',
+        }).catch(console.error);
+
+        joinedNames.push(`${group.icon} ${group.name}`);
+      }
+
+      // Clean up pending invites
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      await (supabase as any)
+        .from('pending_group_invitations')
+        .delete()
+        .eq('phone_number', phoneNumber)
+        .catch(console.error);
+
+      if (joinedNames.length > 0) {
+        groupJoinLine = `\n\n🎉 Por cierto, te uní automáticamente a ${joinedNames.length === 1 ? 'este grupo' : 'estos grupos'}: *${joinedNames.join('*, *')}*. Ya puedes registrar gastos para ellos.`;
+      }
+    }
+
     return `¡Listo, ${firstName}! Ya estoy configurado para ti 🚀
 
-Desde ahora solo escríbeme tus gastos e ingresos y yo me encargo del resto. Por ejemplo: _"gasté 45 mil en Rappi"_ o _"recibí mi quincena, 2.5 millones"_.
+Desde ahora solo escríbeme tus gastos e ingresos y yo me encargo del resto. Por ejemplo: _"gasté 45 mil en Rappi"_ o _"recibí mi quincena, 2.5 millones"_.${groupJoinLine}
 
 Ver tu dashboard: ${BASE_URL}/overview`;
   }
