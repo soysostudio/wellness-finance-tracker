@@ -82,7 +82,7 @@ export async function extractFromMessage(
     model: 'gpt-4o-mini',
     response_format: { type: 'json_object' },
     temperature: 0.1,
-    max_tokens: 600,
+    max_tokens: 1000,
     messages: [
       { role: 'system', content: systemPrompt },
       ...contextMessages,
@@ -91,7 +91,19 @@ export async function extractFromMessage(
   });
 
   const raw = response.choices[0]?.message?.content ?? '{}';
-  const parsed = JSON.parse(raw) as ExtractionResult;
+
+  let parsed: ExtractionResult;
+  try {
+    parsed = JSON.parse(raw) as ExtractionResult;
+  } catch (parseErr) {
+    console.error('[extract-transaction] JSON parse failed. finish_reason:', response.choices[0]?.finish_reason, 'raw:', raw.slice(0, 300));
+    // Fallback: treat as chat so Luca can gracefully reply
+    return {
+      intent: 'chat',
+      confidence: 0,
+      reply_draft: 'Uy, no entendí bien. ¿Me lo repites? 😅',
+    };
+  }
 
   return {
     intent: parsed.intent ?? 'unknown',

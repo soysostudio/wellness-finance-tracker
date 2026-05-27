@@ -596,7 +596,7 @@ default:
     ).catch(console.error);
 
   } catch (err) {
-    console.error('[message-processor] AI error:', err);
+    console.error('[message-processor] Unhandled error for user', user.id, '| message:', payload.Body.slice(0, 100), '| error:', err);
     replyText = 'Uy, tuve un problema procesando eso. ¿Me lo repites? 😅';
   }
 
