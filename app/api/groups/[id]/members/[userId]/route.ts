@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { createAdminClient } from '@/lib/supabase/admin';
 
 // DELETE /api/groups/[id]/members/[userId]
 // - Owner can remove any member
@@ -13,9 +14,11 @@ export async function DELETE(
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
   const { id: groupId, userId: targetUserId } = await params;
+  const admin = createAdminClient();
 
-  // Verify the group exists and get owner
-  const { data: group } = await supabase
+  // Verify the group exists and get owner (admin to bypass RLS)
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data: group } = await (admin as any)
     .from('expense_groups')
     .select('owner_id')
     .eq('id', groupId)
@@ -23,8 +26,8 @@ export async function DELETE(
 
   if (!group) return NextResponse.json({ error: 'Group not found' }, { status: 404 });
 
-  const isOwner    = group.owner_id === user.id;
-  const isSelf     = targetUserId === user.id;
+  const isOwner = group.owner_id === user.id;
+  const isSelf  = targetUserId === user.id;
 
   if (!isOwner && !isSelf) {
     return NextResponse.json({ error: 'No tienes permiso para hacer esto' }, { status: 403 });
@@ -34,7 +37,8 @@ export async function DELETE(
     return NextResponse.json({ error: 'El owner no puede salir del grupo' }, { status: 400 });
   }
 
-  const { error } = await supabase
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { error } = await (admin as any)
     .from('group_members')
     .delete()
     .eq('group_id', groupId)

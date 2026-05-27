@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { createAdminClient } from '@/lib/supabase/admin';
 
 // PATCH /api/groups/[id] — update group name/icon/color (owner only)
 export async function PATCH(
@@ -12,8 +13,22 @@ export async function PATCH(
 
   const { id } = await params;
   const body = await request.json() as { name?: string; icon?: string; color?: string };
+  const admin = createAdminClient();
 
-  const { error } = await supabase
+  // Verify ownership first
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data: group } = await (admin as any)
+    .from('expense_groups')
+    .select('owner_id')
+    .eq('id', id)
+    .single();
+
+  if (!group || group.owner_id !== user.id) {
+    return NextResponse.json({ error: 'Not found or not owner' }, { status: 403 });
+  }
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { error } = await (admin as any)
     .from('expense_groups')
     .update({
       ...(body.name  ? { name: body.name.trim() } : {}),
@@ -21,8 +36,7 @@ export async function PATCH(
       ...(body.color ? { color: body.color }      : {}),
       updated_at: new Date().toISOString(),
     })
-    .eq('id', id)
-    .eq('owner_id', user.id); // RLS + explicit check
+    .eq('id', id);
 
   if (error) return NextResponse.json({ error: 'Could not update group' }, { status: 500 });
   return NextResponse.json({ ok: true });
@@ -38,13 +52,29 @@ export async function DELETE(
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
   const { id } = await params;
+  const admin = createAdminClient();
 
-  const { error } = await supabase
+  // Verify ownership first
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data: group } = await (admin as any)
+    .from('expense_groups')
+    .select('owner_id')
+    .eq('id', id)
+    .single();
+
+  if (!group || group.owner_id !== user.id) {
+    return NextResponse.json({ error: 'Not found or not owner' }, { status: 403 });
+  }
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { error } = await (admin as any)
     .from('expense_groups')
     .delete()
-    .eq('id', id)
-    .eq('owner_id', user.id);
+    .eq('id', id);
 
-  if (error) return NextResponse.json({ error: 'Could not delete group' }, { status: 500 });
+  if (error) {
+    console.error('[DELETE /api/groups/[id]] error:', error);
+    return NextResponse.json({ error: 'Could not delete group' }, { status: 500 });
+  }
   return NextResponse.json({ ok: true });
 }

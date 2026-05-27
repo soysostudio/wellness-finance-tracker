@@ -76,7 +76,12 @@ export function GroupsManager({ userId }: { userId: string }) {
 
   async function deleteGroup(groupId: string) {
     if (!confirm("¿Eliminar este grupo? Los gastos del grupo seguirán en tu historial.")) return;
-    await fetch(`/api/groups/${groupId}`, { method: "DELETE" });
+    const res = await fetch(`/api/groups/${groupId}`, { method: "DELETE" });
+    if (!res.ok) {
+      const d = await res.json() as { error?: string };
+      alert(d.error ?? "No se pudo eliminar el grupo");
+      return;
+    }
     await fetchGroups();
     router.refresh();
   }
