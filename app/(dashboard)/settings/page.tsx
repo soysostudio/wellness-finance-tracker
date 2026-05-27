@@ -2,8 +2,8 @@ import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import { ProfileForm } from "@/components/dashboard/profile-form";
 import { RemindersForm } from "@/components/dashboard/reminders-form";
-import { GroupsManager } from "@/components/dashboard/groups-manager";
 import { AnimateIn } from "@/components/ui/animate-in";
+import Link from "next/link";
 import { LogoutButton } from "@/components/dashboard/logout-button";
 
 export const revalidate = 0;
@@ -82,11 +82,6 @@ export default async function SettingsPage() {
             weekly: weeklyReminder?.id ?? null,
           }}
         />
-      </AnimateIn>
-
-      {/* Groups */}
-      <AnimateIn delay={160}>
-        <GroupsManager userId={user.id} />
       </AnimateIn>
 
       {/* Account */}

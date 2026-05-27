@@ -9,18 +9,22 @@ export async function GET() {
 
   // Groups where user is owner
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { data: ownedGroups } = await (supabase as any)
+  const { data: ownedGroups, error: ownedErr } = await (supabase as any)
     .from('expense_groups')
     .select('id, name, icon, color, owner_id, created_at, group_members(user_id, role, users(full_name, phone_number))')
     .eq('owner_id', user.id);
 
+  if (ownedErr) console.error('[GET /api/groups] ownedGroups error:', ownedErr);
+
   // Groups where user is a member (not owner)
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { data: memberOf } = await (supabase as any)
+  const { data: memberOf, error: memberErr } = await (supabase as any)
     .from('group_members')
     .select('group_id, role, expense_groups(id, name, icon, color, owner_id, created_at, group_members(user_id, role, users(full_name, phone_number)))')
     .eq('user_id', user.id)
     .neq('expense_groups.owner_id', user.id);
+
+  if (memberErr) console.error('[GET /api/groups] memberOf error:', memberErr);
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const memberGroups = ((memberOf as any[]) ?? [])

@@ -11,6 +11,7 @@ import {
   Trophy,
   Sparkles,
   Tag,
+  Users,
   Settings,
   Menu,
   X,
@@ -24,6 +25,7 @@ const NAV_ITEMS: { href: string; label: string; Icon: LucideIcon }[] = [
   { href: "/goals",        label: "Metas",            Icon: Trophy          },
   { href: "/insights",     label: "Insights de Luca", Icon: Sparkles        },
   { href: "/categories",   label: "Categorías",       Icon: Tag             },
+  { href: "/groups",       label: "Grupos",           Icon: Users           },
   { href: "/settings",     label: "Configuración",    Icon: Settings        },
 ];
 
