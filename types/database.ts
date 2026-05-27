@@ -16,6 +16,7 @@ export type MessageIntent =
   | 'delete_last_transaction'
   | 'edit_last_transaction'
   | 'switch_group_context'
+  | 'create_group'
   | 'chat'
   | 'unknown';
 

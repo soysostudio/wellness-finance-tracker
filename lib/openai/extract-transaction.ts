@@ -16,6 +16,7 @@ export interface ExtractionResult {
     category_icon?: string;
     occurred_at: string;
     is_recurring: boolean;
+    group_name?: string | null;  // inline group mention e.g. "para familia"
   };
   query?: {
     period?: 'today' | 'this_week' | 'this_month' | 'last_month';
@@ -41,6 +42,10 @@ export interface ExtractionResult {
     field: 'amount' | 'category' | 'description' | 'delete';
     new_value: string | number | null;
   };
+  new_group?: {
+    name: string;
+    icon: string;
+  };
   reply_draft: string;
 }
 
@@ -52,6 +57,7 @@ export async function extractFromMessage(
     categoryRules?: { keyword: string; category_slug: string }[];
     customCategories?: { id: string; slug: string; name: string; is_income: boolean | null }[];
     activeGroup?: { id: string; name: string; icon: string } | null;
+    userGroups?: { id: string; name: string; icon: string }[];
   }
 ): Promise<ExtractionResult> {
   const openai = getOpenAIClient();
@@ -67,6 +73,7 @@ export async function extractFromMessage(
     categoryRules: options?.categoryRules,
     customCategories: options?.customCategories,
     activeGroup: options?.activeGroup,
+    userGroups: options?.userGroups,
   });
 
   const response = await openai.chat.completions.create({
@@ -93,6 +100,7 @@ export async function extractFromMessage(
     budget: parsed.budget ?? undefined,
     clarification: parsed.clarification ?? undefined,
     edit: parsed.edit ?? undefined,
+    new_group: parsed.new_group ?? undefined,
     reply_draft: parsed.reply_draft ?? 'Uy, no entendí bien. ¿Me lo repites? 😅',
   };
 }

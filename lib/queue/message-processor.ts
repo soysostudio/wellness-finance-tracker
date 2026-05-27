@@ -56,8 +56,8 @@ export async function processIncomingMessage(payload: TwilioWebhookPayload): Pro
     }
   }
 
-  // 2. Load or create conversation + fetch category rules + custom categories in parallel
-  const [convResult, rulesResult, customCatsResult] = await Promise.all([
+  // 2. Load or create conversation + fetch category rules + custom categories + user groups in parallel
+  const [convResult, rulesResult, customCatsResult, groupsResult] = await Promise.all([
     supabase
       .from('conversations')
       .select('id')
@@ -72,11 +72,22 @@ export async function processIncomingMessage(payload: TwilioWebhookPayload): Pro
       .from('categories')
       .select('id, slug, name, is_income')
       .eq('user_id', user.id),
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (supabase as any)
+      .from('group_members')
+      .select('expense_groups(id, name, icon)')
+      .eq('user_id', user.id),
   ]);
 
   type CustomCatRow = { id: string; slug: string; name: string; is_income: boolean | null };
+  type GroupRow = { id: string; name: string; icon: string };
   const categoryRules    = rulesResult.data ?? [];
   const customCategories = (customCatsResult.data ?? []) as CustomCatRow[];
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const userGroups: GroupRow[] = ((groupsResult as any).data ?? [])
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    .map((m: any) => m.expense_groups)
+    .filter((g: GroupRow | null): g is GroupRow => !!g);
   let conversationId: string;
 
   if (convResult.data) {
@@ -154,6 +165,7 @@ export async function processIncomingMessage(payload: TwilioWebhookPayload): Pro
       categoryRules,
       customCategories,
       activeGroup,
+      userGroups,
     });
 
     // 5. Execute intent
@@ -215,6 +227,29 @@ export async function processIncomingMessage(payload: TwilioWebhookPayload): Pro
           categoryId = (newCat?.id as string | undefined) ?? null;
         }
 
+        // ── Inline group resolution ─────────────────────────────────────────
+        // If the AI detected a group mention inline (e.g. "para familia"),
+        // fuzzy-match it against the user's groups and use that group_id.
+        // Takes priority over the persistent active group.
+        const normStr = (s: string) =>
+          s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
+
+        let resolvedGroupId: string | null = activeGroup?.id ?? null;
+        let resolvedGroup: GroupRow | null  = activeGroup ?? null;
+
+        if (result.transaction.group_name) {
+          const targetName = normStr(result.transaction.group_name);
+          const inlineMatch = userGroups.find(
+            (g) => normStr(g.name) === targetName ||
+                   normStr(g.name).includes(targetName) ||
+                   targetName.includes(normStr(g.name))
+          );
+          if (inlineMatch) {
+            resolvedGroupId = inlineMatch.id;
+            resolvedGroup   = inlineMatch;
+          }
+        }
+
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         await supabase.from('transactions').insert({
           user_id:          user.id,
@@ -230,23 +265,22 @@ export async function processIncomingMessage(payload: TwilioWebhookPayload): Pro
           message_id:       savedMessage?.id ?? null,
           confidence:       result.confidence,
           is_recurring:     result.transaction.is_recurring,
-          group_id:         activeGroup?.id ?? null,
+          group_id:         resolvedGroupId,
         } as any);
 
         // Check budget threshold (personal only)
-        if (result.intent === 'log_expense' && categoryId && !activeGroup) {
+        if (result.intent === 'log_expense' && categoryId && !resolvedGroupId) {
           await checkBudgetAlert(user.id, categoryId, result.transaction.amount, supabase, payload.From);
         }
 
-        // If group mode active, append group context to the reply
-        if (activeGroup) {
+        // If expense was tagged to a group, mention it in the reply
+        if (resolvedGroup) {
           replyText = result.reply_draft.replace(
             /Ver resumen:.*$/,
-            `Registrado para *${activeGroup.icon} ${activeGroup.name}* 👥 Ver grupo: ${BASE_URL}/overview`
+            `Anotado para *${resolvedGroup.icon} ${resolvedGroup.name}* 👥 Ver grupo: ${BASE_URL}/overview`
           );
-          // Fallback if the regex didn't match anything
           if (replyText === result.reply_draft) {
-            replyText = `${result.reply_draft}\nRegistrado para *${activeGroup.icon} ${activeGroup.name}* 👥`;
+            replyText = `${result.reply_draft}\nAnotado para *${resolvedGroup.icon} ${resolvedGroup.name}* 👥`;
           }
         } else {
           replyText = result.reply_draft;
@@ -460,6 +494,43 @@ export async function processIncomingMessage(payload: TwilioWebhookPayload): Pro
 
         const action = existing ? 'actualicé' : 'creé';
         replyText = `¡Listo! ${action === 'creé' ? 'Creé' : 'Actualicé'} tu presupuesto de ${budgetCat.name}: ${formatCOPColoquial(result.budget.amount_limit)} al mes 📊 Ver presupuestos: ${BASE_URL}/budgets`;
+        break;
+      }
+
+      case 'create_group': {
+        if (!result.new_group?.name) {
+          replyText = result.reply_draft;
+          break;
+        }
+
+        // Create the group directly via admin client (bypasses RLS)
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const { data: newGroup, error: createErr } = await (supabase as any)
+          .from('expense_groups')
+          .insert({
+            name:     result.new_group.name,
+            icon:     result.new_group.icon ?? '👥',
+            color:    '#6366F1',
+            owner_id: user.id,
+          })
+          .select('id, name, icon')
+          .single() as { data: GroupRow | null; error: unknown };
+
+        if (createErr || !newGroup) {
+          console.error('[message-processor] create_group error:', createErr);
+          replyText = 'No pude crear el grupo 😕 Intenta desde tu dashboard: ' + BASE_URL + '/settings';
+          break;
+        }
+
+        // Auto-add owner as member
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        await (supabase as any).from('group_members').insert({
+          group_id: newGroup.id,
+          user_id:  user.id,
+          role:     'owner',
+        });
+
+        replyText = `¡Listo! Creé el grupo *${newGroup.icon} ${newGroup.name}* 🎉\n\nDesde ahora puedes anotar gastos del grupo así:\n_"40 mil en mercado para ${newGroup.name}"_\n\nO activa el modo grupo: _"modo ${newGroup.name}"_\n\nVer grupo: ${BASE_URL}/settings`;
         break;
       }
 
