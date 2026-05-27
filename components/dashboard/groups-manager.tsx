@@ -251,10 +251,20 @@ export function GroupsManager({ userId }: { userId: string }) {
         </button>
       )}
 
-      <p className="text-xs text-muted-foreground">
-        Activa un grupo en WhatsApp escribiéndole a Luca:{" "}
-        <span className="font-mono">"modo familiar"</span>
-      </p>
+      <div className="space-y-1.5 pt-1 border-t border-foreground/6">
+        <p className="text-xs text-muted-foreground font-medium">¿Cómo usar los grupos?</p>
+        <p className="text-xs text-muted-foreground">
+          <span className="font-medium text-foreground/60">Crear desde WhatsApp:</span>{" "}
+          <span className="font-mono">"crea un grupo para el viaje a NY"</span>
+        </p>
+        <p className="text-xs text-muted-foreground">
+          <span className="font-medium text-foreground/60">Registrar un gasto al grupo:</span>{" "}
+          <span className="font-mono">"40 mil en mercado para familia"</span>
+        </p>
+        <p className="text-xs text-muted-foreground">
+          Los gastos sin mención de grupo siempre son personales.
+        </p>
+      </div>
     </div>
   );
 }
