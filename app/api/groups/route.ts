@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { createAdminClient } from '@/lib/supabase/admin';
 
 // GET /api/groups — list all groups the current user owns or belongs to
 export async function GET() {
@@ -7,9 +8,12 @@ export async function GET() {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
+  // Use admin client to bypass RLS issues with nested joins
+  const admin = createAdminClient();
+
   // Groups where user is owner
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { data: ownedGroups, error: ownedErr } = await (supabase as any)
+  const { data: ownedGroups, error: ownedErr } = await (admin as any)
     .from('expense_groups')
     .select('id, name, icon, color, owner_id, created_at, group_members(user_id, role, users(full_name, phone_number))')
     .eq('owner_id', user.id);
@@ -18,7 +22,7 @@ export async function GET() {
 
   // Groups where user is a member (not owner)
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { data: memberOf, error: memberErr } = await (supabase as any)
+  const { data: memberOf, error: memberErr } = await (admin as any)
     .from('group_members')
     .select('group_id, role, expense_groups(id, name, icon, color, owner_id, created_at, group_members(user_id, role, users(full_name, phone_number)))')
     .eq('user_id', user.id)
