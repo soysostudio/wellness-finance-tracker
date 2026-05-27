@@ -515,7 +515,7 @@ export async function processIncomingMessage(payload: TwilioWebhookPayload): Pro
           role:     'owner',
         });
 
-        replyText = `¡Listo! Creé el grupo *${newGroup.icon} ${newGroup.name}* 🎉\n\nDesde ahora puedes anotar gastos del grupo así:\n_"40 mil en mercado para ${newGroup.name}"_\n\nO activa el modo grupo: _"modo ${newGroup.name}"_\n\nVer grupo: ${BASE_URL}/settings`;
+        replyText = `¡Listo! Creé el grupo *${newGroup.icon} ${newGroup.name}* 🎉\n\nPara anotar gastos del grupo, solo mencionalo:\n_"40 mil en mercado para ${newGroup.name}"_\n\nVer grupo: ${BASE_URL}/groups`;
         break;
       }
 
