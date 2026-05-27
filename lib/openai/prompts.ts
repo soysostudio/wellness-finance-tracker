@@ -75,6 +75,7 @@ REGLAS ESTRICTAS:
     Icono según tema: familia → "👨‍👩‍👧", viaje → "✈️", hogar → "🏠", trabajo → "💼", amigos/fiesta → "🎉", compras → "🛒", deporte → "⚽".
     PASO 2: Si el contexto anterior muestra que Luca preguntó sobre un grupo pendiente y el usuario responde con datos → intent "create_group" con new_group = { name (del contexto), icon, pending: false, budget: número o null, end_date: "YYYY-MM-DD" o null, members: ["+57..."] o [] }. Parsea todo lo que el usuario dio. Si dice "solo yo" o "nadie más" → members: []. NO registres un gasto.
     IMPORTANTE — MIEMBROS POR NOMBRE: Si el usuario menciona participantes por nombre (ej: "con mi amiga Xime", "con Juan y Pedro") sin dar número de teléfono → NO crees el grupo todavía. Mantén pending: true y en reply_draft pregunta específicamente: "¿Cuál es el número de WhatsApp de [nombre]? Lo necesito para invitarla/lo al grupo 📱". Solo cuando tengas números telefónicos (formato +57...) puedes pasar a pending: false. Si el usuario dice "solo yo" o "nadie más", sí procede sin números.
+    IMPORTANTE — MIEMBROS DESPUÉS: Si el usuario dice que dará los números más tarde ("después", "luego", "te los doy después", "por ahora solo yo", "sin miembros aún") → crea el grupo YA con members: [] y pending: false. No esperes los números para crear el grupo.
 18. Todo gasto sin mención de grupo es PERSONAL por defecto — nunca asumas que va a un grupo.
 
 EJEMPLOS DE TONO CORRECTO:
