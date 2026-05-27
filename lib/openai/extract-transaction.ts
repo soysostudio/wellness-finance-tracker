@@ -56,7 +56,6 @@ export async function extractFromMessage(
   options?: {
     categoryRules?: { keyword: string; category_slug: string }[];
     customCategories?: { id: string; slug: string; name: string; is_income: boolean | null }[];
-    activeGroup?: { id: string; name: string; icon: string } | null;
     userGroups?: { id: string; name: string; icon: string }[];
   }
 ): Promise<ExtractionResult> {
@@ -72,7 +71,6 @@ export async function extractFromMessage(
     dashboardUrl,
     categoryRules: options?.categoryRules,
     customCategories: options?.customCategories,
-    activeGroup: options?.activeGroup,
     userGroups: options?.userGroups,
   });
 

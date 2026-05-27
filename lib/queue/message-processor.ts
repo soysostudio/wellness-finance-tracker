@@ -148,23 +148,9 @@ export async function processIncomingMessage(payload: TwilioWebhookPayload): Pro
   let replyText: string;
 
   try {
-    // Fetch active group context if set
-    type GroupCtx = { id: string; name: string; icon: string };
-    let activeGroup: GroupCtx | null = null;
-    if (user.active_group_id) {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const { data: grp } = await (supabase as any)
-        .from('expense_groups')
-        .select('id, name, icon')
-        .eq('id', user.active_group_id)
-        .single() as { data: GroupCtx | null };
-      activeGroup = grp ?? null;
-    }
-
     const result = await extractFromMessage(payload.Body, context.messages, user, {
       categoryRules,
       customCategories,
-      activeGroup,
       userGroups,
     });
 
@@ -230,12 +216,11 @@ export async function processIncomingMessage(payload: TwilioWebhookPayload): Pro
         // ── Inline group resolution ─────────────────────────────────────────
         // If the AI detected a group mention inline (e.g. "para familia"),
         // fuzzy-match it against the user's groups and use that group_id.
-        // Takes priority over the persistent active group.
         const normStr = (s: string) =>
           s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
 
-        let resolvedGroupId: string | null = activeGroup?.id ?? null;
-        let resolvedGroup: GroupRow | null  = activeGroup ?? null;
+        let resolvedGroupId: string | null = null;
+        let resolvedGroup: GroupRow | null  = null;
 
         if (result.transaction.group_name) {
           const targetName = normStr(result.transaction.group_name);
@@ -534,44 +519,7 @@ export async function processIncomingMessage(payload: TwilioWebhookPayload): Pro
         break;
       }
 
-      case 'switch_group_context': {
-        const groupContext = (result as unknown as { group_context?: string; group_name?: string });
-
-        if (!groupContext.group_name || groupContext.group_context === 'personal') {
-          // Switch to personal mode
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          await supabase.from('users').update({ active_group_id: null } as any).eq('id', user.id);
-          replyText = 'Listo, volviste al modo *personal* 👤 Tus próximos gastos son solo tuyos.';
-        } else {
-          // Find group by name (case-insensitive, accent-tolerant)
-          const normStr = (s: string) =>
-            s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
-          const targetName = normStr(groupContext.group_name);
-
-          type GroupRow = { id: string; name: string; icon: string };
-          type MembershipRow = { group_id: string; expense_groups: GroupRow | null };
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          const { data: memberships } = await (supabase as any)
-            .from('group_members')
-            .select('group_id, expense_groups(id, name, icon)')
-            .eq('user_id', user.id) as { data: MembershipRow[] | null };
-
-          const found = (memberships ?? [])
-            .map((m) => m.expense_groups)
-            .find((g): g is GroupRow => !!g && normStr(g.name) === targetName);
-
-          if (!found) {
-            replyText = `No encontré el grupo "${groupContext.group_name}" 🤔 Revisa el nombre en tu dashboard: ${BASE_URL}/settings`;
-          } else {
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            await supabase.from('users').update({ active_group_id: found.id } as any).eq('id', user.id);
-            replyText = `Listo, modo *${found.icon} ${found.name}* activado 👥 Tus próximos gastos irán al grupo.\n\nPara volver a modo personal escribe _"modo personal"_.`;
-          }
-        }
-        break;
-      }
-
-      default:
+default:
         replyText = result.reply_draft;
     }
 

@@ -14,7 +14,6 @@ export function buildSystemPrompt(params: {
   dashboardUrl: string;
   categoryRules?: { keyword: string; category_slug: string }[];
   customCategories?: { id: string; slug: string; name: string; is_income: boolean | null }[];
-  activeGroup?: { id: string; name: string; icon: string } | null;
   userGroups?: { id: string; name: string; icon: string }[];
 }): string {
   const rulesSection = params.categoryRules && params.categoryRules.length > 0
@@ -35,10 +34,6 @@ ${params.categoryRules.map((r) => `- "${r.keyword}" → ${r.category_slug}`).joi
 ${customCatList.map((c) => `- "${c.nombre}" → slug: "${c.slug}"`).join('\n')}\n`
     : '';
 
-  const groupSection = params.activeGroup
-    ? `- Modo activo: Grupo *${params.activeGroup.icon} ${params.activeGroup.name}* — los gastos van al grupo\n`
-    : `- Modo activo: Personal\n`;
-
   const userGroupsSection = (params.userGroups ?? []).length > 0
     ? `\nGrupos de gastos compartidos del usuario (úsalos para detectar menciones inline o al crear grupos):
 ${(params.userGroups ?? []).map((g) => `- "${g.name}" ${g.icon}`).join('\n')}\n`
@@ -52,7 +47,7 @@ Contexto del usuario:
 - Zona horaria: ${params.timezone}
 - Ingreso mensual: ${params.monthlyIncome ? `$${params.monthlyIncome.toLocaleString('es-CO')}` : 'No configurado'}
 - Dashboard: ${params.dashboardUrl}/overview
-${groupSection}${rulesSection}${customCatsSection}${userGroupsSection}
+${rulesSection}${customCatsSection}${userGroupsSection}
 Categorías disponibles:
 ${JSON.stringify(allCategories, null, 2)}
 
@@ -72,12 +67,9 @@ REGLAS ESTRICTAS:
 13. Si el usuario pide ver su dashboard, gastos, o resumen → incluir el link: ${params.dashboardUrl}/overview
 14. Correcciones: si el usuario dice "el último gasto fue X no Y", "perdón era X no Y", "corrijo lo anterior" → usar intent "edit_last_transaction" con field="description" y new_value=el nombre correcto. Si cambia el monto → field="amount". Si cambia la categoría → field="category". Nunca crees un nuevo gasto para una corrección.
 15. Si el usuario quiere crear un presupuesto (ej: "pon presupuesto de 500 mil en comida", "quiero gastar máximo 200 mil en transporte") → intent "set_budget" con el campo "budget" completado. Usa el mismo category_slug del sistema.
-16. Si el usuario dice "modo [nombre de grupo]", "activar grupo [nombre]", "cambia al grupo [nombre]" → intent "switch_group_context" con "group_name" = el nombre del grupo. NO registres un gasto.
-17. Si el usuario dice "modo personal", "volver a personal", "gastos personales", "salir del grupo" → intent "switch_group_context" con "group_context" = "personal". NO registres un gasto.
-18. Si el modo activo es un grupo, menciona el nombre del grupo en el reply_draft al confirmar gastos.
-19. GRUPOS INLINE: Si el usuario menciona un grupo DENTRO de un gasto (ej: "40 mil ropa para familia", "mercado del viaje NY", "transporte familiar", "almuerzo del grupo casa"), registra el gasto normalmente (intent "log_expense") pero agrega "group_name" dentro del objeto transaction con el nombre del grupo mencionado. Tolera variaciones: "familiar" → "Familiar", "el viaje" → "Viaje NY" si existe ese grupo. Si el grupo no existe en la lista del usuario, igual incluye group_name con lo que dijo el usuario.
-20. CREAR GRUPO: Si el usuario dice "crea un grupo para [nombre]", "nuevo grupo [nombre]", "crea el grupo [nombre]", "quiero un grupo para [nombre]" → intent "create_group" con new_group = { name: nombre limpio con mayúscula inicial, icon: emoji representativo }. Elige el icono según el tema: familia/familiar → "👨‍👩‍👧", viaje/trip → "✈️", casa/hogar → "🏠", trabajo → "💼", amigos/fiesta → "🎉", compras → "🛒", deporte → "⚽". NO registres un gasto.
-21. NO uses "switch_group_context" para crear grupos — usa "create_group". NO uses "create_group" para cambiar de modo — usa "switch_group_context".
+16. GRUPOS INLINE: Si el usuario menciona un grupo DENTRO de un gasto (ej: "40 mil ropa para familia", "mercado del viaje NY", "transporte familiar", "almuerzo del grupo casa"), registra el gasto normalmente (intent "log_expense") pero agrega "group_name" dentro del objeto transaction con el nombre del grupo mencionado. Tolera variaciones: "familiar" → "Familiar", "el viaje" → "Viaje NY" si existe ese grupo. Si el grupo no existe en la lista del usuario, igual incluye group_name con lo que dijo el usuario.
+17. CREAR GRUPO: Si el usuario dice "crea un grupo para [nombre]", "nuevo grupo [nombre]", "crea el grupo [nombre]", "quiero un grupo para [nombre]" → intent "create_group" con new_group = { name: nombre limpio con mayúscula inicial, icon: emoji representativo }. Elige el icono según el tema: familia/familiar → "👨‍👩‍👧", viaje/trip → "✈️", casa/hogar → "🏠", trabajo → "💼", amigos/fiesta → "🎉", compras → "🛒", deporte → "⚽". NO registres un gasto.
+18. Todo gasto sin mención de grupo es PERSONAL por defecto — nunca asumas que va a un grupo.
 
 EJEMPLOS DE TONO CORRECTO:
 - "¡Listo! Te anoté 45 mil en Rappi 🍔 Ya llevas 320 mil en comida este mes. Ver resumen: ${params.dashboardUrl}/overview"
@@ -89,7 +81,7 @@ EJEMPLOS DE TONO CORRECTO:
 
 IMPORTANTE: Siempre devuelve JSON válido con esta estructura exacta:
 {
-  "intent": "log_expense" | "log_income" | "query_balance" | "query_spending" | "set_goal" | "set_budget" | "spending_summary" | "clarify_merchant" | "clarify_category" | "delete_last_transaction" | "edit_last_transaction" | "switch_group_context" | "create_group" | "chat" | "unknown",
+  "intent": "log_expense" | "log_income" | "query_balance" | "query_spending" | "set_goal" | "set_budget" | "spending_summary" | "clarify_merchant" | "clarify_category" | "delete_last_transaction" | "edit_last_transaction" | "create_group" | "chat" | "unknown",
   "confidence": 0.0-1.0,
   "transaction": {
     "amount": number,
@@ -130,8 +122,6 @@ IMPORTANTE: Siempre devuelve JSON válido con esta estructura exacta:
     "name": string,
     "icon": string
   } | null,
-  "group_name": string | null,
-  "group_context": "personal" | null,
   "reply_draft": string
 }`;
 }
