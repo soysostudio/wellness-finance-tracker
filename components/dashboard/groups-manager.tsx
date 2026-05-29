@@ -1,10 +1,12 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Trash2, UserPlus, X, ChevronDown, ChevronUp } from "lucide-react";
+import Link from "next/link";
+import { Trash2, UserPlus, X, ChevronDown, ChevronUp, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { formatCOP } from "@/lib/utils/currency";
 
 interface Member {
   user_id: string;
@@ -21,16 +23,21 @@ interface Group {
   group_members: Member[];
 }
 
-interface GroupsData {
-  owned:  Group[];
-  member: Group[];
-}
-
 const GROUP_ICONS = ["👨‍👩‍👧", "✈️", "🏠", "🎉", "💼", "🏖️", "🛒", "🎮"];
 
-export function GroupsManager({ userId }: { userId: string }) {
-  const [data, setData]         = useState<GroupsData | null>(null);
-  const [loading, setLoading]   = useState(true);
+export function GroupsManager({
+  userId,
+  initialOwned,
+  initialMember,
+  spendingByGroup,
+}: {
+  userId: string;
+  initialOwned: Group[];
+  initialMember: Group[];
+  spendingByGroup: Record<string, number>;
+}) {
+  const [owned, setOwned]     = useState<Group[]>(initialOwned);
+  const [member, setMember]   = useState<Group[]>(initialMember);
   const [expanded, setExpanded] = useState<string | null>(null);
   const [creating, setCreating] = useState(false);
   const [newName, setNewName]   = useState("");
@@ -39,17 +46,14 @@ export function GroupsManager({ userId }: { userId: string }) {
   const [error, setError]       = useState("");
   const router = useRouter();
 
-  const fetchGroups = useCallback(async () => {
-    setLoading(true);
-    try {
-      const res = await fetch("/api/groups");
-      if (res.ok) setData(await res.json() as GroupsData);
-    } finally {
-      setLoading(false);
+  async function refetch() {
+    const res = await fetch("/api/groups");
+    if (res.ok) {
+      const d = await res.json() as { owned: Group[]; member: Group[] };
+      setOwned(d.owned ?? []);
+      setMember(d.member ?? []);
     }
-  }, []);
-
-  useEffect(() => { void fetchGroups(); }, [fetchGroups]);
+  }
 
   async function createGroup(e: React.FormEvent) {
     e.preventDefault();
@@ -70,7 +74,7 @@ export function GroupsManager({ userId }: { userId: string }) {
     setNewName("");
     setNewIcon("👨‍👩‍👧");
     setCreating(false);
-    await fetchGroups();
+    await refetch();
     router.refresh();
   }
 
@@ -82,32 +86,23 @@ export function GroupsManager({ userId }: { userId: string }) {
       alert(d.error ?? "No se pudo eliminar el grupo");
       return;
     }
-    await fetchGroups();
+    await refetch();
     router.refresh();
   }
 
   async function leaveGroup(groupId: string) {
     if (!confirm("¿Salir del grupo?")) return;
     await fetch(`/api/groups/${groupId}/members/${userId}`, { method: "DELETE" });
-    await fetchGroups();
+    await refetch();
     router.refresh();
   }
 
   async function removeMember(groupId: string, memberId: string) {
     await fetch(`/api/groups/${groupId}/members/${memberId}`, { method: "DELETE" });
-    await fetchGroups();
+    await refetch();
   }
 
-  if (loading) {
-    return (
-      <div className="bg-card rounded-2xl p-5 space-y-4">
-        <p className="text-[10px] uppercase tracking-widest text-foreground/40">Grupos</p>
-        <p className="text-sm text-foreground/40">Cargando grupos...</p>
-      </div>
-    );
-  }
-
-  const allGroups = [...(data?.owned ?? []), ...(data?.member ?? [])];
+  const allGroups = [...owned, ...member];
 
   return (
     <div className="bg-card rounded-2xl p-5 space-y-4">
@@ -119,9 +114,10 @@ export function GroupsManager({ userId }: { userId: string }) {
       {allGroups.length > 0 && (
         <div className="space-y-2">
           {allGroups.map((group) => {
-            const isOwner  = group.owner_id === userId;
+            const isOwner    = group.owner_id === userId;
             const isExpanded = expanded === group.id;
             const memberCount = group.group_members?.length ?? 0;
+            const spent = spendingByGroup[group.id] ?? 0;
 
             return (
               <div key={group.id} className="rounded-xl border border-foreground/8 overflow-hidden">
@@ -130,12 +126,28 @@ export function GroupsManager({ userId }: { userId: string }) {
                   <span className="text-xl shrink-0">{group.icon}</span>
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-semibold truncate">{group.name}</p>
-                    <p className="text-xs text-foreground/40">
-                      {memberCount} {memberCount === 1 ? "miembro" : "miembros"}
-                      {!isOwner && " · Participante"}
-                    </p>
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <p className="text-xs text-foreground/40">
+                        {memberCount} {memberCount === 1 ? "miembro" : "miembros"}
+                        {!isOwner && " · Participante"}
+                      </p>
+                      {spent > 0 && (
+                        <p className="text-xs text-foreground/50 font-medium">
+                          {formatCOP(spent)} este mes
+                        </p>
+                      )}
+                    </div>
                   </div>
                   <div className="flex items-center gap-1 shrink-0">
+                    {/* Link to deep dive */}
+                    <Link
+                      href={`/groups/${group.id}`}
+                      className="p-1.5 rounded-lg text-foreground/40 hover:text-foreground hover:bg-foreground/6 transition-colors"
+                      title="Ver gastos"
+                    >
+                      <ArrowRight size={15} />
+                    </Link>
+
                     {isOwner && (
                       <button
                         onClick={() => setExpanded(isExpanded ? null : group.id)}
@@ -165,7 +177,6 @@ export function GroupsManager({ userId }: { userId: string }) {
                 {/* Expanded: member management (owner only) */}
                 {isOwner && isExpanded && (
                   <div className="border-t border-foreground/8 px-4 py-3 space-y-3">
-                    {/* Member list */}
                     <div className="space-y-1.5">
                       {(group.group_members ?? []).map((m) => (
                         <div key={m.user_id} className="flex items-center justify-between gap-2">
@@ -191,9 +202,7 @@ export function GroupsManager({ userId }: { userId: string }) {
                         </div>
                       ))}
                     </div>
-
-                    {/* Add member */}
-                    <AddMemberRow groupId={group.id} onAdded={fetchGroups} />
+                    <AddMemberRow groupId={group.id} onAdded={refetch} />
                   </div>
                 )}
               </div>
@@ -260,11 +269,11 @@ export function GroupsManager({ userId }: { userId: string }) {
         <p className="text-xs text-muted-foreground font-medium">¿Cómo usar los grupos?</p>
         <p className="text-xs text-muted-foreground">
           <span className="font-medium text-foreground/60">Crear desde WhatsApp:</span>{" "}
-          <span className="font-mono">"crea un grupo para el viaje a NY"</span>
+          <span className="font-mono">&quot;crea un grupo para el viaje a NY&quot;</span>
         </p>
         <p className="text-xs text-muted-foreground">
           <span className="font-medium text-foreground/60">Registrar un gasto al grupo:</span>{" "}
-          <span className="font-mono">"40 mil en mercado para familia"</span>
+          <span className="font-mono">&quot;40 mil en mercado para familia&quot;</span>
         </p>
         <p className="text-xs text-muted-foreground">
           Los gastos sin mención de grupo siempre son personales.
@@ -274,16 +283,10 @@ export function GroupsManager({ userId }: { userId: string }) {
   );
 }
 
-function AddMemberRow({
-  groupId,
-  onAdded,
-}: {
-  groupId: string;
-  onAdded: () => void;
-}) {
-  const [phone, setPhone]   = useState("");
+function AddMemberRow({ groupId, onAdded }: { groupId: string; onAdded: () => void }) {
+  const [phone, setPhone]     = useState("");
   const [loading, setLoading] = useState(false);
-  const [error, setError]   = useState("");
+  const [error, setError]     = useState("");
   const [success, setSuccess] = useState("");
 
   async function handleAdd(e: React.FormEvent) {

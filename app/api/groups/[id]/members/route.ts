@@ -84,13 +84,11 @@ export async function POST(
   // Send WhatsApp invitation (fire-and-forget)
   if (targetUser.phone_number) {
     sendWhatsAppMessage(
-      targetUser.phone_number,
+      `whatsapp:${targetUser.phone_number}`,
       `👋 ¡Hola, ${memberName}! *${ownerName}* te agregó al grupo *${group.icon} ${group.name}* en Luca.\n\n` +
-      `Para registrar gastos del grupo, escríbeme:\n` +
-      `_"modo ${group.name}"_\n\n` +
-      `Y para volver a tus gastos personales:\n` +
-      `_"modo personal"_\n\n` +
-      `Ver el grupo en tu dashboard: ${BASE_URL}/overview`
+      `Para registrar gastos del grupo, solo mencionalo:\n` +
+      `_"40 mil en mercado para ${group.name}"_\n\n` +
+      `Ver el grupo: ${BASE_URL}/groups/${group.id}`
     ).catch(console.error);
   }
 

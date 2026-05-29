@@ -550,7 +550,7 @@ export async function processIncomingMessage(payload: TwilioWebhookPayload): Pro
               const memberName = memberUser.full_name?.split(' ')[0] ?? 'tú';
               sendWhatsAppMessage(
                 `whatsapp:${phone}`,
-                `👋 ¡Hola, ${memberName}! *${ownerName}* te agregó al grupo *${newGroup.icon} ${newGroup.name}* en Luca.\n\nPara registrar gastos del grupo escríbeme:\n_"40 mil en [gasto] para ${newGroup.name}"_\n\nVer el grupo: ${BASE_URL}/groups`
+                `👋 ¡Hola, ${memberName}! *${ownerName}* te agregó al grupo *${newGroup.icon} ${newGroup.name}* en Luca.\n\nPara registrar gastos del grupo, solo mencionalo:\n_"40 mil en mercado para ${newGroup.name}"_\n\nVer el grupo: ${BASE_URL}/groups/${newGroup.id}`
               ).catch(console.error);
             }
           } else {
@@ -578,7 +578,7 @@ export async function processIncomingMessage(payload: TwilioWebhookPayload): Pro
           ? `\n\n${membersAdded > 0 ? `✅ Ya agregué a ${membersAdded} ${membersAdded === 1 ? 'miembro' : 'miembros'} con cuenta Luca.` : ''}${membersPending > 0 ? `\n📲 Le envié invitación de registro a ${membersPending} ${membersPending === 1 ? 'persona' : 'personas'} — se unirán automáticamente cuando creen su cuenta.` : ''}`
           : '';
 
-        replyText = `¡Listo! Creé el grupo *${newGroup.icon} ${newGroup.name}* 🎉${memberLine}\n\nPara anotar gastos del grupo, solo mencionalo:\n_"40 mil en mercado para ${newGroup.name}"_\n\nVer grupo: ${BASE_URL}/groups`;
+        replyText = `¡Listo! Creé el grupo *${newGroup.icon} ${newGroup.name}* 🎉${memberLine}\n\nPara anotar gastos del grupo, solo mencionalo:\n_"40 mil en mercado para ${newGroup.name}"_\n\nVer grupo: ${BASE_URL}/groups/${newGroup.id}`;
         break;
       }
 

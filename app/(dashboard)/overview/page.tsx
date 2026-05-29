@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { formatCOP } from "@/lib/utils/currency";
 import { getMonthRange } from "@/lib/utils/dates";
 import { getCategoryColor, getCategoryIcon } from "@/lib/utils/categories";
@@ -7,12 +8,11 @@ import { TransactionRow } from "@/components/dashboard/transaction-row";
 import { AnimateIn } from "@/components/ui/animate-in";
 import { CategoryIcon } from "@/components/ui/category-icon";
 import { MonthNav } from "@/components/dashboard/month-nav";
-import { GroupSwitcher } from "@/components/dashboard/group-switcher";
 import Link from "next/link";
 
 export const revalidate = 0;
 
-// ── Personal overview (existing logic) ───────────────────────────────────────
+// ── Personal overview ─────────────────────────────────────────────────────────
 async function getOverviewData(userId: string, yearMonth: string) {
   const supabase = await createClient();
   const { start, end } = getMonthRange(yearMonth);
@@ -48,51 +48,47 @@ async function getOverviewData(userId: string, yearMonth: string) {
   return buildOverviewResult(transactions ?? [], expenses, income, goals ?? [], budgets ?? []);
 }
 
-// ── Group overview ────────────────────────────────────────────────────────────
-async function getGroupOverviewData(groupId: string, yearMonth: string) {
-  const supabase = await createClient();
+// ── Groups spending summary ───────────────────────────────────────────────────
+async function getGroupsSpending(userId: string, yearMonth: string) {
+  const admin = createAdminClient();
   const { start, end } = getMonthRange(yearMonth);
 
-  const [{ data: transactions }, { data: members }] = await Promise.all([
-    supabase
-      .from("transactions")
-      .select("id, amount, transaction_type, category_id, occurred_at, description, merchant, user_id, categories(name, slug, color, icon)")
-      .eq("group_id", groupId)
-      .gte("occurred_at", start)
-      .lte("occurred_at", end)
-      .order("occurred_at", { ascending: false }),
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data: memberRows } = await (admin as any)
+    .from("group_members")
+    .select("group_id, expense_groups(id, name, icon, color, budget)")
+    .eq("user_id", userId);
 
-    supabase
-      .from("group_members")
-      .select("user_id, users(full_name)")
-      .eq("group_id", groupId),
-  ]);
+  type GroupInfo = { id: string; name: string; icon: string; color: string; budget: number | null };
+  const groups: GroupInfo[] = ((memberRows ?? []) as { expense_groups: GroupInfo | GroupInfo[] | null }[])
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    .map((m: any) => m.expense_groups as GroupInfo | GroupInfo[] | null)
+    .map((g) => (Array.isArray(g) ? g[0] : g))
+    .filter((g): g is GroupInfo => !!g);
 
-  const expenses = (transactions ?? []).filter((t) => t.transaction_type === "expense");
-  const income   = (transactions ?? []).filter((t) => t.transaction_type === "income");
+  if (groups.length === 0) return [];
 
-  // Per-member contribution
-  const byMember: Record<string, { name: string; total: number }> = {};
-  for (const t of expenses) {
-    const uid = (t as { user_id: string }).user_id;
-    if (!byMember[uid]) {
-      const m = (members ?? []).find((mem) => mem.user_id === uid);
-      const usersData = m?.users as { full_name: string | null } | { full_name: string | null }[] | null;
-      const userObj   = Array.isArray(usersData) ? usersData[0] : usersData;
-      const name = userObj?.full_name?.split(" ")[0] ?? "Miembro";
-      byMember[uid] = { name, total: 0 };
-    }
-    byMember[uid].total += t.amount;
+  const groupIds = groups.map((g) => g.id);
+
+  // Single query: all group transactions this month
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data: txs } = await (admin as any)
+    .from("transactions")
+    .select("amount, group_id, transaction_type")
+    .in("group_id", groupIds)
+    .eq("transaction_type", "expense")
+    .gte("occurred_at", start)
+    .lte("occurred_at", end);
+
+  const spendingByGroup: Record<string, number> = {};
+  for (const tx of (txs ?? []) as { amount: number; group_id: string }[]) {
+    spendingByGroup[tx.group_id] = (spendingByGroup[tx.group_id] ?? 0) + tx.amount;
   }
 
-  const memberContributions = Object.entries(byMember)
-    .map(([uid, v]) => ({ userId: uid, name: v.name, total: v.total }))
-    .sort((a, b) => b.total - a.total);
-
-  return {
-    ...buildOverviewResult(transactions ?? [], expenses, income, [], []),
-    memberContributions,
-  };
+  return groups.map((g) => ({
+    ...g,
+    totalSpent: spendingByGroup[g.id] ?? 0,
+  }));
 }
 
 // ── Shared helper ─────────────────────────────────────────────────────────────
@@ -125,11 +121,10 @@ function buildOverviewResult(
   return {
     totalExpenses,
     totalIncome,
-    categoryBreakdown:    Object.values(byCat).sort((a, b) => b.total - a.total).slice(0, 6),
-    recentTransactions:   transactions.slice(0, 8),
+    categoryBreakdown:  Object.values(byCat).sort((a, b) => b.total - a.total).slice(0, 6),
+    recentTransactions: transactions.slice(0, 8),
     goals,
     budgets,
-    memberContributions:  [] as { userId: string; name: string; total: number }[],
   };
 }
 
@@ -137,58 +132,32 @@ function buildOverviewResult(
 export default async function OverviewPage({
   searchParams,
 }: {
-  searchParams: Promise<{ month?: string; group?: string }>;
+  searchParams: Promise<{ month?: string }>;
 }) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
-  const { month: monthParam, group: groupParam } = await searchParams;
+  const { month: monthParam } = await searchParams;
 
-  // Resolve month
   const now = new Date();
   const currentYM = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
   const yearMonth  = /^\d{4}-\d{2}$/.test(monthParam ?? "") ? monthParam! : currentYM;
   const isCurrentMonth = yearMonth === currentYM;
 
-  // Load user profile + groups in parallel
-  const [profileResult, groupsResult] = await Promise.all([
-    supabase
-      .from("users")
-      .select("full_name, monthly_income")
-      .eq("id", user.id)
-      .single(),
-
-    supabase
-      .from("group_members")
-      .select("group_id, expense_groups(id, name, icon, color, owner_id)")
-      .eq("user_id", user.id),
+  const [profileResult, overview, groupsSpending] = await Promise.all([
+    supabase.from("users").select("full_name, monthly_income").eq("id", user.id).single(),
+    getOverviewData(user.id, yearMonth),
+    getGroupsSpending(user.id, yearMonth),
   ]);
 
-  const profile = profileResult.data;
-  type GroupShape = { id: string; name: string; icon: string; color: string; owner_id: string };
-  const userGroups = (groupsResult.data ?? [])
-    .map((m) => m.expense_groups as GroupShape | GroupShape[] | null)
-    .map((g) => (Array.isArray(g) ? g[0] : g))
-    .filter((g): g is GroupShape => !!g);
-
-  // Validate group param belongs to this user
-  const activeGroup = groupParam
-    ? userGroups.find((g) => g.id === groupParam) ?? null
-    : null;
-
-  // Fetch overview data
-  const overview = activeGroup
-    ? await getGroupOverviewData(activeGroup.id, yearMonth)
-    : await getOverviewData(user.id, yearMonth);
-
+  const profile   = profileResult.data;
   const firstName = profile?.full_name?.split(" ")[0] ?? "tú";
 
-  // Income display (personal only)
   const displayIncome  = overview.totalIncome > 0
     ? overview.totalIncome
-    : (!activeGroup && isCurrentMonth) ? (profile?.monthly_income ?? 0) : 0;
-  const incomeIsSalary = !activeGroup && overview.totalIncome === 0 && isCurrentMonth && (profile?.monthly_income ?? 0) > 0;
+    : isCurrentMonth ? (profile?.monthly_income ?? 0) : 0;
+  const incomeIsSalary = overview.totalIncome === 0 && isCurrentMonth && (profile?.monthly_income ?? 0) > 0;
   const displayNet     = displayIncome - overview.totalExpenses;
 
   return (
@@ -196,26 +165,13 @@ export default async function OverviewPage({
 
       {/* ── Header ─────────────────────────────────── */}
       <AnimateIn>
-        <div className="space-y-3">
-          <div className="flex items-start justify-between gap-4">
-            <div>
-              <h1 className="font-serif text-4xl md:text-5xl font-normal text-foreground">
-                {activeGroup
-                  ? `${activeGroup.icon} ${activeGroup.name}`
-                  : isCurrentMonth ? `Hola, ${firstName} 👋` : "Resumen"}
-              </h1>
-            </div>
-            <div className="pt-1">
-              <MonthNav yearMonth={yearMonth} />
-            </div>
+        <div className="flex items-start justify-between gap-4">
+          <h1 className="font-serif text-4xl md:text-5xl font-normal text-foreground">
+            {isCurrentMonth ? `Hola, ${firstName} 👋` : "Resumen"}
+          </h1>
+          <div className="pt-1">
+            <MonthNav yearMonth={yearMonth} />
           </div>
-
-          {/* Group switcher */}
-          <GroupSwitcher
-            groups={userGroups}
-            activeGroupId={activeGroup?.id ?? null}
-            yearMonth={yearMonth}
-          />
         </div>
       </AnimateIn>
 
@@ -235,36 +191,6 @@ export default async function OverviewPage({
           />
         </div>
       </AnimateIn>
-
-      {/* ── Member contributions (group mode only) ─── */}
-      {activeGroup && overview.memberContributions.length > 0 && (
-        <section>
-          <AnimateIn>
-            <SectionLabel>Contribución por miembro</SectionLabel>
-          </AnimateIn>
-          <div className="mt-3 space-y-2">
-            {overview.memberContributions.map((m, i) => {
-              const pct = overview.totalExpenses > 0
-                ? Math.round((m.total / overview.totalExpenses) * 100)
-                : 0;
-              return (
-                <AnimateIn key={m.userId} delay={i * 40}>
-                  <div className="flex items-center justify-between gap-4">
-                    <div className="flex items-center gap-2 min-w-0">
-                      <span className="text-sm">👤</span>
-                      <span className="text-sm font-medium truncate">{m.name}</span>
-                    </div>
-                    <div className="flex items-center gap-3 shrink-0">
-                      <span className="text-xs text-foreground/40">{pct}%</span>
-                      <span className="font-serif text-base font-normal">{formatCOP(m.total)}</span>
-                    </div>
-                  </div>
-                </AnimateIn>
-              );
-            })}
-          </div>
-        </section>
-      )}
 
       {/* ── Category breakdown ─────────────────────── */}
       {overview.categoryBreakdown.length > 0 && (
@@ -294,19 +220,60 @@ export default async function OverviewPage({
         </section>
       )}
 
+      {/* ── Groups ─────────────────────────────────── */}
+      {groupsSpending.length > 0 && (
+        <section>
+          <AnimateIn>
+            <SectionLabel>Tus grupos</SectionLabel>
+          </AnimateIn>
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mt-3">
+            {groupsSpending.map((g, i) => {
+              const pct = g.budget && g.budget > 0
+                ? Math.min(Math.round((g.totalSpent / g.budget) * 100), 100)
+                : null;
+              return (
+                <AnimateIn key={g.id} delay={i * 60}>
+                  <Link
+                    href={`/groups/${g.id}`}
+                    className="block rounded-2xl p-4 flex flex-col gap-2 h-full bg-card border border-foreground/8 transition-opacity hover:opacity-80 active:scale-[0.98]"
+                  >
+                    <span className="text-2xl leading-none">{g.icon}</span>
+                    <p className="text-[10px] text-foreground/50 uppercase tracking-widest leading-none truncate">
+                      {g.name}
+                    </p>
+                    <p className="font-serif text-xl font-normal text-foreground">
+                      {formatCOP(g.totalSpent)}
+                    </p>
+                    {pct !== null && (
+                      <div className="space-y-1 mt-0.5">
+                        <div className="h-1 bg-foreground/10 rounded-full overflow-hidden">
+                          <div
+                            className={`h-full rounded-full transition-all ${pct >= 90 ? "bg-[#E8673C]" : "bg-foreground/40"}`}
+                            style={{ width: `${pct}%` }}
+                          />
+                        </div>
+                        <p className="text-[9px] text-foreground/30">{pct}% del presupuesto</p>
+                      </div>
+                    )}
+                  </Link>
+                </AnimateIn>
+              );
+            })}
+          </div>
+        </section>
+      )}
+
       {/* ── Recent transactions ────────────────────── */}
       <section>
         <AnimateIn>
           <div className="flex items-center justify-between mb-3">
             <SectionLabel>Últimas transacciones</SectionLabel>
-            {!activeGroup && (
-              <a
-                href="/transactions"
-                className="text-xs text-foreground/40 hover:text-foreground transition-colors underline underline-offset-4"
-              >
-                Ver todas
-              </a>
-            )}
+            <a
+              href="/transactions"
+              className="text-xs text-foreground/40 hover:text-foreground transition-colors underline underline-offset-4"
+            >
+              Ver todas
+            </a>
           </div>
         </AnimateIn>
         <AnimateIn delay={60}>
@@ -324,8 +291,8 @@ export default async function OverviewPage({
         </AnimateIn>
       </section>
 
-      {/* ── Goals (personal + current month only) ──── */}
-      {!activeGroup && isCurrentMonth && overview.goals.length > 0 && (
+      {/* ── Goals (current month only) ─────────────── */}
+      {isCurrentMonth && overview.goals.length > 0 && (
         <section>
           <AnimateIn>
             <SectionLabel className="mb-3">Tus metas activas</SectionLabel>
@@ -365,13 +332,11 @@ export default async function OverviewPage({
       {overview.totalExpenses === 0 && overview.totalIncome === 0 && (
         <AnimateIn>
           <div className="text-center py-16 space-y-4">
-            <p className="text-5xl">{activeGroup ? activeGroup.icon : "💬"}</p>
+            <p className="text-5xl">💬</p>
             <p className="font-serif text-2xl font-normal text-foreground">
-              {activeGroup
-                ? `Sin movimientos en ${activeGroup.name}`
-                : isCurrentMonth ? "Sin movimientos este mes" : "Sin movimientos ese mes"}
+              {isCurrentMonth ? "Sin movimientos este mes" : "Sin movimientos ese mes"}
             </p>
-            {!activeGroup && isCurrentMonth && (
+            {isCurrentMonth && (
               <>
                 <p className="text-foreground/50 text-sm max-w-xs mx-auto leading-relaxed">
                   Cuéntale a Luca tu primer gasto por WhatsApp y aparecerá aquí al instante.
@@ -380,11 +345,6 @@ export default async function OverviewPage({
                   &quot;gasté 45 mil en Rappi&quot;
                 </p>
               </>
-            )}
-            {activeGroup && (
-              <p className="text-foreground/50 text-sm max-w-xs mx-auto leading-relaxed">
-                Activa el modo grupo en WhatsApp y registra gastos compartidos.
-              </p>
             )}
           </div>
         </AnimateIn>
