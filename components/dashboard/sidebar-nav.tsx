@@ -26,13 +26,14 @@ const NAV_ITEMS: { href: string; label: string; Icon: LucideIcon }[] = [
   { href: "/settings",     label: "Configuración",    Icon: Settings        },
 ];
 
-export function SidebarNav() {
+export function SidebarNav({ budgetAlert = false }: { budgetAlert?: boolean }) {
   const pathname = usePathname();
 
   return (
     <nav className="flex-1 px-3 py-4 space-y-0.5">
       {NAV_ITEMS.map(({ href, label, Icon }) => {
-        const active = pathname.startsWith(href);
+        const active  = pathname.startsWith(href);
+        const showDot = href === "/budgets" && budgetAlert;
         return (
           <Link
             key={href}
@@ -49,7 +50,10 @@ export function SidebarNav() {
               strokeWidth={active ? 2 : 1.5}
               className="shrink-0"
             />
-            {label}
+            <span className="flex-1">{label}</span>
+            {showDot && (
+              <span className="w-2 h-2 rounded-full bg-[#E8673C] shrink-0" />
+            )}
           </Link>
         );
       })}
