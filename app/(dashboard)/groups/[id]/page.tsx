@@ -2,7 +2,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import { formatCOP } from "@/lib/utils/currency";
 import { getMonthRange } from "@/lib/utils/dates";
-import { getCategoryColor, getCategoryIcon } from "@/lib/utils/categories";
+import { getCategoryColor, getCategoryIcon, getCategoryTint, tintFromColor } from "@/lib/utils/categories";
 import { redirect, notFound } from "next/navigation";
 import { TransactionRow } from "@/components/dashboard/transaction-row";
 import { AnimateIn } from "@/components/ui/animate-in";
@@ -259,12 +259,12 @@ export default async function GroupDeepDivePage({
             {categoryBreakdown.map((cat, i) => (
               <AnimateIn key={cat.slug} delay={i * 60}>
                 <div
-                  className="rounded-2xl p-4 flex flex-col gap-2"
-                  style={{ backgroundColor: cat.color }}
+                  className="rounded-2xl p-4 flex flex-col gap-2 border"
+                  style={{ backgroundColor: getCategoryTint(cat.slug), borderColor: tintFromColor(cat.color, 34) }}
                 >
-                  <CategoryIcon slug={cat.slug} size={18} strokeWidth={1.5} style={{ color: cat.color, filter: "brightness(0.6)" }} />
-                  <p className="text-[10px] text-[#1A1A1A]/50 uppercase tracking-widest leading-none">{cat.name}</p>
-                  <p className="font-display text-xl font-normal text-[#1A1A1A]">{formatCOP(cat.total)}</p>
+                  <CategoryIcon slug={cat.slug} size={18} strokeWidth={1.5} style={{ color: cat.color }} />
+                  <p className="font-display text-[10px] text-foreground/45 uppercase tracking-widest leading-none">{cat.name}</p>
+                  <p className="font-amount text-lg font-semibold text-foreground">{formatCOP(cat.total)}</p>
                 </div>
               </AnimateIn>
             ))}

@@ -1,5 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
-import { SYSTEM_CATEGORIES } from "@/lib/utils/categories";
+import { SYSTEM_CATEGORIES, getCategoryTint, tintFromColor } from "@/lib/utils/categories";
 import { redirect } from "next/navigation";
 import { NewCategoryForm } from "@/components/dashboard/new-category-form";
 import { CategoryCard } from "@/components/dashboard/category-card";
@@ -69,14 +69,14 @@ export default async function CategoriesPage() {
           {SYSTEM_CATEGORIES.map((cat, i) => (
             <AnimateIn key={cat.slug} delay={i * 40}>
               <div
-                className="rounded-2xl p-4 flex flex-col gap-2 h-full"
-                style={{ backgroundColor: cat.color }}
+                className="rounded-2xl p-4 flex flex-col gap-2 h-full border"
+                style={{ backgroundColor: getCategoryTint(cat.slug), borderColor: tintFromColor(cat.color, 34) }}
               >
-                <CategoryIcon slug={cat.slug} size={18} strokeWidth={1.5} style={{ color: cat.color, filter: "brightness(0.6)" }} />
-                <p className="text-[10px] text-[#1A1A1A]/50 uppercase tracking-widest truncate">
+                <CategoryIcon slug={cat.slug} size={18} strokeWidth={1.5} style={{ color: cat.color }} />
+                <p className="font-display text-[10px] text-foreground/45 uppercase tracking-widest truncate">
                   {cat.name}
                 </p>
-                <p className="text-xs text-[#1A1A1A]/40">
+                <p className="text-xs text-foreground/40">
                   {cat.isIncome ? "Ingreso" : "Gasto"}
                 </p>
               </div>

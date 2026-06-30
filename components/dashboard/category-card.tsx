@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Pencil, Trash2, X } from "lucide-react";
 import { CategoryIcon } from "@/components/ui/category-icon";
+import { tintFromColor } from "@/lib/utils/categories";
 
 const PRESET_COLORS = [
   "#F4A261", "#E9C46A", "#457B9D", "#6D6875",
@@ -67,14 +68,14 @@ export function CategoryCard({ cat }: { cat: Category }) {
     <>
       {/* Card */}
       <div
-        className="group relative rounded-2xl p-4 flex flex-col gap-2 h-full"
-        style={{ backgroundColor: color }}
+        className="group relative rounded-2xl p-4 flex flex-col gap-2 h-full border"
+        style={{ backgroundColor: tintFromColor(color), borderColor: tintFromColor(color, 34) }}
       >
-        <CategoryIcon slug={cat.slug} size={18} strokeWidth={1.5} style={{ color, filter: "brightness(0.6)" }} />
-        <p className="text-[10px] text-[#1A1A1A]/50 uppercase tracking-widest truncate">
+        <CategoryIcon slug={cat.slug} size={18} strokeWidth={1.5} style={{ color }} />
+        <p className="font-display text-[10px] text-foreground/45 uppercase tracking-widest truncate">
           {cat.name}
         </p>
-        <p className="text-xs text-[#1A1A1A]/40">
+        <p className="text-xs text-foreground/40">
           {cat.is_income ? "Ingreso" : "Gasto"}
         </p>
 

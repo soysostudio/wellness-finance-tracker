@@ -8,15 +8,17 @@ export interface CategoryConfig {
   merchants?: string[];
 }
 
-// ── New brand-aligned palette ──────────────────────────────
-// sage #D4E8A0 · lavender #C8CAD8 · orange #E8673C · teal #4A7C6F · gold #F5C540
+// ── Category hues — distinct, medium-muted ─────────────────
+// Each category owns a unique hue (no duplicates) at medium saturation,
+// so the full color reads on icons/bars while a soft tint of it makes
+// calm, pastel cards. See getCategoryTint().
 
 export const SYSTEM_CATEGORIES: CategoryConfig[] = [
   {
     slug: 'comida',
     name: 'Comida y Restaurantes',
     icon: '🍔',
-    color: '#E8673C',   // warm orange
+    color: '#E0785C',   // coral
     isIncome: false,
     sortOrder: 1,
     merchants: ['rappi', 'domicilios', "mcdonald's", 'crepes', 'el corral', 'subway', 'burger king'],
@@ -25,7 +27,7 @@ export const SYSTEM_CATEGORIES: CategoryConfig[] = [
     slug: 'mercado',
     name: 'Mercado y Supermercado',
     icon: '🛒',
-    color: '#F5C540',   // gold
+    color: '#E3A93A',   // amber
     isIncome: false,
     sortOrder: 2,
     merchants: ['éxito', 'exito', 'jumbo', 'd1', 'ara', 'carulla', 'olímpica', 'olimpica'],
@@ -34,7 +36,7 @@ export const SYSTEM_CATEGORIES: CategoryConfig[] = [
     slug: 'transporte',
     name: 'Transporte',
     icon: '🚗',
-    color: '#4A7C6F',   // teal
+    color: '#3F8C7C',   // teal
     isIncome: false,
     sortOrder: 3,
     merchants: ['uber', 'indriver', 'didi', 'sitp', 'transmilenio', 'cabify', 'picap'],
@@ -43,7 +45,7 @@ export const SYSTEM_CATEGORIES: CategoryConfig[] = [
     slug: 'hogar',
     name: 'Hogar y Arriendo',
     icon: '🏠',
-    color: '#C8CAD8',   // lavender
+    color: '#8487C7',   // periwinkle
     isIncome: false,
     sortOrder: 4,
     merchants: ['arriendo', 'administración', 'administracion'],
@@ -52,7 +54,7 @@ export const SYSTEM_CATEGORIES: CategoryConfig[] = [
     slug: 'servicios',
     name: 'Servicios Públicos',
     icon: '💡',
-    color: '#D4E8A0',   // sage
+    color: '#94B24D',   // olive
     isIncome: false,
     sortOrder: 5,
     merchants: ['epm', 'etb', 'claro', 'movistar', 'tigo', 'gas natural', 'codensa'],
@@ -61,7 +63,7 @@ export const SYSTEM_CATEGORIES: CategoryConfig[] = [
     slug: 'entretenimiento',
     name: 'Entretenimiento',
     icon: '🎬',
-    color: '#E8673C',   // warm orange
+    color: '#B069A6',   // plum
     isIncome: false,
     sortOrder: 6,
     merchants: ['netflix', 'spotify', 'cinépolis', 'cinepolis', 'cine colombia', 'steam', 'disney'],
@@ -70,7 +72,7 @@ export const SYSTEM_CATEGORIES: CategoryConfig[] = [
     slug: 'salud',
     name: 'Salud y Bienestar',
     icon: '🏥',
-    color: '#D4E8A0',   // sage
+    color: '#DD7B96',   // rose
     isIncome: false,
     sortOrder: 7,
     merchants: ['farmacia', 'droguería', 'drogueria', 'gym', 'smart fit'],
@@ -79,7 +81,7 @@ export const SYSTEM_CATEGORIES: CategoryConfig[] = [
     slug: 'educacion',
     name: 'Educación',
     icon: '📚',
-    color: '#4A7C6F',   // teal
+    color: '#5689C2',   // sky blue
     isIncome: false,
     sortOrder: 8,
     merchants: ['udemy', 'coursera', 'platzi'],
@@ -88,7 +90,7 @@ export const SYSTEM_CATEGORIES: CategoryConfig[] = [
     slug: 'compras',
     name: 'Compras y Ropa',
     icon: '🛍️',
-    color: '#C8CAD8',   // lavender
+    color: '#C58A60',   // clay
     isIncome: false,
     sortOrder: 9,
     merchants: ['falabella', 'zara', 'h&m', 'mercado libre', 'amazon'],
@@ -97,7 +99,7 @@ export const SYSTEM_CATEGORIES: CategoryConfig[] = [
     slug: 'ingreso',
     name: 'Ingresos',
     icon: '💰',
-    color: '#F5C540',   // gold
+    color: '#3FA079',   // green (income)
     isIncome: true,
     sortOrder: 10,
     merchants: ['nómina', 'nomina', 'salario', 'freelance'],
@@ -106,7 +108,7 @@ export const SYSTEM_CATEGORIES: CategoryConfig[] = [
     slug: 'otros',
     name: 'Otros',
     icon: '📦',
-    color: '#C8CAD8',   // lavender
+    color: '#98A0A8',   // slate grey
     isIncome: false,
     sortOrder: 11,
   },
@@ -117,7 +119,20 @@ export function getCategoryBySlug(slug: string): CategoryConfig | undefined {
 }
 
 export function getCategoryColor(slug: string): string {
-  return getCategoryBySlug(slug)?.color ?? '#BDC3C7';
+  return getCategoryBySlug(slug)?.color ?? '#98A0A8';
+}
+
+/**
+ * Soft pastel tint of a category color, for calm card backgrounds.
+ * `pct` is how much of the full hue to keep (rest is paper white).
+ * Works with any hex; falls back to the neutral grey for unknown slugs.
+ */
+export function tintFromColor(color: string, pct = 16): string {
+  return `color-mix(in srgb, ${color} ${pct}%, #FFFFFF)`;
+}
+
+export function getCategoryTint(slug: string, pct = 16): string {
+  return tintFromColor(getCategoryColor(slug), pct);
 }
 
 export function getCategoryIcon(slug: string): string {
