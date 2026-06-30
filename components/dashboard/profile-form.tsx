@@ -13,23 +13,18 @@ interface Props {
   email: string;
   initialName: string;
   initialPhone: string;
-  initialCurrency: string;
   initialIncome: number | null;
 }
-
-const CURRENCIES = ["COP", "USD", "EUR", "MXN", "ARS", "PEN", "CLP"];
 
 export function ProfileForm({
   userId,
   email,
   initialName,
   initialPhone,
-  initialCurrency,
   initialIncome,
 }: Props) {
   const [name, setName] = useState(initialName);
   const [phone, setPhone] = useState(initialPhone);
-  const [currency, setCurrency] = useState(initialCurrency);
   const [income, setIncome] = useState(initialIncome ? formatAmountInput(String(initialIncome)) : "");
   const [loading, setLoading] = useState(false);
   const [saved, setSaved] = useState(false);
@@ -48,7 +43,7 @@ export function ProfileForm({
       .update({
         full_name: name.trim(),
         phone_number: phone.trim() ? normalizePhone(phone) : null,
-        currency,
+        currency: "COP",
         monthly_income: income ? parseAmountInput(income) : null,
       })
       .eq("id", userId);
@@ -99,15 +94,10 @@ export function ProfileForm({
 
         <div className="space-y-1">
           <label className="text-xs font-medium text-muted-foreground">Moneda</label>
-          <select
-            value={currency}
-            onChange={(e) => setCurrency(e.target.value)}
-            className="w-full h-11 rounded-md border border-input bg-background px-3 text-sm"
-          >
-            {CURRENCIES.map((c) => (
-              <option key={c} value={c}>{c}</option>
-            ))}
-          </select>
+          <div className="w-full h-11 rounded-md border border-input bg-muted/40 px-3 flex items-center justify-between text-sm">
+            <span className="text-foreground">Pesos colombianos (COP)</span>
+            <span className="text-[10px] uppercase tracking-widest text-foreground/30">Pronto: más monedas</span>
+          </div>
         </div>
 
         <div className="space-y-1">

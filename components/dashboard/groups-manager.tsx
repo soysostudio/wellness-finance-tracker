@@ -44,6 +44,9 @@ export function GroupsManager({
   const [newIcon, setNewIcon]   = useState("👨‍👩‍👧");
   const [saving, setSaving]     = useState(false);
   const [error, setError]       = useState("");
+  const [confirming, setConfirming] = useState<{ groupId: string; action: "delete" | "leave" } | null>(null);
+  const [busy, setBusy]         = useState(false);
+  const [actionError, setActionError] = useState<{ groupId: string; message: string } | null>(null);
   const router = useRouter();
 
   async function refetch() {
@@ -79,22 +82,39 @@ export function GroupsManager({
   }
 
   async function deleteGroup(groupId: string) {
-    if (!confirm("¿Eliminar este grupo? Los gastos del grupo seguirán en tu historial.")) return;
-    const res = await fetch(`/api/groups/${groupId}`, { method: "DELETE" });
-    if (!res.ok) {
-      const d = await res.json() as { error?: string };
-      alert(d.error ?? "No se pudo eliminar el grupo");
-      return;
+    setBusy(true);
+    setActionError(null);
+    try {
+      const res = await fetch(`/api/groups/${groupId}`, { method: "DELETE" });
+      if (!res.ok) {
+        const d = await res.json() as { error?: string };
+        setActionError({ groupId, message: d.error ?? "No se pudo eliminar el grupo" });
+        return;
+      }
+      setConfirming(null);
+      await refetch();
+      router.refresh();
+    } finally {
+      setBusy(false);
     }
-    await refetch();
-    router.refresh();
   }
 
   async function leaveGroup(groupId: string) {
-    if (!confirm("¿Salir del grupo?")) return;
-    await fetch(`/api/groups/${groupId}/members/${userId}`, { method: "DELETE" });
-    await refetch();
-    router.refresh();
+    setBusy(true);
+    setActionError(null);
+    try {
+      const res = await fetch(`/api/groups/${groupId}/members/${userId}`, { method: "DELETE" });
+      if (!res.ok) {
+        const d = await res.json() as { error?: string };
+        setActionError({ groupId, message: d.error ?? "No se pudo salir del grupo" });
+        return;
+      }
+      setConfirming(null);
+      await refetch();
+      router.refresh();
+    } finally {
+      setBusy(false);
+    }
   }
 
   async function removeMember(groupId: string, memberId: string) {
@@ -138,41 +158,73 @@ export function GroupsManager({
                       )}
                     </div>
                   </div>
-                  <div className="flex items-center gap-1 shrink-0">
-                    {/* Link to deep dive */}
-                    <Link
-                      href={`/groups/${group.id}`}
-                      className="p-1.5 rounded-lg text-foreground/40 hover:text-foreground hover:bg-foreground/6 transition-colors"
-                      title="Ver gastos"
-                    >
-                      <ArrowRight size={15} />
-                    </Link>
-
-                    {isOwner && (
+                  {confirming?.groupId === group.id ? (
+                    <div className="flex items-center gap-2 shrink-0">
+                      <span className="text-xs text-foreground/50">
+                        {confirming.action === "delete" ? "¿Eliminar grupo?" : "¿Salir del grupo?"}
+                      </span>
                       <button
-                        onClick={() => setExpanded(isExpanded ? null : group.id)}
+                        onClick={() => confirming.action === "delete" ? deleteGroup(group.id) : leaveGroup(group.id)}
+                        disabled={busy}
+                        className="text-xs font-medium text-destructive hover:opacity-70 disabled:opacity-50"
+                      >
+                        {busy ? "..." : "Sí"}
+                      </button>
+                      <button
+                        onClick={() => { setConfirming(null); setActionError(null); }}
+                        className="text-xs text-foreground/40 hover:text-foreground"
+                      >
+                        No
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="flex items-center gap-1 shrink-0">
+                      {/* Link to deep dive */}
+                      <Link
+                        href={`/groups/${group.id}`}
                         className="p-1.5 rounded-lg text-foreground/40 hover:text-foreground hover:bg-foreground/6 transition-colors"
+                        title="Ver gastos"
                       >
-                        {isExpanded ? <ChevronUp size={15} /> : <ChevronDown size={15} />}
-                      </button>
-                    )}
-                    {isOwner ? (
-                      <button
-                        onClick={() => deleteGroup(group.id)}
-                        className="p-1.5 rounded-lg text-foreground/40 hover:text-destructive hover:bg-destructive/8 transition-colors"
-                      >
-                        <Trash2 size={14} />
-                      </button>
-                    ) : (
-                      <button
-                        onClick={() => leaveGroup(group.id)}
-                        className="text-xs text-foreground/40 hover:text-destructive transition-colors px-2 py-1"
-                      >
-                        Salir
-                      </button>
-                    )}
-                  </div>
+                        <ArrowRight size={15} />
+                      </Link>
+
+                      {isOwner && (
+                        <button
+                          onClick={() => setExpanded(isExpanded ? null : group.id)}
+                          className="p-1.5 rounded-lg text-foreground/40 hover:text-foreground hover:bg-foreground/6 transition-colors"
+                        >
+                          {isExpanded ? <ChevronUp size={15} /> : <ChevronDown size={15} />}
+                        </button>
+                      )}
+                      {isOwner ? (
+                        <button
+                          onClick={() => { setConfirming({ groupId: group.id, action: "delete" }); setActionError(null); }}
+                          className="p-1.5 rounded-lg text-foreground/40 hover:text-destructive hover:bg-destructive/8 transition-colors"
+                          title="Eliminar grupo"
+                        >
+                          <Trash2 size={14} />
+                        </button>
+                      ) : (
+                        <button
+                          onClick={() => { setConfirming({ groupId: group.id, action: "leave" }); setActionError(null); }}
+                          className="text-xs text-foreground/40 hover:text-destructive transition-colors px-2 py-1"
+                        >
+                          Salir
+                        </button>
+                      )}
+                    </div>
+                  )}
                 </div>
+
+                {/* Inline confirm hint + error */}
+                {confirming?.groupId === group.id && confirming.action === "delete" && (
+                  <p className="px-4 pb-2 -mt-1 text-[11px] text-foreground/40">
+                    Los gastos del grupo seguirán en tu historial.
+                  </p>
+                )}
+                {actionError?.groupId === group.id && (
+                  <p className="px-4 pb-2 -mt-1 text-[11px] text-destructive">{actionError.message}</p>
+                )}
 
                 {/* Expanded: member management (owner only) */}
                 {isOwner && isExpanded && (

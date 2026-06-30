@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { resolveCategoryId } from '@/lib/utils/resolve-category';
 
 // GET /api/transactions?offset=0&limit=50
 export async function GET(request: Request) {
@@ -10,11 +11,28 @@ export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const offset = parseInt(searchParams.get('offset') ?? '0', 10);
   const limit  = parseInt(searchParams.get('limit')  ?? '50', 10);
+  const type     = searchParams.get('type');     // 'expense' | 'income' | null
+  const category = searchParams.get('category');  // category slug | null
 
-  const { data: transactions, error } = await supabase
+  let query = supabase
     .from('transactions')
     .select('id, amount, transaction_type, description, merchant, occurred_at, categories(name, slug, color, icon)')
-    .eq('user_id', user.id)
+    .eq('user_id', user.id);
+
+  if (type === 'expense' || type === 'income') {
+    query = query.eq('transaction_type', type);
+  }
+
+  if (category) {
+    const categoryId = await resolveCategoryId(supabase, category, user.id);
+    // Unknown slug → no matches rather than silently ignoring the filter
+    if (!categoryId) {
+      return NextResponse.json({ transactions: [], hasMore: false });
+    }
+    query = query.eq('category_id', categoryId);
+  }
+
+  const { data: transactions, error } = await query
     .order('occurred_at', { ascending: false })
     .range(offset, offset + limit - 1);
 
@@ -45,16 +63,10 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'amount y transaction_type son requeridos' }, { status: 400 });
   }
 
-  // Resolve category slug → id
+  // Resolve category slug → id (prefers the user's own category on slug collisions)
   let categoryId: string | null = null;
   if (body.category_slug) {
-    const { data: cat } = await supabase
-      .from('categories')
-      .select('id')
-      .eq('slug', body.category_slug)
-      .or(`user_id.is.null,user_id.eq.${user.id}`)
-      .single();
-    if (cat) categoryId = cat.id;
+    categoryId = await resolveCategoryId(supabase, body.category_slug, user.id);
   }
 
   const { data: transaction, error } = await supabase

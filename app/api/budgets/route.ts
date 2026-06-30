@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { resolveCategoryId } from '@/lib/utils/resolve-category';
 
 function getPeriodDates(period: string): { period_start: string; period_end: string } {
   const now = new Date();
@@ -47,22 +48,17 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'category_slug and amount_limit are required' }, { status: 400 });
   }
 
-  // Resolve category slug → id
-  const { data: cat } = await supabase
-    .from('categories')
-    .select('id')
-    .eq('slug', body.category_slug)
-    .or(`user_id.is.null,user_id.eq.${user.id}`)
-    .single();
+  // Resolve category slug → id (prefers the user's own category on slug collisions)
+  const categoryId = await resolveCategoryId(supabase, body.category_slug, user.id);
 
-  if (!cat) return NextResponse.json({ error: 'Category not found' }, { status: 404 });
+  if (!categoryId) return NextResponse.json({ error: 'Category not found' }, { status: 404 });
 
   // Prevent duplicate active budgets for the same category
   const { data: existing } = await supabase
     .from('budgets')
     .select('id')
     .eq('user_id', user.id)
-    .eq('category_id', cat.id)
+    .eq('category_id', categoryId)
     .eq('is_active', true)
     .maybeSingle();
 
@@ -80,7 +76,7 @@ export async function POST(request: Request) {
     .from('budgets')
     .insert({
       user_id:      user.id,
-      category_id:  cat.id,
+      category_id:  categoryId,
       amount_limit: body.amount_limit,
       alert_at:     body.alert_at ?? 0.8,
       period,

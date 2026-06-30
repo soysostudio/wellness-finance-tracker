@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { formatCOP } from "@/lib/utils/currency";
+import { SYSTEM_CATEGORIES } from "@/lib/utils/categories";
 import { redirect } from "next/navigation";
 import { AnimateIn } from "@/components/ui/animate-in";
 import { NewTransactionForm } from "@/components/dashboard/new-transaction-form";
@@ -15,12 +16,26 @@ export default async function TransactionsPage() {
 
   const PAGE_SIZE = 50;
 
-  const { data: transactions } = await supabase
-    .from("transactions")
-    .select("id, amount, transaction_type, description, merchant, occurred_at, categories(name, slug, color, icon)")
-    .eq("user_id", user.id)
-    .order("occurred_at", { ascending: false })
-    .limit(PAGE_SIZE);
+  const [{ data: transactions }, { data: customCategories }] = await Promise.all([
+    supabase
+      .from("transactions")
+      .select("id, amount, transaction_type, description, merchant, occurred_at, categories(name, slug, color, icon)")
+      .eq("user_id", user.id)
+      .order("occurred_at", { ascending: false })
+      .limit(PAGE_SIZE),
+
+    supabase
+      .from("categories")
+      .select("slug, name")
+      .eq("user_id", user.id),
+  ]);
+
+  // Full category list for the filter dropdown (system + custom), deduped by slug
+  const catOptions = Array.from(
+    new Map(
+      [...SYSTEM_CATEGORIES, ...(customCategories ?? [])].map((c) => [c.slug, c.name]),
+    ).entries(),
+  ).map(([slug, name]) => ({ slug, name }));
 
   const allTxs       = transactions ?? [];
   const expenses     = allTxs.filter((t) => t.transaction_type === "expense");
@@ -82,6 +97,7 @@ export default async function TransactionsPage() {
           <TransactionFilterList
             initialTransactions={allTxs}
             initialHasMore={initialHasMore}
+            categories={catOptions}
           />
         </AnimateIn>
       )}

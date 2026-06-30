@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { TransactionRow } from "./transaction-row";
 
 interface TxCategory {
@@ -20,10 +20,18 @@ interface Transaction {
   categories: TxCategory | TxCategory[] | null;
 }
 
+interface CategoryOption {
+  slug: string;
+  name: string;
+}
+
 interface Props {
   initialTransactions: Transaction[];
   initialHasMore: boolean;
+  categories: CategoryOption[];
 }
+
+const PAGE_SIZE = 50;
 
 const TYPE_FILTERS = [
   { value: "all",     label: "Todos"    },
@@ -31,34 +39,49 @@ const TYPE_FILTERS = [
   { value: "income",  label: "Ingresos" },
 ];
 
-export function TransactionFilterList({ initialTransactions, initialHasMore }: Props) {
-  const [typeFilter, setCategoryType] = useState<"all" | "expense" | "income">("all");
-  const [catFilter, setCatFilter]     = useState<string>("all");
+export function TransactionFilterList({ initialTransactions, initialHasMore, categories }: Props) {
+  const [typeFilter, setTypeFilter]     = useState<"all" | "expense" | "income">("all");
+  const [catFilter, setCatFilter]       = useState<string>("all");
   const [transactions, setTransactions] = useState(initialTransactions);
   const [loading, setLoading]           = useState(false);
   const [hasMore, setHasMore]           = useState(initialHasMore);
 
-  // Derive unique category options from loaded data
-  const catMap = new Map<string, string>();
-  for (const t of transactions) {
-    const cat = Array.isArray(t.categories) ? t.categories[0] : t.categories;
-    catMap.set(cat?.slug ?? "otros", cat?.name ?? "Otros");
-  }
-  const catOptions = Array.from(catMap.entries());
+  const filtersActive = typeFilter !== "all" || catFilter !== "all";
 
-  const filtered = transactions.filter((t) => {
-    if (typeFilter !== "all" && t.transaction_type !== typeFilter) return false;
-    if (catFilter !== "all") {
-      const cat = Array.isArray(t.categories) ? t.categories[0] : t.categories;
-      if ((cat?.slug ?? "otros") !== catFilter) return false;
+  // Build the query string for the current filters at a given offset
+  function buildUrl(offset: number) {
+    const params = new URLSearchParams({ offset: String(offset), limit: String(PAGE_SIZE) });
+    if (typeFilter !== "all") params.set("type", typeFilter);
+    if (catFilter !== "all")  params.set("category", catFilter);
+    return `/api/transactions?${params.toString()}`;
+  }
+
+  // Refetch from the server whenever filters change (skips the first mount,
+  // which already has the server-rendered initial page).
+  const firstRun = useRef(true);
+  useEffect(() => {
+    if (firstRun.current) {
+      firstRun.current = false;
+      return;
     }
-    return true;
-  });
+    let cancelled = false;
+    setLoading(true);
+    fetch(buildUrl(0))
+      .then((res) => res.json() as Promise<{ transactions: Transaction[]; hasMore: boolean }>)
+      .then((data) => {
+        if (cancelled) return;
+        setTransactions(data.transactions ?? []);
+        setHasMore(data.hasMore);
+      })
+      .finally(() => { if (!cancelled) setLoading(false); });
+    return () => { cancelled = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [typeFilter, catFilter]);
 
   async function loadMore() {
     setLoading(true);
     try {
-      const res  = await fetch(`/api/transactions?offset=${transactions.length}&limit=50`);
+      const res  = await fetch(buildUrl(transactions.length));
       const data = await res.json() as { transactions: Transaction[]; hasMore: boolean };
       setTransactions((prev) => [...prev, ...data.transactions]);
       setHasMore(data.hasMore);
@@ -66,8 +89,6 @@ export function TransactionFilterList({ initialTransactions, initialHasMore }: P
       setLoading(false);
     }
   }
-
-  const filtersActive = typeFilter !== "all" || catFilter !== "all";
 
   return (
     <div className="space-y-4">
@@ -78,7 +99,7 @@ export function TransactionFilterList({ initialTransactions, initialHasMore }: P
           {TYPE_FILTERS.map((f) => (
             <button
               key={f.value}
-              onClick={() => setCategoryType(f.value as "all" | "expense" | "income")}
+              onClick={() => setTypeFilter(f.value as "all" | "expense" | "income")}
               className={`px-3 h-8 rounded-lg text-xs font-medium transition-colors ${
                 typeFilter === f.value
                   ? "bg-foreground text-background"
@@ -91,22 +112,22 @@ export function TransactionFilterList({ initialTransactions, initialHasMore }: P
         </div>
 
         {/* Category select */}
-        {catOptions.length > 1 && (
+        {categories.length > 0 && (
           <select
             value={catFilter}
             onChange={(e) => setCatFilter(e.target.value)}
             className="h-10 px-3 rounded-xl bg-foreground/5 border-none text-xs text-foreground/70 outline-none cursor-pointer"
           >
             <option value="all">Todas las categorías</option>
-            {catOptions.map(([slug, name]) => (
-              <option key={slug} value={slug}>{name}</option>
+            {categories.map((c) => (
+              <option key={c.slug} value={c.slug}>{c.name}</option>
             ))}
           </select>
         )}
 
         {filtersActive && (
           <button
-            onClick={() => { setCategoryType("all"); setCatFilter("all"); }}
+            onClick={() => { setTypeFilter("all"); setCatFilter("all"); }}
             className="text-xs text-foreground/40 hover:text-foreground transition-colors"
           >
             Limpiar
@@ -115,20 +136,22 @@ export function TransactionFilterList({ initialTransactions, initialHasMore }: P
       </div>
 
       {/* List */}
-      {filtered.length === 0 ? (
+      {transactions.length === 0 ? (
         <div className="text-center py-10">
-          <p className="text-foreground/40 text-sm">Sin resultados para este filtro</p>
+          <p className="text-foreground/40 text-sm">
+            {loading ? "Cargando..." : "Sin resultados para este filtro"}
+          </p>
         </div>
       ) : (
         <div className="space-y-1.5">
-          {filtered.map((t) => (
+          {transactions.map((t) => (
             <TransactionRow key={t.id} t={t} />
           ))}
         </div>
       )}
 
-      {/* Load more — only when no filters active */}
-      {hasMore && !filtersActive && (
+      {/* Load more — works with filters applied (server-side pagination) */}
+      {hasMore && (
         <div className="flex justify-center pt-2">
           <button
             onClick={loadMore}

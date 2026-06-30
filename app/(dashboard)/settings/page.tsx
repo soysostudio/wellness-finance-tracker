@@ -46,7 +46,6 @@ export default async function SettingsPage() {
           email={user.email ?? ""}
           initialName={profile?.full_name ?? ""}
           initialPhone={profile?.phone_number ?? ""}
-          initialCurrency={profile?.currency ?? "COP"}
           initialIncome={profile?.monthly_income ?? null}
         />
       </AnimateIn>

@@ -5,6 +5,7 @@ import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useRouter } from "next/navigation";
+import { SYSTEM_CATEGORIES } from "@/lib/utils/categories";
 
 const PRESET_COLORS = [
   "#F4A261", "#E9C46A", "#457B9D", "#6D6875",
@@ -37,6 +38,18 @@ export function NewCategoryForm({ userId }: Props) {
       .normalize("NFD").replace(/[̀-ͯ]/g, "")
       .replace(/[^a-z0-9]+/g, "-")
       .replace(/^-|-$/g, "");
+
+    if (!slug) {
+      setError("Usa al menos una letra o número en el nombre.");
+      setLoading(false);
+      return;
+    }
+
+    if (SYSTEM_CATEGORIES.some((c) => c.slug === slug)) {
+      setError("Ya existe una categoría con ese nombre. Elige otro.");
+      setLoading(false);
+      return;
+    }
 
     const supabase = createClient();
     const { error: err } = await supabase.from("categories").insert({
