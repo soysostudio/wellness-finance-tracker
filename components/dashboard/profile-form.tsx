@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useRouter } from "next/navigation";
 import { formatAmountInput, parseAmountInput } from "@/lib/utils/currency";
+import { normalizePhone } from "@/lib/utils/phone";
 
 interface Props {
   userId: string;
@@ -46,7 +47,7 @@ export function ProfileForm({
       .from("users")
       .update({
         full_name: name.trim(),
-        phone_number: phone.trim() || null,
+        phone_number: phone.trim() ? normalizePhone(phone) : null,
         currency,
         monthly_income: income ? parseAmountInput(income) : null,
       })

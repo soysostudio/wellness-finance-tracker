@@ -137,7 +137,9 @@ export function GoalRow({ goal }: { goal: Goal }) {
         <div className="flex gap-6">
           <div>
             <p className="text-[10px] uppercase tracking-widest text-foreground/40">Falta</p>
-            <p className="font-serif text-lg font-normal text-foreground mt-0.5">{formatCOP(remaining)}</p>
+            <p className="font-serif text-lg font-normal text-foreground mt-0.5">
+              {remaining > 0 ? formatCOP(remaining) : "¡Listo! 🎉"}
+            </p>
           </div>
           {daysLeft !== null && (
             <div>

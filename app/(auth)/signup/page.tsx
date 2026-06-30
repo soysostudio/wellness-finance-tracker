@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
+import { normalizePhone } from "@/lib/utils/phone";
 
 type Step = "form" | "sent";
 
@@ -20,7 +21,7 @@ export default function SignupPage() {
     setErrorMsg("");
 
     const supabase = createClient();
-    const formattedPhone = phone ? formatPhone(phone) : null;
+    const formattedPhone = phone ? normalizePhone(phone) : null;
 
     const { error: signupError } = await supabase.auth.signInWithOtp({
       email,
@@ -47,13 +48,6 @@ export default function SignupPage() {
     setStep("sent");
   }
 
-  function formatPhone(raw: string): string {
-    const digits = raw.replace(/\D/g, "");
-    if (digits.startsWith("57")) return `+${digits}`;
-    if (digits.startsWith("3") && digits.length === 10) return `+57${digits}`;
-    return `+${digits}`;
-  }
-
   if (step === "sent") {
     return (
       <div className="space-y-6">
@@ -68,7 +62,7 @@ export default function SignupPage() {
         <div className="rounded-2xl p-5 space-y-4" style={{ backgroundColor: "#FEFF6E" }}>
           <p className="text-[10px] uppercase tracking-widest text-[#1A1A1A]/50">Próximo paso</p>
           <p className="text-sm text-[#1A1A1A]/70 leading-relaxed">
-            Después de confirmar tu correo, escríbele <strong className="text-[#1A1A1A]">"Hola"</strong> a Luca
+            Después de confirmar tu correo, escríbele <strong className="text-[#1A1A1A]">&quot;Hola&quot;</strong> a Luca
             en WhatsApp y él te guiará por el resto.
           </p>
           <a

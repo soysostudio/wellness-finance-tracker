@@ -16,7 +16,7 @@ export default async function InsightsPage() {
   const { start, end }               = getCurrentMonthRange();
   const { start: lastStart, end: lastEnd } = getLastMonthRange();
 
-  const [{ data: transactions }, { data: lastMonthTxs }] = await Promise.all([
+  const [{ data: transactions }, { data: lastMonthTxs }, { data: profile }] = await Promise.all([
     supabase
       .from("transactions")
       .select("amount, transaction_type, occurred_at, categories(name, slug, color, icon)")
@@ -32,13 +32,20 @@ export default async function InsightsPage() {
       .eq("transaction_type", "expense")
       .gte("occurred_at", lastStart)
       .lte("occurred_at", lastEnd),
+
+    supabase
+      .from("users")
+      .select("monthly_income")
+      .eq("id", user.id)
+      .single(),
   ]);
 
   const expenses = (transactions ?? []).filter((t) => t.transaction_type === "expense");
   const income   = (transactions ?? []).filter((t) => t.transaction_type === "income");
 
   const totalExpenses  = expenses.reduce((s, t) => s + t.amount, 0);
-  const totalIncome    = income.reduce((s, t) => s + t.amount, 0);
+  // Configured salary + logged income — consistent with the Overview summary
+  const totalIncome    = income.reduce((s, t) => s + t.amount, 0) + (profile?.monthly_income ?? 0);
   const lastMonthTotal = (lastMonthTxs ?? []).reduce((s, t) => s + t.amount, 0);
 
   const savingsRate = totalIncome > 0

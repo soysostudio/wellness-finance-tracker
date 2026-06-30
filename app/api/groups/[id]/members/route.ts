@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { sendWhatsAppMessage } from '@/lib/twilio/send-message';
+import { normalizePhone } from '@/lib/utils/phone';
 
 const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL ?? 'https://finance-tracker.xyz';
 
@@ -30,7 +31,7 @@ export async function POST(
     return NextResponse.json({ error: 'phone_number is required' }, { status: 400 });
   }
 
-  const phone = body.phone_number.trim();
+  const phone = normalizePhone(body.phone_number);
 
   // Find the target user by phone number
   const { data: targetUser } = await supabase
