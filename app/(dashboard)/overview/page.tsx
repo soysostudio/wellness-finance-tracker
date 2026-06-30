@@ -175,20 +175,41 @@ export default async function OverviewPage({
         </div>
       </AnimateIn>
 
-      {/* ── Summary stats ──────────────────────────── */}
+      {/* ── Summary stats: recibo del mes ────────────── */}
       <AnimateIn>
-        <div className="grid grid-cols-3 gap-6 py-6 border-t border-b border-foreground/8">
-          <StatBlock label="Gastos"   value={formatCOP(overview.totalExpenses)} />
-          <StatBlock
-            label="Ingresos"
-            value={formatCOP(displayIncome)}
-            sublabel={incomeIsSalary ? "salario configurado" : undefined}
-          />
-          <StatBlock
-            label="Balance neto"
-            value={formatCOP(displayNet)}
-            muted={displayNet < 0}
-          />
+        <div className="receipt-torn bg-card rounded-3xl border border-foreground/8 px-6 pt-6 pb-8">
+          <p className="text-[10px] uppercase tracking-widest text-foreground/40 mb-4">
+            {isCurrentMonth
+              ? "Recibo de este mes"
+              : new Date(yearMonth + "-01").toLocaleDateString("es-CO", { month: "long", year: "numeric" })}
+          </p>
+
+          <div className="space-y-2.5">
+            <div className="leader-row text-sm">
+              <span className="text-foreground/55 shrink-0">Gastos</span>
+              <span className="leader-fill text-foreground" />
+              <span className="font-amount text-foreground shrink-0">{formatCOP(overview.totalExpenses)}</span>
+            </div>
+            <div className="leader-row text-sm">
+              <span className="text-foreground/55 shrink-0">
+                Ingresos{incomeIsSalary ? " · salario configurado" : ""}
+              </span>
+              <span className="leader-fill text-foreground" />
+              <span className="font-amount text-foreground shrink-0">{formatCOP(displayIncome)}</span>
+            </div>
+          </div>
+
+          <div className="border-t border-dashed border-foreground/20 mt-4 pt-4">
+            <div className="leader-row">
+              <span className="text-[10px] uppercase tracking-widest font-semibold text-foreground/60 shrink-0">
+                Balance neto
+              </span>
+              <span className="leader-fill text-foreground" />
+              <span className={`font-amount text-2xl font-semibold shrink-0 ${displayNet < 0 ? "text-[#E8673C]" : "text-foreground"}`}>
+                {formatCOP(displayNet)}
+              </span>
+            </div>
+          </div>
         </div>
       </AnimateIn>
 
@@ -210,7 +231,7 @@ export default async function OverviewPage({
                   <p className="text-[10px] text-[#1A1A1A]/50 uppercase tracking-widest leading-none">
                     {cat.name}
                   </p>
-                  <p className="font-serif text-xl font-normal text-[#1A1A1A]">
+                  <p className="font-amount text-lg font-semibold text-[#1A1A1A]">
                     {formatCOP(cat.total)}
                   </p>
                 </Link>
@@ -241,7 +262,7 @@ export default async function OverviewPage({
                     <p className="text-[10px] text-foreground/50 uppercase tracking-widest leading-none truncate">
                       {g.name}
                     </p>
-                    <p className="font-serif text-xl font-normal text-foreground">
+                    <p className="font-amount text-lg font-semibold text-foreground">
                       {formatCOP(g.totalSpent)}
                     </p>
                     {pct !== null && (
@@ -316,7 +337,7 @@ export default async function OverviewPage({
                         style={{ width: `${pct}%` }}
                       />
                     </div>
-                    <div className="flex justify-between text-xs text-foreground/40">
+                    <div className="flex justify-between text-xs text-foreground/40 font-amount">
                       <span>{formatCOP(goal.current_amount)}</span>
                       <span>{formatCOP(goal.target_amount)}</span>
                     </div>
@@ -354,20 +375,6 @@ export default async function OverviewPage({
 }
 
 /* ── Sub-components ─────────────────────────────────── */
-
-function StatBlock({ label, value, muted, sublabel }: { label: string; value: string; muted?: boolean; sublabel?: string }) {
-  return (
-    <div className="space-y-1.5">
-      <p className="text-[10px] uppercase tracking-widest text-foreground/40">{label}</p>
-      <p className={`font-serif text-xl md:text-2xl font-normal ${muted ? "text-[#E8673C]" : "text-foreground"}`}>
-        {value}
-      </p>
-      {sublabel && (
-        <p className="text-[9px] uppercase tracking-widest text-foreground/30">{sublabel}</p>
-      )}
-    </div>
-  );
-}
 
 function SectionLabel({ children, className }: { children: React.ReactNode; className?: string }) {
   return (

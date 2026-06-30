@@ -17,22 +17,23 @@ export default async function DashboardLayout({
 
   if (!user) redirect("/login");
 
-  const { data: profile } = await supabase
-    .from("users")
-    .select("full_name, phone_number")
-    .eq("id", user.id)
-    .single();
-
-  // Budget alert: check if any active budget is >= 80% spent this month
   const now = new Date();
   const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
   const monthEnd   = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59).toISOString();
 
-  const { data: budgets } = await supabase
-    .from("budgets")
-    .select("category_id, amount_limit, alert_at")
-    .eq("user_id", user.id)
-    .eq("is_active", true);
+  // Fetch profile and budgets in parallel
+  const [{ data: profile }, { data: budgets }] = await Promise.all([
+    supabase
+      .from("users")
+      .select("full_name, phone_number")
+      .eq("id", user.id)
+      .single(),
+    supabase
+      .from("budgets")
+      .select("category_id, amount_limit, alert_at")
+      .eq("user_id", user.id)
+      .eq("is_active", true),
+  ]);
 
   let hasBudgetAlert = false;
   if (budgets && budgets.length > 0) {

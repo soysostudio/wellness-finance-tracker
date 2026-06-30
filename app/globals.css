@@ -69,7 +69,7 @@
 }
 
 :root {
-  --background: #F5F6F8;                /* misma base que landing */
+  --background: #F7F4ED;                /* papel de recibo, más cálido */
   --foreground: oklch(0.13 0 0);        /* #1A1A1A */
   --card: #ffffff;
   --card-foreground: oklch(0.145 0 0);
@@ -172,6 +172,50 @@ a[x-apple-data-detectors] {
 .luca-blue    { background-color: #ADDEFF; }
 .luca-pink    { background-color: #FFB0FF; }
 .luca-cream   { background-color: #FEF3D6; }
+
+/* ── Receipt system ──────────────────────────────────
+   Direction "El Recibo": monetary amounts read like a real
+   receipt/ledger — tabular mono figures, dotted leader lines
+   connecting label to value, perforated tear at card edges. */
+
+.font-amount {
+  font-family: var(--font-geist-mono);
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum" 1;
+}
+
+/* Label ⋯⋯⋯⋯ value row, like a restaurant check */
+.leader-row {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+}
+.leader-row .leader-fill {
+  flex: 1 1 auto;
+  min-width: 0.75rem;
+  border-bottom: 1px dotted currentColor;
+  opacity: 0.28;
+  margin-bottom: 0.3em;
+}
+
+/* Perforated tear along the bottom edge of a receipt card.
+   Card needs position: relative and a known --tear-bg matching
+   whatever sits behind it. */
+.receipt-torn {
+  position: relative;
+  --tear-bg: var(--background);
+}
+.receipt-torn::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -1px;
+  height: 13px;
+  background-image: radial-gradient(circle at 7px 0, var(--tear-bg) 7px, transparent 7.5px);
+  background-size: 14px 14px;
+  background-repeat: repeat-x;
+}
 /* AnimateIn keyframes — GPU-accelerated, no JS during scroll */
 @keyframes animate-in-bottom {
   from { opacity: 0; transform: translateY(24px); }

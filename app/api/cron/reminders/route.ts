@@ -79,9 +79,14 @@ async function buildDailySummary(
   userId: string,
   supabase: ReturnType<typeof createAdminClient>
 ): Promise<string | null> {
-  const today = new Date();
-  const start = new Date(today.getFullYear(), today.getMonth(), today.getDate()).toISOString();
-  const end = new Date(today.getFullYear(), today.getMonth(), today.getDate() + 1).toISOString();
+  // Cron fires at 01:00 UTC = 20:00 Bogotá (UTC-5).
+  // "Today in Bogotá" starts at 05:00 UTC and ends at 05:00 UTC next day.
+  const now = new Date();
+  const bogotaOffsetMs = 5 * 60 * 60 * 1000;
+  const bogotaNow = new Date(now.getTime() - bogotaOffsetMs);
+  const bogotaDay = bogotaNow.toISOString().split('T')[0]; // YYYY-MM-DD in Bogotá
+  const start = `${bogotaDay}T05:00:00.000Z`; // midnight Bogotá in UTC
+  const end   = new Date(new Date(start).getTime() + 24 * 60 * 60 * 1000).toISOString();
 
   const { data: txs } = await supabase
     .from('transactions')
@@ -91,7 +96,11 @@ async function buildDailySummary(
     .gte('occurred_at', start)
     .lt('occurred_at', end);
 
-  if (!txs?.length) return null;
+  const dashboardUrl = process.env.NEXT_PUBLIC_BASE_URL ?? 'https://finance-tracker.xyz';
+
+  if (!txs?.length) {
+    return `📊 *Resumen de hoy*\n\nAún no registraste gastos hoy — ¡buen día de ahorro! 🌟\n\nSi tuviste algún gasto, cuéntaselo a Luca por WhatsApp.\n👉 ${dashboardUrl}/overview`;
+  }
 
   const total = txs.reduce((s, t) => s + t.amount, 0);
   const lines = txs
@@ -99,7 +108,6 @@ async function buildDailySummary(
     .map((t) => `• ${t.merchant || t.description || 'Gasto'}: ${formatCOPColoquial(t.amount)}`)
     .join('\n');
 
-  const dashboardUrl = process.env.NEXT_PUBLIC_BASE_URL ?? 'https://finance-tracker.xyz';
   return `📊 *Resumen de hoy*\n\n${lines}${txs.length > 5 ? `\n• +${txs.length - 5} más…` : ''}\n\n💸 Total del día: *${formatCOPColoquial(total)}*\n\n¡Buen trabajo registrando tus gastos! 💪\n👉 ${dashboardUrl}/overview`;
 }
 

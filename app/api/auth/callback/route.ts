@@ -19,12 +19,23 @@ export async function GET(request: Request) {
       if (meta.full_name)    updates.full_name    = meta.full_name;
       if (meta.phone_number) updates.phone_number = meta.phone_number;
 
-      if (Object.keys(updates).length > 0) {
-        await supabase
-          .from('users')
-          .update(updates)
-          .eq('id', data.user.id);
-      }
+      const [profileResult] = await Promise.all([
+        Object.keys(updates).length > 0
+          ? supabase.from('users').update(updates).eq('id', data.user.id)
+          : Promise.resolve(null),
+        // Auto-create default daily reminder for new users (idempotent — skips if exists)
+        supabase.from('reminders').select('id').eq('user_id', data.user.id).eq('reminder_type', 'daily_summary').maybeSingle()
+          .then(({ data: existing }) => {
+            if (!existing) {
+              return supabase.from('reminders').insert({
+                user_id:       data.user.id,
+                reminder_type: 'daily_summary',
+                is_active:     true,
+              });
+            }
+          }),
+      ]);
+      void profileResult;
 
       return NextResponse.redirect(`${origin}${next}`);
     }

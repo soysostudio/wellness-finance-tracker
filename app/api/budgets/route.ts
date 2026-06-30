@@ -1,6 +1,35 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 
+function getPeriodDates(period: string): { period_start: string; period_end: string } {
+  const now = new Date();
+  if (period === 'weekly') {
+    const day = now.getDay();
+    const diffToMonday = day === 0 ? -6 : 1 - day;
+    const monday = new Date(now);
+    monday.setDate(now.getDate() + diffToMonday);
+    const sunday = new Date(monday);
+    sunday.setDate(monday.getDate() + 6);
+    return {
+      period_start: monday.toISOString().split('T')[0],
+      period_end:   sunday.toISOString().split('T')[0],
+    };
+  }
+  if (period === 'yearly') {
+    return {
+      period_start: `${now.getFullYear()}-01-01`,
+      period_end:   `${now.getFullYear()}-12-31`,
+    };
+  }
+  // monthly (default)
+  const start = new Date(now.getFullYear(), now.getMonth(), 1);
+  const end   = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+  return {
+    period_start: start.toISOString().split('T')[0],
+    period_end:   end.toISOString().split('T')[0],
+  };
+}
+
 // POST /api/budgets — create a new budget
 export async function POST(request: Request) {
   const supabase = await createClient();
@@ -28,6 +57,9 @@ export async function POST(request: Request) {
 
   if (!cat) return NextResponse.json({ error: 'Category not found' }, { status: 404 });
 
+  const period = body.period ?? 'monthly';
+  const { period_start, period_end } = getPeriodDates(period);
+
   const { data: budget, error } = await supabase
     .from('budgets')
     .insert({
@@ -35,7 +67,9 @@ export async function POST(request: Request) {
       category_id:  cat.id,
       amount_limit: body.amount_limit,
       alert_at:     body.alert_at ?? 0.8,
-      period:       body.period ?? 'monthly',
+      period,
+      period_start,
+      period_end,
       is_active:    true,
     })
     .select('id, amount_limit, alert_at, period')

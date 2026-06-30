@@ -113,7 +113,7 @@ export function BudgetRow({ budget, spent }: { budget: Budget; spent: number }) 
             </div>
           )}
           <div className="text-right shrink-0">
-            <p className="font-serif text-xl font-normal text-foreground">{pct}%</p>
+            <p className="font-amount text-xl font-medium text-foreground">{pct}%</p>
             <p className="text-[10px] text-foreground/40 uppercase tracking-widest">usado</p>
           </div>
         </div>
@@ -125,23 +125,24 @@ export function BudgetRow({ budget, spent }: { budget: Budget; spent: number }) 
               style={{ width: `${pct}%`, backgroundColor: barColor }}
             />
           </div>
-          <div className="flex justify-between text-xs text-foreground/40">
-            <span>{formatCOP(spent)} gastado</span>
-            <span>límite {formatCOP(budget.amount_limit)}</span>
+          <div className="leader-row text-xs text-foreground/40">
+            <span className="font-amount shrink-0">{formatCOP(spent)} gastado</span>
+            <span className="leader-fill" />
+            <span className="font-amount shrink-0">límite {formatCOP(budget.amount_limit)}</span>
           </div>
         </div>
 
         {pct >= 100 ? (
           <p className="text-xs text-[#E76F51] font-medium">
-            🚨 Superaste tu presupuesto por {formatCOP(Math.abs(remaining))}
+            🚨 Superaste tu presupuesto por <span className="font-amount">{formatCOP(Math.abs(remaining))}</span>
           </p>
         ) : pct >= alertPct ? (
           <p className="text-xs text-[#F4A261] font-medium">
-            ⚠️ Quedan {formatCOP(remaining)} — cerca del límite
+            ⚠️ Quedan <span className="font-amount">{formatCOP(remaining)}</span> — cerca del límite
           </p>
         ) : (
           <p className="text-xs text-foreground/40">
-            {formatCOP(remaining)} disponibles
+            <span className="font-amount">{formatCOP(remaining)}</span> disponibles
           </p>
         )}
       </div>

@@ -90,7 +90,7 @@ export function TransactionRow({ t }: { t: Transaction }) {
           <p className="text-xs text-foreground/40 mt-0.5">{date}</p>
         </div>
 
-        <p className={`font-serif text-sm font-normal shrink-0 ${isExpense ? "text-foreground" : "text-[#2A9D8F]"}`}>
+        <p className={`font-amount text-sm font-medium shrink-0 ${isExpense ? "text-foreground" : "text-[#2A9D8F]"}`}>
           {isExpense ? "−" : "+"}{formatCOP(t.amount)}
         </p>
 
