@@ -44,8 +44,20 @@ export default async function BudgetsPage() {
     }
   }
 
-  const systemCats = SYSTEM_CATEGORIES.map((c) => ({ slug: c.slug, name: c.name }));
-  const customCats = (customCategories ?? []).map((c) => ({ id: c.id, slug: c.slug, name: c.name }));
+  // Categories that already have an active budget — can't be picked again
+  const usedSlugs = new Set(
+    (budgets ?? []).map((b) => {
+      const c = Array.isArray(b.categories) ? b.categories[0] : b.categories;
+      return c?.slug;
+    }).filter(Boolean) as string[],
+  );
+
+  const systemCats = SYSTEM_CATEGORIES
+    .map((c) => ({ slug: c.slug, name: c.name }))
+    .filter((c) => !usedSlugs.has(c.slug));
+  const customCats = (customCategories ?? [])
+    .map((c) => ({ id: c.id, slug: c.slug, name: c.name }))
+    .filter((c) => !usedSlugs.has(c.slug));
 
   // Compute alert summary for banner
   const alertBudgets = (budgets ?? []).filter((b) => {

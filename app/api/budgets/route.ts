@@ -57,6 +57,22 @@ export async function POST(request: Request) {
 
   if (!cat) return NextResponse.json({ error: 'Category not found' }, { status: 404 });
 
+  // Prevent duplicate active budgets for the same category
+  const { data: existing } = await supabase
+    .from('budgets')
+    .select('id')
+    .eq('user_id', user.id)
+    .eq('category_id', cat.id)
+    .eq('is_active', true)
+    .maybeSingle();
+
+  if (existing) {
+    return NextResponse.json(
+      { error: 'Ya tienes un presupuesto activo para esta categoría. Edítalo en vez de crear otro.' },
+      { status: 409 },
+    );
+  }
+
   const period = body.period ?? 'monthly';
   const { period_start, period_end } = getPeriodDates(period);
 

@@ -19,15 +19,19 @@ interface Props {
 export function RemindersForm({ userId, active, reminderIds }: Props) {
   const [daily, setDaily] = useState(active.daily);
   const [weekly, setWeekly] = useState(active.weekly);
-  const [loading, setLoading] = useState(false);
+  const [pending, setPending] = useState<ReminderType | null>(null);
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState("");
   const router = useRouter();
 
   async function toggle(type: ReminderType, enabled: boolean) {
-    setLoading(true);
-    setError("");
+    const setLocal = type === "daily_summary" ? setDaily : setWeekly;
     const existingId = type === "daily_summary" ? reminderIds.daily : reminderIds.weekly;
+
+    // Optimistic: move the switch immediately
+    setLocal(enabled);
+    setPending(type);
+    setError("");
 
     try {
       const res = await fetch("/api/reminders", {
@@ -38,18 +42,17 @@ export function RemindersForm({ userId, active, reminderIds }: Props) {
 
       if (!res.ok) {
         const data = await res.json() as { error?: string };
+        setLocal(!enabled); // revert
         setError(data.error ?? "No se pudo guardar. Intenta de nuevo.");
         return;
       }
     } catch {
+      setLocal(!enabled); // revert
       setError("Error de red. Intenta de nuevo.");
       return;
     } finally {
-      setLoading(false);
+      setPending(null);
     }
-
-    if (type === "daily_summary") setDaily(enabled);
-    else setWeekly(enabled);
 
     setSaved(true);
     setTimeout(() => setSaved(false), 2500);
@@ -71,14 +74,14 @@ export function RemindersForm({ userId, active, reminderIds }: Props) {
           label="Resumen diario"
           description="Luca te manda un resumen de tus gastos del día a las 8pm"
           enabled={daily}
-          loading={loading}
+          loading={pending === "daily_summary"}
           onChange={(v) => toggle("daily_summary", v)}
         />
         <ReminderToggle
           label="Resumen semanal"
           description="Los domingos a las 8pm recibes el balance de la semana"
           enabled={weekly}
-          loading={loading}
+          loading={pending === "weekly_summary"}
           onChange={(v) => toggle("weekly_summary", v)}
         />
       </div>

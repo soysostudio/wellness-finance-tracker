@@ -154,10 +154,11 @@ export default async function OverviewPage({
   const profile   = profileResult.data;
   const firstName = profile?.full_name?.split(" ")[0] ?? "tú";
 
-  const displayIncome  = overview.totalIncome > 0
-    ? overview.totalIncome
-    : isCurrentMonth ? (profile?.monthly_income ?? 0) : 0;
-  const incomeIsSalary = overview.totalIncome === 0 && isCurrentMonth && (profile?.monthly_income ?? 0) > 0;
+  // Configured salary applies only to the current month (it's a present-day setting,
+  // not historical). Logged income transactions are summed on top of it.
+  const salary         = isCurrentMonth ? (profile?.monthly_income ?? 0) : 0;
+  const displayIncome  = overview.totalIncome + salary;
+  const includesSalary = salary > 0;
   const displayNet     = displayIncome - overview.totalExpenses;
 
   return (
@@ -177,7 +178,7 @@ export default async function OverviewPage({
 
       {/* ── Summary stats: recibo del mes ────────────── */}
       <AnimateIn>
-        <div className="receipt-torn bg-card rounded-3xl border border-foreground/8 px-6 pt-6 pb-8">
+        <div className="receipt-torn bg-card rounded-t-3xl border-t border-x border-foreground/8 px-6 pt-6 pb-8">
           <p className="text-[10px] uppercase tracking-widest text-foreground/40 mb-4">
             {isCurrentMonth
               ? "Recibo de este mes"
@@ -192,7 +193,7 @@ export default async function OverviewPage({
             </div>
             <div className="leader-row text-sm">
               <span className="text-foreground/55 shrink-0">
-                Ingresos{incomeIsSalary ? " · salario configurado" : ""}
+                Ingresos{includesSalary ? " · incluye salario" : ""}
               </span>
               <span className="leader-fill text-foreground" />
               <span className="font-amount text-foreground shrink-0">{formatCOP(displayIncome)}</span>

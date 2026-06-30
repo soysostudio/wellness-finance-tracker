@@ -21,12 +21,27 @@ const ALERT_OPTIONS = [
 
 export function NewBudgetForm({ systemCategories, customCategories }: Props) {
   const router = useRouter();
+
+  const allCategories = [
+    ...systemCategories.map((c) => ({ slug: c.slug, name: c.name })),
+    ...customCategories.map((c) => ({ slug: c.slug, name: `${c.name} (personal)` })),
+  ];
+
   const [open, setOpen]               = useState(false);
-  const [categorySlug, setCategorySlug] = useState(systemCategories[0]?.slug ?? "");
+  const [categorySlug, setCategorySlug] = useState(allCategories[0]?.slug ?? "");
   const [amountLimit, setAmountLimit] = useState("");
   const [alertAt, setAlertAt]         = useState(0.8);
   const [saving, setSaving]           = useState(false);
   const [error, setError]             = useState("");
+
+  // Every category already has a budget — nothing left to create
+  if (allCategories.length === 0) {
+    return (
+      <p className="text-center text-xs text-foreground/40 border border-dashed border-border rounded-2xl px-4 py-3">
+        Ya tienes un presupuesto para cada categoría 🎉
+      </p>
+    );
+  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -43,7 +58,7 @@ export function NewBudgetForm({ systemCategories, customCategories }: Props) {
       });
       if (res.ok) {
         setAmountLimit("");
-        setCategorySlug(systemCategories[0]?.slug ?? "");
+        setCategorySlug(allCategories[0]?.slug ?? "");
         setAlertAt(0.8);
         setOpen(false);
         router.refresh();
@@ -67,11 +82,6 @@ export function NewBudgetForm({ systemCategories, customCategories }: Props) {
       </button>
     );
   }
-
-  const allCategories = [
-    ...systemCategories.map((c) => ({ slug: c.slug, name: c.name })),
-    ...customCategories.map((c) => ({ slug: c.slug, name: `${c.name} (personal)` })),
-  ];
 
   return (
     <form onSubmit={handleSubmit} className="bg-card rounded-2xl p-5 space-y-4 border border-foreground/5">
