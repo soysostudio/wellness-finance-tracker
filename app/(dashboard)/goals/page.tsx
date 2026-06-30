@@ -27,7 +27,7 @@ export default async function GoalsPage() {
       {/* Header */}
       <AnimateIn>
         <p className="text-[10px] uppercase tracking-widest text-foreground/40">Objetivos</p>
-        <h1 className="font-serif text-4xl md:text-5xl font-normal mt-1 text-foreground">
+        <h1 className="font-display text-3xl md:text-4xl font-bold mt-1 text-foreground">
           Metas
         </h1>
       </AnimateIn>
@@ -41,7 +41,7 @@ export default async function GoalsPage() {
         <AnimateIn>
           <div className="text-center py-16 space-y-4">
             <p className="text-5xl">🏆</p>
-            <p className="font-serif text-2xl font-normal text-foreground">Sin metas aún</p>
+            <p className="font-display text-2xl font-normal text-foreground">Sin metas aún</p>
             <p className="text-foreground/50 text-sm max-w-xs mx-auto leading-relaxed">
               Créala arriba o dile a Luca por WhatsApp
             </p>

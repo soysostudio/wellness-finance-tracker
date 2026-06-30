@@ -58,7 +58,7 @@ export function RecentTransactions({ transactions }: RecentTransactionsProps) {
               <p className="text-xs text-foreground/40 mt-0.5">{date}</p>
             </div>
             <p
-              className={`font-serif text-sm font-normal shrink-0 ${isIncome ? "" : "text-foreground"}`}
+              className={`font-display text-sm font-normal shrink-0 ${isIncome ? "" : "text-foreground"}`}
               style={isIncome ? { color: "#2A9D8F" } : undefined}
             >
               {isIncome ? "+" : "−"}{formatCOP(tx.amount)}

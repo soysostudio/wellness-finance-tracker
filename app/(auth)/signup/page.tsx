@@ -53,7 +53,7 @@ export default function SignupPage() {
       <div className="space-y-6">
         <div>
           <p className="text-[10px] uppercase tracking-widest text-foreground/40 mb-1">Listo</p>
-          <h1 className="font-serif text-4xl font-normal text-foreground">Revisa tu correo</h1>
+          <h1 className="font-display text-3xl font-bold text-foreground">Revisa tu correo</h1>
         </div>
         <p className="text-foreground/55 text-sm leading-relaxed">
           Te enviamos un enlace a <span className="text-foreground font-medium">{email}</span>.
@@ -91,7 +91,7 @@ export default function SignupPage() {
     <div className="space-y-8">
       <div>
         <p className="text-[10px] uppercase tracking-widest text-foreground/40 mb-1">Gratis para siempre</p>
-        <h1 className="font-serif text-4xl font-normal text-foreground">Crea tu cuenta</h1>
+        <h1 className="font-display text-3xl font-bold text-foreground">Crea tu cuenta</h1>
         <p className="text-sm text-foreground/50 mt-1">Sin contraseñas, en 2 minutos.</p>
       </div>
 

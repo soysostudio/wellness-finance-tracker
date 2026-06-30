@@ -127,7 +127,7 @@ export default async function CategoryDeepDivePage({
             </div>
             <div>
               <p className="text-[10px] uppercase tracking-widest text-foreground/40">Categoría</p>
-              <h1 className="font-serif text-3xl md:text-4xl font-normal text-foreground mt-0.5">
+              <h1 className="font-display text-2xl md:text-3xl font-bold text-foreground mt-0.5">
                 {catName}
               </h1>
             </div>
@@ -145,7 +145,7 @@ export default async function CategoryDeepDivePage({
             <p className="text-[10px] uppercase tracking-widest text-foreground/40">
               Total en {monthLabel}
             </p>
-            <p className="font-serif text-4xl font-normal text-foreground">
+            <p className="font-display text-3xl font-bold text-foreground">
               {formatCOP(totalThisMonth)}
             </p>
           </div>
@@ -186,7 +186,7 @@ export default async function CategoryDeepDivePage({
           <AnimateIn delay={40}>
             <div className="text-center py-16 space-y-3">
               <p className="text-4xl">{catIcon}</p>
-              <p className="font-serif text-xl font-normal text-foreground">
+              <p className="font-display text-xl font-normal text-foreground">
                 Sin gastos en {catName}
               </p>
               <p className="text-sm text-foreground/40">
@@ -211,7 +211,7 @@ export default async function CategoryDeepDivePage({
           <div className="rounded-2xl border border-foreground/8 p-4 flex items-center justify-between gap-4">
             <div>
               <p className="text-[10px] uppercase tracking-widest text-foreground/40">Mes anterior</p>
-              <p className="font-serif text-xl font-normal text-foreground mt-0.5">
+              <p className="font-display text-xl font-normal text-foreground mt-0.5">
                 {formatCOP(totalPrevMonth)}
               </p>
               <p className="text-xs text-foreground/40 mt-0.5">

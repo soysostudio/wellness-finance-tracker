@@ -9,7 +9,8 @@
   --color-foreground: var(--foreground);
   --font-sans: var(--font-sans);
   --font-mono: var(--font-geist-mono);
-  --font-heading: var(--font-sans);
+  --font-display: var(--font-display);
+  --font-heading: var(--font-display);
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -69,9 +70,10 @@
 }
 
 :root {
-  --background: #F7F4ED;                /* papel de recibo, más cálido */
-  --foreground: oklch(0.13 0 0);        /* #1A1A1A */
-  --card: #ffffff;
+  --background: #F4F4EF;                /* papel térmico, neutro-frío (no crema) */
+  --foreground: #1A1D1C;                /* tinta térmica: negro con matiz frío */
+  --card: #FCFCFA;                      /* papel del recibo, ligeramente más claro */
+  --stamp: #D64550;                     /* rojo de sello de caucho — alertas */
   --card-foreground: oklch(0.145 0 0);
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.145 0 0);
@@ -155,7 +157,8 @@
     @apply font-sans;
   }
   h1, h2, h3 {
-    font-family: var(--font-serif);
+    font-family: var(--font-display);
+    letter-spacing: -0.02em;
   }
 }
 
@@ -189,6 +192,7 @@ a[x-apple-data-detectors] {
   display: flex;
   align-items: baseline;
   gap: 0.5rem;
+  min-width: 0;
 }
 .leader-row .leader-fill {
   flex: 1 1 auto;
@@ -215,6 +219,42 @@ a[x-apple-data-detectors] {
   background-image: radial-gradient(circle at 7px 0, var(--tear-bg) 7px, transparent 7.5px);
   background-size: 14px 14px;
   background-repeat: repeat-x;
+}
+
+/* Dot-matrix divider — the dashed rule a thermal printer leaves between
+   sections of a receipt. */
+.receipt-rule {
+  border: 0;
+  border-top: 1.5px dashed color-mix(in srgb, var(--foreground) 28%, transparent);
+  margin: 0;
+}
+
+/* Double rule above the TOTAL line, like a ledger sum. */
+.receipt-total {
+  border-top: 3px double color-mix(in srgb, var(--foreground) 55%, transparent);
+}
+
+/* Highlighter swipe — a felt-tip mark over the one number that matters.
+   Painted as a band behind the glyphs so it always renders above the card. */
+.receipt-mark {
+  background-image: linear-gradient(var(--accent), var(--accent));
+  background-repeat: no-repeat;
+  background-size: 100% 0.62em;
+  background-position: 0 78%;
+  padding: 0 0.12em;
+  border-radius: 1px;
+}
+
+/* "Prints in" on load — the receipt feeds out of the register top-down. */
+@keyframes receipt-print {
+  from { clip-path: inset(0 0 100% 0); opacity: 0.4; }
+  to   { clip-path: inset(0 0 0 0);    opacity: 1; }
+}
+.receipt-print {
+  animation: receipt-print 0.6s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+@media (prefers-reduced-motion: reduce) {
+  .receipt-print { animation: none; }
 }
 /* AnimateIn keyframes — GPU-accelerated, no JS during scroll */
 @keyframes animate-in-bottom {

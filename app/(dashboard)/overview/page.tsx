@@ -167,7 +167,7 @@ export default async function OverviewPage({
       {/* ── Header ─────────────────────────────────── */}
       <AnimateIn>
         <div className="flex items-start justify-between gap-4">
-          <h1 className="font-serif text-4xl md:text-5xl font-normal text-foreground">
+          <h1 className="font-display text-3xl md:text-4xl font-bold text-foreground">
             {isCurrentMonth ? `Hola, ${firstName} 👋` : "Resumen"}
           </h1>
           <div className="pt-1">
@@ -178,38 +178,55 @@ export default async function OverviewPage({
 
       {/* ── Summary stats: recibo del mes ────────────── */}
       <AnimateIn>
-        <div className="receipt-torn bg-card rounded-t-3xl border-t border-x border-foreground/8 px-6 pt-6 pb-8">
-          <p className="text-[10px] uppercase tracking-widest text-foreground/40 mb-4">
-            {isCurrentMonth
-              ? "Recibo de este mes"
-              : new Date(yearMonth + "-01").toLocaleDateString("es-CO", { month: "long", year: "numeric" })}
-          </p>
+        <div className="receipt-print receipt-torn bg-card rounded-t-3xl border-t border-x border-foreground/10 px-6 pt-7 pb-9 shadow-sm max-w-md">
+          {/* Encabezado tipo comercio */}
+          <div className="text-center space-y-1.5 pb-4">
+            <p className="font-display text-base font-bold tracking-[0.4em] text-foreground pl-[0.4em]">LUCA</p>
+            <p className="font-display text-[10px] uppercase tracking-[0.22em] text-foreground/45">
+              {isCurrentMonth
+                ? "Resumen del mes · "
+                : ""}
+              {new Date(yearMonth + "-01").toLocaleDateString("es-CO", { month: "long", year: "numeric" })}
+            </p>
+          </div>
 
-          <div className="space-y-2.5">
+          <hr className="receipt-rule" />
+
+          {/* Líneas */}
+          <div className="space-y-3 py-4">
             <div className="leader-row text-sm">
-              <span className="text-foreground/55 shrink-0">Gastos</span>
+              <span className="font-display text-[11px] uppercase tracking-wider text-foreground/55 shrink-0">Gastos</span>
               <span className="leader-fill text-foreground" />
               <span className="font-amount text-foreground shrink-0">{formatCOP(overview.totalExpenses)}</span>
             </div>
             <div className="leader-row text-sm">
-              <span className="text-foreground/55 shrink-0">
-                Ingresos{includesSalary ? " · incluye salario" : ""}
-              </span>
+              <span className="font-display text-[11px] uppercase tracking-wider text-foreground/55 shrink-0">Ingresos</span>
               <span className="leader-fill text-foreground" />
               <span className="font-amount text-foreground shrink-0">{formatCOP(displayIncome)}</span>
             </div>
+            {includesSalary && (
+              <p className="font-display text-[9px] uppercase tracking-wider text-foreground/35">
+                ✶ Ingresos incluyen tu salario configurado
+              </p>
+            )}
           </div>
 
-          <div className="border-t border-dashed border-foreground/20 mt-4 pt-4">
-            <div className="leader-row">
-              <span className="text-[10px] uppercase tracking-widest font-semibold text-foreground/60 shrink-0">
-                Balance neto
-              </span>
+          {/* Total */}
+          <div className="receipt-total pt-4">
+            <div className="leader-row items-baseline">
+              <span className="font-display text-xs uppercase tracking-[0.18em] font-bold text-foreground shrink-0">Balance</span>
               <span className="leader-fill text-foreground" />
-              <span className={`font-amount text-2xl font-semibold shrink-0 ${displayNet < 0 ? "text-[#E8673C]" : "text-foreground"}`}>
-                {formatCOP(displayNet)}
-              </span>
+              {displayNet < 0 ? (
+                <span className="font-amount text-3xl font-bold text-[#D64550] shrink-0">{formatCOP(displayNet)}</span>
+              ) : (
+                <span className="receipt-mark font-amount text-3xl font-bold text-foreground shrink-0">{formatCOP(displayNet)}</span>
+              )}
             </div>
+            {isCurrentMonth && (
+              <p className="font-display text-[10px] uppercase tracking-[0.2em] text-foreground/40 text-center pt-5">
+                ★ Gracias por cuidar tu plata ★
+              </p>
+            )}
           </div>
         </div>
       </AnimateIn>
@@ -355,7 +372,7 @@ export default async function OverviewPage({
         <AnimateIn>
           <div className="text-center py-16 space-y-4">
             <p className="text-5xl">💬</p>
-            <p className="font-serif text-2xl font-normal text-foreground">
+            <p className="font-display text-2xl font-normal text-foreground">
               {isCurrentMonth ? "Sin movimientos este mes" : "Sin movimientos ese mes"}
             </p>
             {isCurrentMonth && (

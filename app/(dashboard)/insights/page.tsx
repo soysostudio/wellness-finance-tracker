@@ -104,7 +104,7 @@ export default async function InsightsPage() {
       {/* Header */}
       <AnimateIn>
         <p className="text-[10px] uppercase tracking-widest text-foreground/40 capitalize">{monthName}</p>
-        <h1 className="font-serif text-4xl md:text-5xl font-normal mt-1 text-foreground">
+        <h1 className="font-display text-3xl md:text-4xl font-bold mt-1 text-foreground">
           Insights de Luca
         </h1>
       </AnimateIn>
@@ -113,7 +113,7 @@ export default async function InsightsPage() {
         <AnimateIn>
           <div className="text-center py-20 space-y-4">
             <p className="text-5xl">✨</p>
-            <p className="font-serif text-2xl font-normal text-foreground">Sin datos suficientes aún</p>
+            <p className="font-display text-2xl font-normal text-foreground">Sin datos suficientes aún</p>
             <p className="text-foreground/50 text-sm max-w-xs mx-auto leading-relaxed">
               Registra algunos gastos y Luca generará tus insights automáticamente.
             </p>
@@ -126,15 +126,15 @@ export default async function InsightsPage() {
           <div className="grid grid-cols-3 gap-6 py-6 border-t border-b border-foreground/8">
             <div className="space-y-1.5">
               <p className="text-[10px] uppercase tracking-widest text-foreground/40">Gasto total</p>
-              <p className="font-serif text-xl md:text-2xl font-normal text-foreground">{formatCOP(totalExpenses)}</p>
+              <p className="font-display text-xl md:text-2xl font-normal text-foreground">{formatCOP(totalExpenses)}</p>
             </div>
             <div className="space-y-1.5">
               <p className="text-[10px] uppercase tracking-widest text-foreground/40">Ingreso total</p>
-              <p className="font-serif text-xl md:text-2xl font-normal text-foreground">{formatCOP(totalIncome)}</p>
+              <p className="font-display text-xl md:text-2xl font-normal text-foreground">{formatCOP(totalIncome)}</p>
             </div>
             <div className="space-y-1.5">
               <p className="text-[10px] uppercase tracking-widest text-foreground/40">Tasa de ahorro</p>
-              <p className={`font-serif text-xl md:text-2xl font-normal ${savingsRate < 10 ? "text-[#E8673C]" : "text-foreground"}`}>
+              <p className={`font-display text-xl md:text-2xl font-normal ${savingsRate < 10 ? "text-[#E8673C]" : "text-foreground"}`}>
                 {savingsRate}%
               </p>
             </div>
@@ -145,7 +145,7 @@ export default async function InsightsPage() {
             <div className="bg-card border border-foreground/5 rounded-2xl p-5 flex items-center justify-between gap-4">
               <div>
                 <p className="text-[10px] uppercase tracking-widest text-foreground/40">Gasto promedio por día</p>
-                <p className="font-serif text-3xl font-normal text-foreground mt-1">{formatCOP(avgDaily)}</p>
+                <p className="font-display text-2xl font-bold text-foreground mt-1">{formatCOP(avgDaily)}</p>
               </div>
               <div className="flex items-end gap-1 h-12 shrink-0">
                 {dailyValues.slice(-14).map((v, i) => (
@@ -170,10 +170,10 @@ export default async function InsightsPage() {
               <div className="bg-card border border-foreground/5 rounded-2xl p-5 space-y-1.5">
                 <p className="text-[10px] uppercase tracking-widest text-foreground/40">vs. mes anterior</p>
                 {monthDelta === null ? (
-                  <p className="font-serif text-2xl font-normal text-foreground/30">—</p>
+                  <p className="font-display text-2xl font-normal text-foreground/30">—</p>
                 ) : (
                   <>
-                    <p className={`font-serif text-2xl font-normal ${
+                    <p className={`font-display text-2xl font-normal ${
                       monthDelta > 10 ? "text-[#E8673C]" : monthDelta < -5 ? "text-[#2A9D8F]" : "text-foreground"
                     }`}>
                       {monthDelta > 0 ? "+" : ""}{monthDelta}%
@@ -192,7 +192,7 @@ export default async function InsightsPage() {
               {/* Projection */}
               <div className="bg-card border border-foreground/5 rounded-2xl p-5 space-y-1.5">
                 <p className="text-[10px] uppercase tracking-widest text-foreground/40">Proyección del mes</p>
-                <p className="font-serif text-2xl font-normal text-foreground">{formatCOP(projection)}</p>
+                <p className="font-display text-2xl font-normal text-foreground">{formatCOP(projection)}</p>
                 <p className="text-xs text-foreground/40">
                   Día {daysPassed} de {daysInMonth} · a este ritmo
                 </p>
@@ -219,7 +219,7 @@ export default async function InsightsPage() {
                             <CategoryIcon slug={cat.slug} size={15} strokeWidth={1.5} style={{ color: cat.color }} />
                             <span>{cat.name}</span>
                           </span>
-                          <span className="font-serif text-sm font-normal text-foreground">
+                          <span className="font-display text-sm font-normal text-foreground">
                             {formatCOP(cat.total)}
                           </span>
                         </div>

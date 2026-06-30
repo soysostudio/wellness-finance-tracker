@@ -63,7 +63,7 @@ export default async function GroupsPage() {
     <div className="p-6 md:p-8 max-w-2xl mx-auto space-y-8">
       <AnimateIn>
         <p className="text-[10px] uppercase tracking-widest text-foreground/40">Colaboración</p>
-        <h1 className="font-serif text-4xl md:text-5xl font-normal mt-1 text-foreground">
+        <h1 className="font-display text-3xl md:text-4xl font-bold mt-1 text-foreground">
           Grupos
         </h1>
         <p className="text-sm text-foreground/40 mt-2 leading-relaxed">

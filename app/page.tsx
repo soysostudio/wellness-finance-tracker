@@ -65,7 +65,7 @@ export default function LandingPage() {
       {/* ── Hero ──────────────────────────────────────── */}
       <section className="px-8 md:px-16 pt-16 pb-24 max-w-7xl mx-auto grid md:grid-cols-2 gap-12 items-center">
         <AnimateIn className="space-y-7">
-          <h1 className="font-serif text-5xl md:text-6xl leading-[1.1] font-normal text-foreground">
+          <h1 className="font-display text-5xl md:text-6xl leading-[1.1] font-normal text-foreground">
             Maneja tu plata<br />
             <span style={{ background: "linear-gradient(to top, #FEFF6E 80%, transparent 80%)", color: "#1A1A1A" }}>por WhatsApp.</span>
           </h1>
@@ -117,7 +117,7 @@ export default function LandingPage() {
       <section id="como-funciona" className="px-8 md:px-16 py-20 max-w-7xl mx-auto">
         <AnimateIn>
           <p className="text-xs text-foreground/40 uppercase tracking-widest mb-3">Lo que hace Luca</p>
-          <h2 className="font-serif text-3xl md:text-4xl font-normal mb-14 text-foreground">
+          <h2 className="font-display text-2xl md:text-3xl font-bold mb-14 text-foreground">
             Todo lo que necesitas,<br />sin la complejidad.
           </h2>
         </AnimateIn>
@@ -144,7 +144,7 @@ export default function LandingPage() {
                   <div className="w-9 h-9 rounded-lg bg-[#1A1A1A]/10 flex items-center justify-center">
                     <Icon size={16} strokeWidth={1.5} className="text-[#1A1A1A]/70" />
                   </div>
-                  <span className="font-serif text-5xl font-normal" style={{ color: "rgba(0,0,0,0.10)" }}>{n}</span>
+                  <span className="font-display text-4xl font-bold" style={{ color: "rgba(0,0,0,0.10)" }}>{n}</span>
                 </div>
                 <div>
                   <p className="font-medium text-base mb-2 text-[#1A1A1A]">{t}</p>
@@ -160,7 +160,7 @@ export default function LandingPage() {
       <section className="px-8 md:px-16 py-20 max-w-7xl mx-auto">
         <AnimateIn>
           <p className="text-xs text-foreground/40 uppercase tracking-widest mb-3">Personas reales</p>
-          <h2 className="font-serif text-3xl md:text-4xl font-normal mb-12 text-foreground">
+          <h2 className="font-display text-2xl md:text-3xl font-bold mb-12 text-foreground">
             Lo que dicen quienes<br />ya usan Luca.
           </h2>
         </AnimateIn>
@@ -183,7 +183,7 @@ export default function LandingPage() {
       {/* ── CTA ───────────────────────────────────────── */}
       <section className="px-8 md:px-16 py-24 max-w-3xl mx-auto text-center">
         <AnimateIn className="space-y-6">
-          <h2 className="font-serif text-4xl md:text-5xl font-normal leading-snug text-foreground">
+          <h2 className="font-display text-3xl md:text-4xl font-bold leading-snug text-foreground">
             Tu plata, finalmente<br />
             <span style={{ background: "linear-gradient(to top, #FFB0FF 80%, transparent 80%)", color: "#1A1A1A" }}>organizada.</span>
           </h2>

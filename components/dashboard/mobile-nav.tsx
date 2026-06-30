@@ -37,7 +37,7 @@ export function MobileNav({ userName, budgetAlert = false }: { userName: string;
     <>
       {/* Top bar */}
       <div className="md:hidden flex items-center justify-between px-4 py-3 border-b border-border bg-card sticky top-0 z-40">
-        <Link href="/overview" className="font-serif text-lg font-normal tracking-tight no-underline text-foreground">Luca</Link>
+        <Link href="/overview" className="font-display text-lg font-normal tracking-tight no-underline text-foreground">Luca</Link>
         <button
           onClick={() => setOpen(true)}
           className="p-2 rounded-lg hover:bg-muted transition-colors text-foreground/50"
@@ -61,7 +61,7 @@ export function MobileNav({ userName, budgetAlert = false }: { userName: string;
         open ? "translate-x-0" : "-translate-x-full"
       )}>
         <div className="flex items-center justify-between px-6 py-5 border-b border-border">
-          <Link href="/overview" onClick={() => setOpen(false)} className="font-serif text-xl font-normal tracking-tight no-underline text-foreground">Luca</Link>
+          <Link href="/overview" onClick={() => setOpen(false)} className="font-display text-xl font-normal tracking-tight no-underline text-foreground">Luca</Link>
           <button
             onClick={() => setOpen(false)}
             className="p-1.5 rounded-lg hover:bg-muted transition-colors text-foreground/40"

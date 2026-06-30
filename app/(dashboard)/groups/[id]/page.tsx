@@ -155,7 +155,7 @@ export default async function GroupDeepDivePage({
             </div>
             <div>
               <p className="text-[10px] uppercase tracking-widest text-foreground/40">Grupo</p>
-              <h1 className="font-serif text-3xl md:text-4xl font-normal text-foreground mt-0.5">
+              <h1 className="font-display text-2xl md:text-3xl font-bold text-foreground mt-0.5">
                 {group.name}
               </h1>
             </div>
@@ -171,7 +171,7 @@ export default async function GroupDeepDivePage({
         <div className="flex items-end gap-6 py-6 border-t border-b border-foreground/8 flex-wrap">
           <div className="space-y-1">
             <p className="text-[10px] uppercase tracking-widest text-foreground/40">Total en {monthLabel}</p>
-            <p className="font-serif text-4xl font-normal text-foreground">{formatCOP(totalSpent)}</p>
+            <p className="font-display text-3xl font-bold text-foreground">{formatCOP(totalSpent)}</p>
           </div>
 
           {pctChange !== null && totalSpent > 0 && (
@@ -235,7 +235,7 @@ export default async function GroupDeepDivePage({
                       </div>
                       <div className="flex items-center gap-3 shrink-0">
                         <span className="text-xs text-foreground/40">{pct}%</span>
-                        <span className="font-serif text-base font-normal">{formatCOP(m.total)}</span>
+                        <span className="font-display text-base font-normal">{formatCOP(m.total)}</span>
                       </div>
                     </div>
                     <div className="h-1 bg-foreground/8 rounded-full overflow-hidden">
@@ -264,7 +264,7 @@ export default async function GroupDeepDivePage({
                 >
                   <CategoryIcon slug={cat.slug} size={18} strokeWidth={1.5} style={{ color: cat.color, filter: "brightness(0.6)" }} />
                   <p className="text-[10px] text-[#1A1A1A]/50 uppercase tracking-widest leading-none">{cat.name}</p>
-                  <p className="font-serif text-xl font-normal text-[#1A1A1A]">{formatCOP(cat.total)}</p>
+                  <p className="font-display text-xl font-normal text-[#1A1A1A]">{formatCOP(cat.total)}</p>
                 </div>
               </AnimateIn>
             ))}
@@ -284,7 +284,7 @@ export default async function GroupDeepDivePage({
           <AnimateIn delay={40}>
             <div className="text-center py-16 space-y-3">
               <p className="text-4xl">{group.icon}</p>
-              <p className="font-serif text-xl font-normal text-foreground">Sin movimientos en {group.name}</p>
+              <p className="font-display text-xl font-normal text-foreground">Sin movimientos en {group.name}</p>
               <p className="text-sm text-foreground/40">
                 Registra gastos del grupo desde WhatsApp:<br />
                 <span className="font-mono">&quot;40 mil en mercado para {group.name}&quot;</span>
@@ -321,7 +321,7 @@ export default async function GroupDeepDivePage({
           <div className="rounded-2xl border border-foreground/8 p-4 flex items-center justify-between gap-4">
             <div>
               <p className="text-[10px] uppercase tracking-widest text-foreground/40">Mes anterior</p>
-              <p className="font-serif text-xl font-normal text-foreground mt-0.5">{formatCOP(prevExpAmt)}</p>
+              <p className="font-display text-xl font-normal text-foreground mt-0.5">{formatCOP(prevExpAmt)}</p>
             </div>
             <Link
               href={`/groups/${groupId}?month=${prevYM}`}

@@ -52,7 +52,7 @@ export default async function TransactionsPage() {
         <div className="flex items-start justify-between gap-4">
           <div>
             <p className="text-[10px] uppercase tracking-widest text-foreground/40">Historial</p>
-            <h1 className="font-serif text-4xl md:text-5xl font-normal mt-1 text-foreground">
+            <h1 className="font-display text-3xl md:text-4xl font-bold mt-1 text-foreground">
               Transacciones
             </h1>
           </div>
@@ -72,11 +72,11 @@ export default async function TransactionsPage() {
         <div className="grid grid-cols-2 gap-6 py-6 border-t border-b border-foreground/8">
           <div className="space-y-1.5">
             <p className="text-[10px] uppercase tracking-widest text-foreground/40">Total gastos</p>
-            <p className="font-serif text-xl md:text-2xl font-normal text-foreground">{formatCOP(totalExpenses)}</p>
+            <p className="font-display text-xl md:text-2xl font-normal text-foreground">{formatCOP(totalExpenses)}</p>
           </div>
           <div className="space-y-1.5">
             <p className="text-[10px] uppercase tracking-widest text-foreground/40">Total ingresos</p>
-            <p className="font-serif text-xl md:text-2xl font-normal text-foreground">{formatCOP(totalIncome)}</p>
+            <p className="font-display text-xl md:text-2xl font-normal text-foreground">{formatCOP(totalIncome)}</p>
           </div>
         </div>
       </AnimateIn>
@@ -86,7 +86,7 @@ export default async function TransactionsPage() {
         <AnimateIn>
           <div className="text-center py-20 space-y-4">
             <p className="text-5xl">💬</p>
-            <p className="font-serif text-2xl font-normal text-foreground">Sin transacciones aún</p>
+            <p className="font-display text-2xl font-normal text-foreground">Sin transacciones aún</p>
             <p className="text-foreground/50 text-sm max-w-xs mx-auto leading-relaxed">
               Agrégala arriba o cuéntale un gasto a Luca por WhatsApp
             </p>

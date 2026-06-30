@@ -153,7 +153,7 @@ export function BudgetRow({ budget, spent }: { budget: Budget; spent: number }) 
         <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
           <div className="w-full max-w-md bg-card rounded-2xl p-6 space-y-4 shadow-xl">
             <div className="flex items-center justify-between">
-              <h2 className="font-serif text-xl font-normal text-foreground">Editar presupuesto</h2>
+              <h2 className="font-display text-xl font-normal text-foreground">Editar presupuesto</h2>
               <button
                 onClick={() => setEditing(false)}
                 className="p-1.5 rounded-lg hover:bg-foreground/6 text-foreground/40 hover:text-foreground transition-colors"

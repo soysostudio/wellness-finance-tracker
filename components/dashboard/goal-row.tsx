@@ -137,14 +137,14 @@ export function GoalRow({ goal }: { goal: Goal }) {
         <div className="flex gap-6">
           <div>
             <p className="text-[10px] uppercase tracking-widest text-foreground/40">Falta</p>
-            <p className="font-serif text-lg font-normal text-foreground mt-0.5">
+            <p className="font-display text-lg font-normal text-foreground mt-0.5">
               {remaining > 0 ? formatCOP(remaining) : "¡Listo! 🎉"}
             </p>
           </div>
           {daysLeft !== null && (
             <div>
               <p className="text-[10px] uppercase tracking-widest text-foreground/40">Días restantes</p>
-              <p className="font-serif text-lg font-normal text-foreground mt-0.5">
+              <p className="font-display text-lg font-normal text-foreground mt-0.5">
                 {daysLeft > 0 ? daysLeft : "Vencida"}
               </p>
             </div>
@@ -158,7 +158,7 @@ export function GoalRow({ goal }: { goal: Goal }) {
         <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
           <div className="w-full max-w-md bg-card rounded-2xl p-6 space-y-4 shadow-xl max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between">
-              <h2 className="font-serif text-xl font-normal text-foreground">Editar meta</h2>
+              <h2 className="font-display text-xl font-normal text-foreground">Editar meta</h2>
               <button
                 onClick={() => setEditing(false)}
                 className="p-1.5 rounded-lg hover:bg-foreground/6 text-foreground/40 hover:text-foreground transition-colors"

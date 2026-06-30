@@ -37,7 +37,7 @@ export default function LoginPage() {
       <div className="space-y-6">
         <div>
           <p className="text-[10px] uppercase tracking-widest text-foreground/40 mb-1">Listo</p>
-          <h1 className="font-serif text-4xl font-normal text-foreground">Revisa tu correo</h1>
+          <h1 className="font-display text-3xl font-bold text-foreground">Revisa tu correo</h1>
         </div>
         <p className="text-foreground/55 text-sm leading-relaxed">
           Te enviamos un enlace mágico a{" "}
@@ -58,7 +58,7 @@ export default function LoginPage() {
     <div className="space-y-8">
       <div>
         <p className="text-[10px] uppercase tracking-widest text-foreground/40 mb-1">Bienvenido</p>
-        <h1 className="font-serif text-4xl font-normal text-foreground">Inicia sesión</h1>
+        <h1 className="font-display text-3xl font-bold text-foreground">Inicia sesión</h1>
         <p className="text-sm text-foreground/50 mt-1">Te enviamos un enlace — sin contraseñas.</p>
       </div>
 

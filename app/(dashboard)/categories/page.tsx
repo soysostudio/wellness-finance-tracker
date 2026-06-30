@@ -25,7 +25,7 @@ export default async function CategoriesPage() {
       {/* Header */}
       <AnimateIn>
         <p className="text-[10px] uppercase tracking-widest text-foreground/40">Clasificación</p>
-        <h1 className="font-serif text-4xl md:text-5xl font-normal mt-1 text-foreground">
+        <h1 className="font-display text-3xl md:text-4xl font-bold mt-1 text-foreground">
           Categorías
         </h1>
         <p className="text-sm text-foreground/40 mt-2 leading-relaxed">
