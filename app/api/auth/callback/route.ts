@@ -11,13 +11,11 @@ export async function GET(request: Request) {
     const { data, error } = await supabase.auth.exchangeCodeForSession(code);
 
     if (!error && data.user) {
-      // Persist name + phone from signup metadata server-side.
-      // This works regardless of which browser/device opens the magic link,
-      // unlike the localStorage approach.
+      // Persist name from signup metadata. El teléfono NO se guarda aquí:
+      // debe verificarse por WhatsApp entrante (ver /api/phone/verify/start).
       const meta = data.user.user_metadata ?? {};
       const updates: Record<string, string> = {};
-      if (meta.full_name)    updates.full_name    = meta.full_name;
-      if (meta.phone_number) updates.phone_number = meta.phone_number;
+      if (meta.full_name) updates.full_name = meta.full_name;
 
       const [profileResult] = await Promise.all([
         Object.keys(updates).length > 0

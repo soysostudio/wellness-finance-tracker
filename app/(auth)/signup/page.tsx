@@ -3,7 +3,6 @@
 import { useState } from "react";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
-import { normalizePhone } from "@/lib/utils/phone";
 
 type Step = "form" | "sent";
 
@@ -11,7 +10,6 @@ export default function SignupPage() {
   const [step, setStep]       = useState<Step>("form");
   const [name, setName]       = useState("");
   const [email, setEmail]     = useState("");
-  const [phone, setPhone]     = useState("");
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
 
@@ -21,18 +19,14 @@ export default function SignupPage() {
     setErrorMsg("");
 
     const supabase = createClient();
-    const formattedPhone = phone ? normalizePhone(phone) : null;
 
     const { error: signupError } = await supabase.auth.signInWithOtp({
       email,
       options: {
         emailRedirectTo: `${process.env.NEXT_PUBLIC_BASE_URL}/api/auth/callback`,
-        // Store name + phone in metadata so callback can persist them server-side
-        // regardless of which browser/device opens the magic link
-        data: {
-          full_name: name,
-          ...(formattedPhone ? { phone_number: formattedPhone } : {}),
-        },
+        // Solo el nombre. El teléfono se vincula luego con verificación por
+        // WhatsApp (en Ajustes), no se guarda sin comprobar propiedad.
+        data: { full_name: name },
       },
     });
 
@@ -42,8 +36,6 @@ export default function SignupPage() {
       return;
     }
 
-    // localStorage as fallback for same-browser flow
-    if (formattedPhone) localStorage.setItem("luca_pending_phone", formattedPhone);
     setLoading(false);
     setStep("sent");
   }
@@ -110,18 +102,6 @@ export default function SignupPage() {
           required
           autoComplete="email"
         />
-        <div className="space-y-1.5">
-          <AuthInput
-            type="tel"
-            placeholder="WhatsApp (ej: 300 123 4567)"
-            value={phone}
-            onChange={(e) => setPhone(e.target.value)}
-          />
-          <p className="text-xs text-foreground/40 px-1">
-            Con este número Luca te reconocerá en WhatsApp
-          </p>
-        </div>
-
         {errorMsg && (
           <p className="text-xs text-red-500 px-1">{errorMsg}</p>
         )}

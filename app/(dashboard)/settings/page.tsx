@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import { ProfileForm } from "@/components/dashboard/profile-form";
+import { PhoneVerify } from "@/components/dashboard/phone-verify";
 import { RemindersForm } from "@/components/dashboard/reminders-form";
 import { CustomReminders } from "@/components/dashboard/custom-reminders";
 import { ThemeToggle } from "@/components/dashboard/theme-toggle";
@@ -55,7 +56,6 @@ export default async function SettingsPage() {
           userId={user.id}
           email={user.email ?? ""}
           initialName={profile?.full_name ?? ""}
-          initialPhone={profile?.phone_number ?? ""}
           initialIncome={profile?.monthly_income ?? null}
         />
       </AnimateIn>
@@ -75,16 +75,9 @@ export default async function SettingsPage() {
       <AnimateIn delay={100}>
         <div className="bg-card border border-foreground/5 rounded-2xl p-5 space-y-3">
           <p className="text-[10px] uppercase tracking-widest text-foreground/40">WhatsApp</p>
-          <div className="flex items-center justify-between text-sm">
-            <span className="text-foreground/50">Número vinculado</span>
-            <span className="font-medium text-foreground">
-              {profile?.phone_number ?? (
-                <span className="text-destructive text-xs">No vinculado</span>
-              )}
-            </span>
-          </div>
+          <PhoneVerify linkedPhone={profile?.phone_number ?? null} />
           <p className="text-xs text-foreground/40 leading-relaxed">
-            Luca te reconoce por este número. Si cambias de número, actualízalo arriba.
+            Luca te reconoce por este número. Verificarlo evita que alguien más reciba tus datos.
           </p>
         </div>
       </AnimateIn>

@@ -331,6 +331,33 @@ export interface Database {
         };
         Relationships: [];
       };
+      phone_verifications: {
+        Row: {
+          id: string;
+          user_id: string;
+          phone_number: string;
+          code: string;
+          expires_at: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          phone_number: string;
+          code: string;
+          expires_at: string;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          phone_number?: string;
+          code?: string;
+          expires_at?: string;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
       goal_contributions: {
         Row: {
           id: string;

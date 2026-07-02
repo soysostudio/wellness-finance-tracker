@@ -6,13 +6,11 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useRouter } from "next/navigation";
 import { formatAmountInput, parseAmountInput } from "@/lib/utils/currency";
-import { normalizePhone } from "@/lib/utils/phone";
 
 interface Props {
   userId: string;
   email: string;
   initialName: string;
-  initialPhone: string;
   initialIncome: number | null;
 }
 
@@ -20,11 +18,9 @@ export function ProfileForm({
   userId,
   email,
   initialName,
-  initialPhone,
   initialIncome,
 }: Props) {
   const [name, setName] = useState(initialName);
-  const [phone, setPhone] = useState(initialPhone);
   const [income, setIncome] = useState(initialIncome ? formatAmountInput(String(initialIncome)) : "");
   const [loading, setLoading] = useState(false);
   const [saved, setSaved] = useState(false);
@@ -42,7 +38,6 @@ export function ProfileForm({
       .from("users")
       .update({
         full_name: name.trim(),
-        phone_number: phone.trim() ? normalizePhone(phone) : null,
         currency: "COP",
         monthly_income: income ? parseAmountInput(income) : null,
       })
@@ -79,17 +74,6 @@ export function ProfileForm({
         <div className="space-y-1">
           <label className="text-xs font-medium text-muted-foreground">Correo</label>
           <Input value={email} disabled className="h-11 opacity-60" />
-        </div>
-
-        <div className="space-y-1">
-          <label className="text-xs font-medium text-muted-foreground">Número de WhatsApp</label>
-          <Input
-            value={phone}
-            onChange={(e) => setPhone(e.target.value)}
-            placeholder="+57 300 123 4567"
-            type="tel"
-            className="h-11"
-          />
         </div>
 
         <div className="space-y-1">

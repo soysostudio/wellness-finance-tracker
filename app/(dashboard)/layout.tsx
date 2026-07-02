@@ -4,7 +4,6 @@ import { createClient } from "@/lib/supabase/server";
 import { getCurrentMonthRange } from "@/lib/utils/dates";
 import { SidebarNav } from "@/components/dashboard/sidebar-nav";
 import { MobileNav } from "@/components/dashboard/mobile-nav";
-import { PhoneLinker } from "@/components/dashboard/phone-linker";
 
 export default async function DashboardLayout({
   children,
@@ -71,7 +70,6 @@ export default async function DashboardLayout({
       {/* Main */}
       <main className="flex-1 overflow-auto">
         <MobileNav userName={profile?.full_name ?? user.email ?? ""} budgetAlert={hasBudgetAlert} />
-        <PhoneLinker userId={user.id} hasPhone={!!profile?.phone_number} />
         {children}
       </main>
     </div>

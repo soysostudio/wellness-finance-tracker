@@ -21,6 +21,35 @@ export async function processIncomingMessage(payload: TwilioWebhookPayload): Pro
   const supabase = createAdminClient();
   const phoneNumber = payload.From.replace('whatsapp:', '');
 
+  // 0. ¿Es un código de verificación de número? El remitente aún no está vinculado;
+  //    confirma propiedad al enviar el código DESDE su propio número.
+  const maybeCode = payload.Body?.trim().toUpperCase();
+  if (maybeCode && /^LUCA-[A-Z0-9]{4}$/.test(maybeCode)) {
+    const { data: pending } = await supabase
+      .from('phone_verifications')
+      .select('id, user_id')
+      .eq('code', maybeCode)
+      .eq('phone_number', phoneNumber)
+      .gt('expires_at', new Date().toISOString())
+      .maybeSingle();
+
+    if (pending) {
+      const { data: taken } = await supabase
+        .from('users').select('id').eq('phone_number', phoneNumber).maybeSingle();
+      if (taken && taken.id !== pending.user_id) {
+        await sendWhatsAppMessage(payload.From, 'Ese número ya está vinculado a otra cuenta de Luca.');
+        return;
+      }
+      await supabase.from('users').update({ phone_number: phoneNumber }).eq('id', pending.user_id);
+      await supabase.from('phone_verifications').delete().eq('user_id', pending.user_id);
+      await sendWhatsAppMessage(
+        payload.From,
+        '✅ ¡Número verificado! Ya quedaste vinculado a Luca. Cuéntame tu primer gasto cuando quieras 💪',
+      );
+      return;
+    }
+  }
+
   // 1. Find user by phone number
   const { data: userRaw } = await supabase
     .from('users')

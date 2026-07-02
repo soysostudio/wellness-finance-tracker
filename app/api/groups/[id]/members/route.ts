@@ -40,62 +40,55 @@ export async function POST(
     .eq('phone_number', phone)
     .maybeSingle();
 
-  if (!targetUser) {
-    return NextResponse.json(
-      { error: 'El número no está registrado en Luca. El usuario debe crear su cuenta primero.' },
-      { status: 400 }
-    );
-  }
-
-  if (targetUser.id === user.id) {
+  if (targetUser && targetUser.id === user.id) {
     return NextResponse.json({ error: 'No puedes agregarte a ti mismo' }, { status: 400 });
   }
 
-  // Check if already a member
-  const { data: existing } = await supabase
-    .from('group_members')
-    .select('id')
-    .eq('group_id', groupId)
-    .eq('user_id', targetUser.id)
-    .maybeSingle();
-
-  if (existing) {
-    return NextResponse.json({ error: 'Ya es miembro del grupo' }, { status: 409 });
-  }
-
-  // Add as member
-  const { error: insertErr } = await supabase
-    .from('group_members')
-    .insert({ group_id: groupId, user_id: targetUser.id, role: 'member' });
-
-  if (insertErr) {
-    return NextResponse.json({ error: 'No se pudo agregar el miembro' }, { status: 500 });
-  }
-
-  // Get owner's name for the invitation message
+  // Nombre del dueño para el mensaje de invitación
   const { data: ownerProfile } = await supabase
     .from('users')
     .select('full_name')
     .eq('id', user.id)
     .single();
+  const ownerName = ownerProfile?.full_name?.split(' ')[0] ?? 'Alguien';
 
-  const ownerName  = ownerProfile?.full_name?.split(' ')[0] ?? 'Alguien';
-  const memberName = targetUser.full_name?.split(' ')[0] ?? 'tú';
+  // Respuesta genérica: nunca revelamos si el número está registrado (evita oráculo)
+  const genericOk = NextResponse.json(
+    { success: true, message: 'Listo. Si el número usa Luca se agregará; si no, le llegará una invitación.' },
+    { status: 200 },
+  );
 
-  // Send WhatsApp invitation (fire-and-forget)
-  if (targetUser.phone_number) {
-    sendWhatsAppMessage(
-      `whatsapp:${targetUser.phone_number}`,
-      `👋 ¡Hola, ${memberName}! *${ownerName}* te agregó al grupo *${group.icon} ${group.name}* en Luca.\n\n` +
-      `Para registrar gastos del grupo, solo mencionalo:\n` +
-      `_"40 mil en mercado para ${group.name}"_\n\n` +
-      `Ver el grupo: ${BASE_URL}/groups/${group.id}`
-    ).catch(console.error);
+  if (targetUser) {
+    // Ya usa Luca → agregar si no es miembro (idempotente) e invitar por WhatsApp
+    const { data: existing } = await supabase
+      .from('group_members')
+      .select('id')
+      .eq('group_id', groupId)
+      .eq('user_id', targetUser.id)
+      .maybeSingle();
+
+    if (!existing) {
+      await supabase.from('group_members').insert({ group_id: groupId, user_id: targetUser.id, role: 'member' });
+      const memberName = targetUser.full_name?.split(' ')[0] ?? 'tú';
+      if (targetUser.phone_number) {
+        sendWhatsAppMessage(
+          `whatsapp:${targetUser.phone_number}`,
+          `👋 ¡Hola, ${memberName}! *${ownerName}* te agregó al grupo *${group.icon} ${group.name}* en Luca.\n\n` +
+          `Para registrar gastos del grupo, solo mencionalo:\n` +
+          `_"40 mil en mercado para ${group.name}"_\n\n` +
+          `Ver el grupo: ${BASE_URL}/groups/${group.id}`
+        ).catch(console.error);
+      }
+    }
+    return genericOk;
   }
 
-  return NextResponse.json({
-    id:        targetUser.id,
-    full_name: targetUser.full_name,
-    phone:     targetUser.phone_number,
-  }, { status: 201 });
+  // No usa Luca todavía → guardar invitación pendiente (se une al registrarse)
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  await (supabase as any)
+    .from('pending_group_invitations')
+    .upsert({ phone_number: phone, group_id: groupId, invited_by: user.id }, { onConflict: 'phone_number,group_id' })
+    .then(() => {}, () => {});
+
+  return genericOk;
 }
