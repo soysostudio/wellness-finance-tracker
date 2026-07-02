@@ -2,7 +2,8 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Pencil, Trash2, X } from "lucide-react";
+import { X } from "lucide-react";
+import { RowActions } from "@/components/ui/row-actions";
 import { formatCOP, formatAmountInput, parseAmountInput } from "@/lib/utils/currency";
 
 interface Goal {
@@ -20,7 +21,6 @@ interface Goal {
 export function GoalRow({ goal }: { goal: Goal }) {
   const router = useRouter();
   const [editing, setEditing]       = useState(false);
-  const [confirming, setConfirming] = useState(false);
   const [deleting, setDeleting]     = useState(false);
   const [saving, setSaving]         = useState(false);
 
@@ -89,30 +89,12 @@ export function GoalRow({ goal }: { goal: Goal }) {
               <p className="text-xs text-foreground/40 mt-0.5">{goal.description}</p>
             )}
           </div>
-          {confirming ? (
-            <div className="flex items-center gap-2 shrink-0">
-              <span className="text-xs text-foreground/50">¿Eliminar?</span>
-              <button onClick={handleDelete} disabled={deleting} className="text-xs font-medium text-red-500 hover:text-red-600 disabled:opacity-50">{deleting ? "..." : "Sí"}</button>
-              <button onClick={() => setConfirming(false)} className="text-xs text-foreground/40 hover:text-foreground">No</button>
-            </div>
-          ) : (
-            <div className="flex items-center gap-1 md:opacity-0 md:group-hover:opacity-100 transition-opacity shrink-0">
-              <button
-                onClick={() => setEditing(true)}
-                className="p-1.5 rounded-lg hover:bg-foreground/6 text-foreground/40 hover:text-foreground transition-colors"
-                title="Editar"
-              >
-                <Pencil size={14} strokeWidth={1.5} />
-              </button>
-              <button
-                onClick={() => setConfirming(true)}
-                className="p-1.5 rounded-lg hover:bg-red-50 dark:hover:bg-red-950/30 text-foreground/40 hover:text-red-500 transition-colors"
-                title="Eliminar"
-              >
-                <Trash2 size={14} strokeWidth={1.5} />
-              </button>
-            </div>
-          )}
+          <RowActions
+            label={`Acciones de ${goal.name}`}
+            deleting={deleting}
+            onEdit={() => setEditing(true)}
+            onDelete={handleDelete}
+          />
           <span
             className="text-xs px-3 py-1 rounded-full shrink-0 font-medium"
             style={{ backgroundColor: "#FEFF6E", color: "#1A1A1A" }}
@@ -161,6 +143,7 @@ export function GoalRow({ goal }: { goal: Goal }) {
               <h2 className="font-display text-xl font-normal text-foreground">Editar meta</h2>
               <button
                 onClick={() => setEditing(false)}
+                aria-label="Cerrar"
                 className="p-1.5 rounded-lg hover:bg-foreground/6 text-foreground/40 hover:text-foreground transition-colors"
               >
                 <X size={16} strokeWidth={1.5} />

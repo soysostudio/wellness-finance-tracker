@@ -72,7 +72,7 @@ export function CategoryCard({ cat }: { cat: Category }) {
         style={{ backgroundColor: tintFromColor(color), borderColor: tintFromColor(color, 34) }}
       >
         <CategoryIcon slug={cat.slug} size={18} strokeWidth={1.5} style={{ color }} />
-        <p className="font-display text-[10px] text-foreground/45 uppercase tracking-widest truncate">
+        <p className="font-display text-[11px] font-medium text-foreground/70 uppercase tracking-widest truncate">
           {cat.name}
         </p>
         <p className="text-xs text-foreground/40">
@@ -80,24 +80,24 @@ export function CategoryCard({ cat }: { cat: Category }) {
         </p>
 
         {confirming ? (
-          <div className="absolute top-2 right-2 flex items-center gap-1.5 bg-white/80 rounded-lg px-2 py-1">
-            <span className="text-[10px] text-[#1A1A1A]/60">¿Eliminar?</span>
-            <button onClick={handleDelete} disabled={deleting} className="text-[10px] font-medium text-red-600">{deleting ? "..." : "Sí"}</button>
-            <button onClick={() => setConfirming(false)} className="text-[10px] text-[#1A1A1A]/50">No</button>
+          <div className="absolute top-2 right-2 flex items-center gap-1.5 bg-card/90 backdrop-blur rounded-lg px-2 py-1">
+            <span className="text-[10px] text-foreground/60">¿Eliminar?</span>
+            <button onClick={handleDelete} disabled={deleting} className="text-[10px] font-medium text-destructive">{deleting ? "..." : "Sí"}</button>
+            <button onClick={() => setConfirming(false)} className="text-[10px] text-foreground/50">No</button>
           </div>
         ) : (
           <div className="absolute top-2 right-2 flex items-center gap-1 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
             <button
               onClick={() => setEditing(true)}
-              className="p-1 rounded-lg bg-[#1A1A1A]/10 hover:bg-[#1A1A1A]/20 text-[#1A1A1A]/60 hover:text-[#1A1A1A] transition-colors"
-              title="Editar"
+              className="p-1 rounded-lg bg-foreground/10 hover:bg-foreground/20 text-foreground/60 hover:text-foreground transition-colors"
+              aria-label={`Editar ${cat.name}`}
             >
               <Pencil size={12} strokeWidth={1.5} />
             </button>
             <button
               onClick={() => setConfirming(true)}
-              className="p-1 rounded-lg bg-[#1A1A1A]/10 hover:bg-red-500/20 text-[#1A1A1A]/60 hover:text-red-600 transition-colors"
-              title="Eliminar"
+              className="p-1 rounded-lg bg-foreground/10 hover:bg-destructive/20 text-foreground/60 hover:text-destructive transition-colors"
+              aria-label={`Eliminar ${cat.name}`}
             >
               <Trash2 size={12} strokeWidth={1.5} />
             </button>
@@ -114,6 +114,7 @@ export function CategoryCard({ cat }: { cat: Category }) {
               <h2 className="font-display text-xl font-normal text-foreground">Editar categoría</h2>
               <button
                 onClick={() => setEditing(false)}
+                aria-label="Cerrar"
                 className="p-1.5 rounded-lg hover:bg-foreground/6 text-foreground/40 hover:text-foreground transition-colors"
               >
                 <X size={16} strokeWidth={1.5} />

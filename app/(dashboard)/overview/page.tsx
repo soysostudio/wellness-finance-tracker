@@ -246,7 +246,7 @@ export default async function OverviewPage({
                   style={{ backgroundColor: getCategoryTint(cat.slug), borderColor: tintFromColor(cat.color, 34) }}
                 >
                   <CategoryIcon slug={cat.slug} size={18} strokeWidth={1.5} style={{ color: cat.color }} />
-                  <p className="font-display text-[10px] text-foreground/45 uppercase tracking-widest leading-none">
+                  <p className="font-display text-[11px] font-medium text-foreground/70 uppercase tracking-widest leading-none">
                     {cat.name}
                   </p>
                   <p className="font-amount text-lg font-semibold text-foreground">

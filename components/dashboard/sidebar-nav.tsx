@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
+import { NavPending } from "./nav-pending";
 import {
   LayoutDashboard,
   CreditCard,
@@ -54,6 +55,7 @@ export function SidebarNav({ budgetAlert = false }: { budgetAlert?: boolean }) {
             {showDot && (
               <span className="w-2 h-2 rounded-full bg-[#E8673C] shrink-0" />
             )}
+            <NavPending />
           </Link>
         );
       })}

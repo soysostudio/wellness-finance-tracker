@@ -74,6 +74,7 @@
   --foreground: #1A1D1C;                /* tinta térmica: negro con matiz frío */
   --card: #FCFCFA;                      /* papel del recibo, ligeramente más claro */
   --stamp: #D64550;                     /* rojo de sello de caucho — alertas */
+  --tint-base: #FFFFFF;                 /* base para tintes pastel de categorías (claro) */
   --card-foreground: oklch(0.145 0 0);
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.145 0 0);
@@ -109,6 +110,7 @@
   --background: oklch(0.12 0.003 90);   /* #111110 warm dark */
   --foreground: oklch(0.97 0 0);        /* #F5F5F3 */
   --card: oklch(0.16 0.003 90);         /* #1C1C1A warm dark card */
+  --tint-base: #252420;                 /* base oscura para tintes pastel de categorías */
   --card-foreground: oklch(0.985 0 0);
   --popover: oklch(0.205 0 0);
   --popover-foreground: oklch(0.985 0 0);
@@ -237,12 +239,14 @@ a[x-apple-data-detectors] {
 /* Highlighter swipe — a felt-tip mark over the one number that matters.
    Painted as a band behind the glyphs so it always renders above the card. */
 .receipt-mark {
-  background-image: linear-gradient(var(--accent), var(--accent));
+  /* Highlighter is always brand yellow with dark ink on top, in both themes */
+  background-image: linear-gradient(#FEFF6E, #FEFF6E);
   background-repeat: no-repeat;
   background-size: 100% 0.62em;
   background-position: 0 78%;
   padding: 0 0.12em;
   border-radius: 1px;
+  color: #1A1D1C;
 }
 
 /* "Prints in" on load — the receipt feeds out of the register top-down. */

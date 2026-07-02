@@ -128,7 +128,9 @@ export function getCategoryColor(slug: string): string {
  * Works with any hex; falls back to the neutral grey for unknown slugs.
  */
 export function tintFromColor(color: string, pct = 16): string {
-  return `color-mix(in srgb, ${color} ${pct}%, #FFFFFF)`;
+  // --tint-base is white in light mode and a dark surface in dark mode,
+  // so the pastel adapts to the theme (see globals.css).
+  return `color-mix(in srgb, ${color} ${pct}%, var(--tint-base))`;
 }
 
 export function getCategoryTint(slug: string, pct = 16): string {

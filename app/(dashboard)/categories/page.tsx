@@ -73,7 +73,7 @@ export default async function CategoriesPage() {
                 style={{ backgroundColor: getCategoryTint(cat.slug), borderColor: tintFromColor(cat.color, 34) }}
               >
                 <CategoryIcon slug={cat.slug} size={18} strokeWidth={1.5} style={{ color: cat.color }} />
-                <p className="font-display text-[10px] text-foreground/45 uppercase tracking-widest truncate">
+                <p className="font-display text-[11px] font-medium text-foreground/70 uppercase tracking-widest truncate">
                   {cat.name}
                 </p>
                 <p className="text-xs text-foreground/40">

@@ -2,6 +2,7 @@ import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import { ProfileForm } from "@/components/dashboard/profile-form";
 import { RemindersForm } from "@/components/dashboard/reminders-form";
+import { ThemeToggle } from "@/components/dashboard/theme-toggle";
 import { AnimateIn } from "@/components/ui/animate-in";
 import Link from "next/link";
 import { LogoutButton } from "@/components/dashboard/logout-button";
@@ -48,6 +49,17 @@ export default async function SettingsPage() {
           initialPhone={profile?.phone_number ?? ""}
           initialIncome={profile?.monthly_income ?? null}
         />
+      </AnimateIn>
+
+      {/* Appearance */}
+      <AnimateIn delay={80}>
+        <div className="bg-card border border-foreground/5 rounded-2xl p-5 space-y-3">
+          <p className="text-[10px] uppercase tracking-widest text-foreground/40">Apariencia</p>
+          <div className="flex items-center justify-between gap-4">
+            <span className="text-sm text-foreground/60">Tema</span>
+            <ThemeToggle />
+          </div>
+        </div>
       </AnimateIn>
 
       {/* WhatsApp */}

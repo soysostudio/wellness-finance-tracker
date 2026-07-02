@@ -114,9 +114,12 @@ function ReminderToggle({
       </div>
       <button
         type="button"
+        role="switch"
+        aria-checked={enabled}
+        aria-label={label}
         disabled={loading}
         onClick={() => onChange(!enabled)}
-        className={`relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors focus:outline-none ${
+        className={`relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring ${
           enabled ? "bg-foreground" : "bg-muted"
         }`}
       >

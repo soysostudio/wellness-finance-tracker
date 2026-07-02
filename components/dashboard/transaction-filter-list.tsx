@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import { TransactionRow } from "./transaction-row";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface TxCategory {
   name: string;
@@ -136,14 +137,18 @@ export function TransactionFilterList({ initialTransactions, initialHasMore, cat
       </div>
 
       {/* List */}
-      {transactions.length === 0 ? (
+      {loading && transactions.length === 0 ? (
+        <div className="space-y-1.5" aria-busy="true" aria-label="Cargando transacciones">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <Skeleton key={i} className="h-16 rounded-2xl" />
+          ))}
+        </div>
+      ) : transactions.length === 0 ? (
         <div className="text-center py-10">
-          <p className="text-foreground/40 text-sm">
-            {loading ? "Cargando..." : "Sin resultados para este filtro"}
-          </p>
+          <p className="text-foreground/40 text-sm">Sin resultados para este filtro</p>
         </div>
       ) : (
-        <div className="space-y-1.5">
+        <div className={`space-y-1.5 transition-opacity ${loading ? "opacity-50" : ""}`}>
           {transactions.map((t) => (
             <TransactionRow key={t.id} t={t} />
           ))}

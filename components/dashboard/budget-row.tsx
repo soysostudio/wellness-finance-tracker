@@ -2,8 +2,9 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Pencil, Trash2, X } from "lucide-react";
+import { X } from "lucide-react";
 import { CategoryIcon } from "@/components/ui/category-icon";
+import { RowActions } from "@/components/ui/row-actions";
 import { getCategoryColor } from "@/lib/utils/categories";
 import { formatCOP, formatAmountInput, parseAmountInput } from "@/lib/utils/currency";
 
@@ -24,7 +25,6 @@ const ALERT_OPTIONS = [
 export function BudgetRow({ budget, spent }: { budget: Budget; spent: number }) {
   const router = useRouter();
   const [editing, setEditing]       = useState(false);
-  const [confirming, setConfirming] = useState(false);
   const [deleting, setDeleting]     = useState(false);
   const [saving, setSaving]         = useState(false);
 
@@ -88,30 +88,12 @@ export function BudgetRow({ budget, spent }: { budget: Budget; spent: number }) 
             <p className="text-sm font-medium text-foreground">{cat?.name ?? "Categoría"}</p>
             <p className="text-xs text-foreground/40 capitalize">{budget.period}</p>
           </div>
-          {confirming ? (
-            <div className="flex items-center gap-2 shrink-0">
-              <span className="text-xs text-foreground/50">¿Eliminar?</span>
-              <button onClick={handleDelete} disabled={deleting} className="text-xs font-medium text-red-500 hover:text-red-600 disabled:opacity-50">{deleting ? "..." : "Sí"}</button>
-              <button onClick={() => setConfirming(false)} className="text-xs text-foreground/40 hover:text-foreground">No</button>
-            </div>
-          ) : (
-            <div className="flex items-center gap-1 md:opacity-0 md:group-hover:opacity-100 transition-opacity shrink-0">
-              <button
-                onClick={() => setEditing(true)}
-                className="p-1.5 rounded-lg hover:bg-foreground/6 text-foreground/40 hover:text-foreground transition-colors"
-                title="Editar"
-              >
-                <Pencil size={14} strokeWidth={1.5} />
-              </button>
-              <button
-                onClick={() => setConfirming(true)}
-                className="p-1.5 rounded-lg hover:bg-red-50 dark:hover:bg-red-950/30 text-foreground/40 hover:text-red-500 transition-colors"
-                title="Eliminar"
-              >
-                <Trash2 size={14} strokeWidth={1.5} />
-              </button>
-            </div>
-          )}
+          <RowActions
+            label={`Acciones de ${cat?.name ?? "presupuesto"}`}
+            deleting={deleting}
+            onEdit={() => setEditing(true)}
+            onDelete={handleDelete}
+          />
           <div className="text-right shrink-0">
             <p className="font-amount text-xl font-medium text-foreground">{pct}%</p>
             <p className="text-[10px] text-foreground/40 uppercase tracking-widest">usado</p>
@@ -156,6 +138,7 @@ export function BudgetRow({ budget, spent }: { budget: Budget; spent: number }) 
               <h2 className="font-display text-xl font-normal text-foreground">Editar presupuesto</h2>
               <button
                 onClick={() => setEditing(false)}
+                aria-label="Cerrar"
                 className="p-1.5 rounded-lg hover:bg-foreground/6 text-foreground/40 hover:text-foreground transition-colors"
               >
                 <X size={16} strokeWidth={1.5} />
