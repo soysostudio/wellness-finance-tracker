@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
+import { useBudgetAlert } from "@/lib/hooks/use-budget-alert";
 import {
   LayoutDashboard,
   CreditCard,
@@ -29,9 +30,10 @@ const NAV_ITEMS: { href: string; label: string; Icon: LucideIcon }[] = [
   { href: "/settings",     label: "Configuración",    Icon: Settings        },
 ];
 
-export function MobileNav({ userName, budgetAlert = false }: { userName: string; budgetAlert?: boolean }) {
+export function MobileNav({ userName }: { userName: string }) {
   const [open, setOpen] = useState(false);
   const pathname = usePathname();
+  const budgetAlert = useBudgetAlert();
 
   return (
     <>

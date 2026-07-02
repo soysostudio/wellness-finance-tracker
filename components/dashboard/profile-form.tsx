@@ -34,14 +34,20 @@ export function ProfileForm({
     setSaved(false);
 
     const supabase = createClient();
-    const { error: err } = await supabase
-      .from("users")
-      .update({
-        full_name: name.trim(),
-        currency: "COP",
-        monthly_income: income ? parseAmountInput(income) : null,
-      })
-      .eq("id", userId);
+    // Actualiza la tabla users Y el user_metadata de auth en paralelo — el
+    // layout del dashboard lee el nombre de user_metadata para no bloquear
+    // la navegación con una consulta extra, así que deben quedar sincronizados.
+    const [{ error: err }] = await Promise.all([
+      supabase
+        .from("users")
+        .update({
+          full_name: name.trim(),
+          currency: "COP",
+          monthly_income: income ? parseAmountInput(income) : null,
+        })
+        .eq("id", userId),
+      supabase.auth.updateUser({ data: { full_name: name.trim() } }),
+    ]);
 
     setLoading(false);
     if (err) {

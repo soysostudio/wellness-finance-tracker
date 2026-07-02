@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { NavPending } from "./nav-pending";
+import { useBudgetAlert } from "@/lib/hooks/use-budget-alert";
 import {
   LayoutDashboard,
   CreditCard,
@@ -27,8 +28,9 @@ const NAV_ITEMS: { href: string; label: string; Icon: LucideIcon }[] = [
   { href: "/settings",     label: "Configuración",    Icon: Settings        },
 ];
 
-export function SidebarNav({ budgetAlert = false }: { budgetAlert?: boolean }) {
+export function SidebarNav() {
   const pathname = usePathname();
+  const budgetAlert = useBudgetAlert();
 
   return (
     <nav className="flex-1 px-3 py-4 space-y-0.5">
