@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { resolveCategoryId } from '@/lib/utils/resolve-category';
 
 // DELETE /api/transactions/[id]
 export async function DELETE(
@@ -63,15 +64,14 @@ export async function PATCH(
   if (body.merchant !== undefined)    updates.merchant    = body.merchant;
   if (body.occurred_at !== undefined) updates.occurred_at = body.occurred_at;
 
-  // Resolve category slug → id
+  // Resolve category slug → id (prefiere la categoría propia si hay colisión de slug)
   if (body.category_slug) {
-    const { data: cat } = await supabase
-      .from('categories')
-      .select('id')
-      .eq('slug', body.category_slug)
-      .or(`user_id.is.null,user_id.eq.${user.id}`)
-      .single();
-    if (cat) updates.category_id = cat.id;
+    const categoryId = await resolveCategoryId(supabase, body.category_slug, user.id);
+    if (categoryId) updates.category_id = categoryId;
+  }
+
+  if (Object.keys(updates).length === 0) {
+    return NextResponse.json({ error: 'Nada que actualizar' }, { status: 400 });
   }
 
   const { data: updated, error } = await supabase

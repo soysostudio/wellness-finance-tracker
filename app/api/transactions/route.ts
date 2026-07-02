@@ -9,8 +9,10 @@ export async function GET(request: Request) {
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
   const { searchParams } = new URL(request.url);
-  const offset = parseInt(searchParams.get('offset') ?? '0', 10);
-  const limit  = parseInt(searchParams.get('limit')  ?? '50', 10);
+  const offsetRaw = parseInt(searchParams.get('offset') ?? '0', 10);
+  const limitRaw  = parseInt(searchParams.get('limit')  ?? '50', 10);
+  const offset = Number.isFinite(offsetRaw) && offsetRaw > 0 ? offsetRaw : 0;
+  const limit  = Number.isFinite(limitRaw) ? Math.min(Math.max(limitRaw, 1), 100) : 50;
   const type     = searchParams.get('type');     // 'expense' | 'income' | null
   const category = searchParams.get('category');  // category slug | null
 
@@ -59,8 +61,11 @@ export async function POST(request: Request) {
     occurred_at?: string;
   };
 
-  if (!body.amount || !body.transaction_type) {
-    return NextResponse.json({ error: 'amount y transaction_type son requeridos' }, { status: 400 });
+  if (!body.transaction_type || !['expense', 'income'].includes(body.transaction_type)) {
+    return NextResponse.json({ error: 'transaction_type inválido' }, { status: 400 });
+  }
+  if (typeof body.amount !== 'number' || !Number.isFinite(body.amount) || body.amount <= 0) {
+    return NextResponse.json({ error: 'El monto debe ser un número mayor a 0' }, { status: 400 });
   }
 
   // Resolve category slug → id (prefers the user's own category on slug collisions)

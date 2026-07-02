@@ -33,20 +33,22 @@ export async function GET(request: Request) {
   const { data: txs, error } = await query;
   if (error) return new Response("Error fetching data", { status: 500 });
 
+  // Escapa una celda CSV y neutraliza inyección de fórmulas (=, +, -, @, tab, CR)
+  const cell = (v: unknown) => {
+    let s = String(v ?? "");
+    if (/^[=+\-@\t\r]/.test(s)) s = `'${s}`;
+    return `"${s.replace(/"/g, '""')}"`;
+  };
+
   // Build CSV
   const headers = ["Fecha", "Tipo", "Monto", "Comercio", "Descripción", "Categoría"];
   const rows = (txs ?? []).map((t) => {
     const cat  = Array.isArray(t.categories) ? t.categories[0] : t.categories;
-    const date = new Date(t.occurred_at).toLocaleDateString("es-CO");
+    const date = new Date(t.occurred_at).toLocaleDateString("es-CO", { timeZone: "America/Bogota" });
     const type = t.transaction_type === "expense" ? "Gasto" : "Ingreso";
-    return [
-      date,
-      type,
-      t.amount,
-      t.merchant ?? "",
-      t.description ?? "",
-      cat?.name ?? "Otros",
-    ].map((v) => `"${String(v).replace(/"/g, '""')}"`).join(",");
+    return [date, type, t.amount, t.merchant ?? "", t.description ?? "", cat?.name ?? "Otros"]
+      .map(cell)
+      .join(",");
   });
 
   const csv = [headers.join(","), ...rows].join("\n");

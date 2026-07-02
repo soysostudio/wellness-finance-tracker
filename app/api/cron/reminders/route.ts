@@ -7,6 +7,11 @@ export const runtime = 'nodejs';
 export const maxDuration = 60;
 
 export async function GET(request: Request) {
+  // Fail-closed: sin CRON_SECRET no autorizamos (evita que 'Bearer undefined' pase)
+  if (!process.env.CRON_SECRET) {
+    console.error('[cron] CRON_SECRET no configurado');
+    return new Response('Server misconfigured', { status: 500 });
+  }
   const authHeader = request.headers.get('authorization');
   if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
     return new Response('Unauthorized', { status: 401 });
@@ -16,12 +21,26 @@ export async function GET(request: Request) {
   const now = new Date();
   const hourUTC = now.getUTCHours();
   const dayUTC = now.getUTCDay(); // 0 = Sunday
+  // El cron se programa a las 01:00 UTC (8pm Bogotá) pero en el plan gratuito
+  // puede correr tarde; aceptamos 1 o 2 UTC (el dedupe de 20h evita dobles).
+  const inSendWindow = hourUTC === 1 || hourUTC === 2;
 
   // Fecha/hora en Bogotá (UTC-5) para evaluar recordatorios personalizados
   const bogotaNow = new Date(now.getTime() - 5 * 60 * 60 * 1000);
   const bDayOfMonth = bogotaNow.getUTCDate();
   const bDayOfWeek  = bogotaNow.getUTCDay();
   const bDateStr    = bogotaNow.toISOString().split('T')[0];
+  // Último día del mes actual en Bogotá (para "cada mes el día 31" en meses cortos)
+  const bLastDayOfMonth = new Date(Date.UTC(bogotaNow.getUTCFullYear(), bogotaNow.getUTCMonth() + 1, 0)).getUTCDate();
+
+  // Limpieza: desactivar recordatorios "una vez" cuya fecha ya pasó
+  await supabase
+    .from('reminders')
+    .update({ is_active: false })
+    .eq('reminder_type', 'custom')
+    .eq('frequency', 'once')
+    .eq('is_active', true)
+    .lt('run_date', bDateStr);
 
   const { data: reminders } = await supabase
     .from('reminders')
@@ -39,14 +58,19 @@ export async function GET(request: Request) {
       if (hoursSince < 20) continue;
     }
 
-    // Check schedule — cron corre a las 01:00 UTC = 8pm Bogotá (UTC-5)
-    const isDailyTime  = reminder.reminder_type === 'daily_summary'  && hourUTC === 1;
+    // Check schedule — ventana de envío = 8pm Bogotá (01–02 UTC)
+    const isDailyTime  = reminder.reminder_type === 'daily_summary'  && inSendWindow;
     // dayUTC===1 (lunes UTC) = domingo 8pm Bogota — corrección de zona horaria
-    const isWeeklyTime = reminder.reminder_type === 'weekly_summary' && dayUTC === 1 && hourUTC === 1;
-    const isCustomTime = reminder.reminder_type === 'custom' && hourUTC === 1 && (
-      (reminder.frequency === 'monthly' && reminder.day_of_month === bDayOfMonth) ||
-      (reminder.frequency === 'weekly'  && reminder.day_of_week  === bDayOfWeek)  ||
-      (reminder.frequency === 'once'    && reminder.run_date     === bDateStr)
+    const isWeeklyTime = reminder.reminder_type === 'weekly_summary' && dayUTC === 1 && inSendWindow;
+    // Mensual "día N": dispara el día N, o el último día del mes si N no existe (feb, meses de 30)
+    const monthlyMatch = reminder.frequency === 'monthly' && reminder.day_of_month != null && (
+      reminder.day_of_month === bDayOfMonth ||
+      (reminder.day_of_month > bLastDayOfMonth && bDayOfMonth === bLastDayOfMonth)
+    );
+    const isCustomTime = reminder.reminder_type === 'custom' && inSendWindow && (
+      monthlyMatch ||
+      (reminder.frequency === 'weekly' && reminder.day_of_week === bDayOfWeek) ||
+      (reminder.frequency === 'once'   && reminder.run_date    === bDateStr)
     );
     if (!isDailyTime && !isWeeklyTime && !isCustomTime) continue;
 

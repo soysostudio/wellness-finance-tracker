@@ -42,14 +42,22 @@ export async function POST(request: Request) {
     return NextResponse.json({ success: true });
   }
 
-  // ── Toggle diario/semanal (o cualquiera por id) ───────────
+  // ── Toggle diario/semanal — idempotente por (user_id, reminder_type) ──
+  // Buscamos la fila existente en vez de depender del id del cliente, para que
+  // apagar (sin id conocido) nunca sea un no-op silencioso.
+  const { data: existing } = await supabase
+    .from('reminders')
+    .select('id')
+    .eq('user_id', user.id)
+    .eq('reminder_type', body.reminder_type)
+    .maybeSingle();
+
   let error = null;
-  if (body.id) {
+  if (existing) {
     const result = await supabase
       .from('reminders')
-      .update({ is_active: body.is_active })
-      .eq('id', body.id)
-      .eq('user_id', user.id);
+      .update({ is_active: body.is_active ?? false })
+      .eq('id', existing.id);
     error = result.error;
   } else if (body.is_active) {
     const result = await supabase.from('reminders').insert({

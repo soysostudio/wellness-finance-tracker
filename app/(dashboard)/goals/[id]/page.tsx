@@ -35,7 +35,9 @@ export default async function GoalDeepDivePage({
 
   if (!goal) notFound();
 
-  const pct       = Math.min(Math.round((goal.current_amount / goal.target_amount) * 100), 100);
+  const pct       = goal.target_amount > 0
+    ? Math.min(Math.round((goal.current_amount / goal.target_amount) * 100), 100)
+    : 0;
   const remaining = Math.max(0, goal.target_amount - goal.current_amount);
   const completed = goal.status === "completed";
 

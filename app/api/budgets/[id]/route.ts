@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { getBudgetPeriodDates } from '@/lib/utils/dates';
 
 // PATCH /api/budgets/[id]
 export async function PATCH(
@@ -31,8 +32,18 @@ export async function PATCH(
   const updates: Record<string, unknown> = {};
   if (body.amount_limit !== undefined) updates.amount_limit = body.amount_limit;
   if (body.alert_at !== undefined)     updates.alert_at     = body.alert_at;
-  if (body.period !== undefined)       updates.period       = body.period;
   if (body.is_active !== undefined)    updates.is_active    = body.is_active;
+  // Al cambiar el periodo, recalcular las fechas del periodo para que no queden desfasadas
+  if (body.period !== undefined) {
+    updates.period = body.period;
+    const { period_start, period_end } = getBudgetPeriodDates(body.period);
+    updates.period_start = period_start;
+    updates.period_end   = period_end;
+  }
+
+  if (Object.keys(updates).length === 0) {
+    return NextResponse.json({ error: 'Nada que actualizar' }, { status: 400 });
+  }
 
   const { data: updated, error } = await supabase
     .from('budgets')

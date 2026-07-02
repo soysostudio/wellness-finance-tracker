@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { getCurrentMonthRange } from "@/lib/utils/dates";
 import { SidebarNav } from "@/components/dashboard/sidebar-nav";
 import { MobileNav } from "@/components/dashboard/mobile-nav";
 import { PhoneLinker } from "@/components/dashboard/phone-linker";
@@ -17,9 +18,7 @@ export default async function DashboardLayout({
 
   if (!user) redirect("/login");
 
-  const now = new Date();
-  const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
-  const monthEnd   = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59).toISOString();
+  const { start: monthStart, end: monthEnd } = getCurrentMonthRange();
 
   // Fetch profile and budgets in parallel
   const [{ data: profile }, { data: budgets }] = await Promise.all([

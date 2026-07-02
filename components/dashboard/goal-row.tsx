@@ -37,7 +37,6 @@ export function GoalRow({ goal }: { goal: Goal }) {
   const [description,   setDescription]   = useState(goal.description ?? "");
   const [icon,          setIcon]          = useState(goal.icon ?? "🎯");
   const [targetAmount,  setTargetAmount]  = useState(formatAmountInput(String(goal.target_amount)));
-  const [currentAmount, setCurrentAmount] = useState(formatAmountInput(String(goal.current_amount)));
   const [targetDate,    setTargetDate]    = useState(goal.target_date?.slice(0, 10) ?? "");
   const [status,        setStatus]        = useState(goal.status ?? "active");
 
@@ -63,7 +62,6 @@ export function GoalRow({ goal }: { goal: Goal }) {
           description:    description || null,
           icon,
           target_amount:  parseAmountInput(targetAmount) || goal.target_amount,
-          current_amount: parseAmountInput(currentAmount),
           target_date:    targetDate ? new Date(targetDate).toISOString() : null,
           status,
         }),
@@ -199,17 +197,7 @@ export function GoalRow({ goal }: { goal: Goal }) {
                 />
               </div>
 
-              {/* Current amount */}
-              <div className="space-y-1">
-                <label className="text-[10px] uppercase tracking-widest text-foreground/40">Ya ahorrado (COP)</label>
-                <input
-                  type="text"
-                  inputMode="numeric"
-                  value={currentAmount}
-                  onChange={(e) => setCurrentAmount(formatAmountInput(e.target.value))}
-                  className="w-full h-11 px-4 rounded-xl bg-background border border-foreground/8 text-sm text-foreground outline-none focus:border-foreground/30 transition-colors"
-                />
-              </div>
+              {/* El saldo ahorrado se gestiona con aportes/retiros en el detalle de la meta */}
 
               {/* Target date */}
               <div className="space-y-1">

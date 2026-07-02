@@ -13,47 +13,25 @@ export async function POST(
   const { id: goalId } = await params;
   const body = await request.json() as { amount?: number; note?: string };
 
-  if (!body.amount || body.amount === 0) {
-    return NextResponse.json({ error: 'amount es requerido' }, { status: 400 });
+  if (typeof body.amount !== 'number' || !Number.isFinite(body.amount) || body.amount === 0) {
+    return NextResponse.json({ error: 'El monto debe ser un número distinto de 0' }, { status: 400 });
   }
 
-  // Verificar propiedad + obtener estado actual
-  const { data: goal } = await supabase
-    .from('goals')
-    .select('id, current_amount, target_amount, status')
-    .eq('id', goalId)
-    .eq('user_id', user.id)
-    .single();
-
-  if (!goal) return NextResponse.json({ error: 'Not found' }, { status: 404 });
-
-  // Nuevo saldo (no baja de 0)
-  const newAmount = Math.max(0, Number(goal.current_amount) + body.amount);
-
-  const { error: insertErr } = await supabase.from('goal_contributions').insert({
-    goal_id: goalId,
-    user_id: user.id,
-    amount:  body.amount,
-    note:    body.note?.trim() || null,
+  // Aporte/retiro atómico: inserta el movimiento y actualiza el saldo en una
+  // sola transacción, rechazando retiros que dejen saldo negativo (ver migración 016).
+  const { data: updated, error } = await supabase.rpc('apply_goal_contribution', {
+    p_goal_id: goalId,
+    p_amount:  body.amount,
+    p_note:    body.note?.trim() || null,
   });
 
-  if (insertErr) return NextResponse.json({ error: insertErr.message }, { status: 500 });
-
-  // Autocompletar al alcanzar la meta (sin reactivar si baja)
-  const reachedGoal = newAmount >= Number(goal.target_amount);
-  const nextStatus =
-    reachedGoal && goal.status === 'active' ? 'completed' :
-    !reachedGoal && goal.status === 'completed' ? 'active' :
-    goal.status;
-
-  const { data: updated, error: updateErr } = await supabase
-    .from('goals')
-    .update({ current_amount: newAmount, status: nextStatus })
-    .eq('id', goalId)
-    .select('id, current_amount, status')
-    .single();
-
-  if (updateErr) return NextResponse.json({ error: updateErr.message }, { status: 500 });
+  if (error) {
+    if (error.message.includes('INSUFFICIENT_BALANCE'))
+      return NextResponse.json({ error: 'El retiro supera el saldo de la meta.' }, { status: 400 });
+    if (error.message.includes('GOAL_NOT_FOUND'))
+      return NextResponse.json({ error: 'Meta no encontrada' }, { status: 404 });
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
 
   return NextResponse.json({ success: true, goal: updated });
 }

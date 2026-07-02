@@ -15,11 +15,12 @@ export async function PATCH(
     name?: string;
     description?: string;
     target_amount?: number;
-    current_amount?: number;
     target_date?: string | null;
     status?: string;
     icon?: string;
   };
+  // Nota: current_amount NO se acepta aquí — el saldo solo cambia vía
+  // /api/goals/[id]/contributions (para mantener el historial consistente).
 
   // Verify ownership
   const { data: goal } = await supabase
@@ -35,7 +36,6 @@ export async function PATCH(
   if (body.name !== undefined)           updates.name           = body.name;
   if (body.description !== undefined)    updates.description    = body.description;
   if (body.target_amount !== undefined)  updates.target_amount  = body.target_amount;
-  if (body.current_amount !== undefined) updates.current_amount = body.current_amount;
   if (body.target_date !== undefined)    updates.target_date    = body.target_date;
   if (body.status !== undefined)         updates.status         = body.status;
   if (body.icon !== undefined)           updates.icon           = body.icon;

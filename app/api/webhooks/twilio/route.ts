@@ -13,8 +13,16 @@ export async function POST(request: Request): Promise<Response> {
   const signature = request.headers.get('x-twilio-signature') ?? '';
   const url = `${process.env.NEXT_PUBLIC_BASE_URL}/api/webhooks/twilio`;
 
-  // Skip validation in development when no auth token is configured
-  if (process.env.TWILIO_AUTH_TOKEN && !validateTwilioSignature(signature, url, rawBody)) {
+  // Validación de firma Twilio. Fail-closed en producción: si falta el token
+  // no se salta la validación (evita aceptar 'From' forjados).
+  const authToken = process.env.TWILIO_AUTH_TOKEN;
+  if (!authToken) {
+    if (process.env.NODE_ENV === 'production') {
+      console.error('[twilio] TWILIO_AUTH_TOKEN no configurado en producción');
+      return new Response('Server misconfigured', { status: 500 });
+    }
+    // Solo en desarrollo se permite omitir la validación
+  } else if (!validateTwilioSignature(signature, url, rawBody)) {
     return new Response('Forbidden', { status: 403 });
   }
 

@@ -360,7 +360,25 @@ export interface Database {
       };
     };
     Views: Record<string, never>;
-    Functions: Record<string, never>;
+    Functions: {
+      apply_goal_contribution: {
+        Args: { p_goal_id: string; p_amount: number; p_note: string | null };
+        Returns: {
+          id: string;
+          user_id: string;
+          name: string;
+          description: string | null;
+          target_amount: number;
+          current_amount: number;
+          target_date: string | null;
+          icon: string | null;
+          color: string | null;
+          status: string;
+          created_at: string;
+          updated_at: string;
+        };
+      };
+    };
     Enums: Record<string, never>;
   };
 }
