@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { X } from "lucide-react";
 import { RowActions } from "@/components/ui/row-actions";
 import { formatCOP, formatAmountInput, parseAmountInput } from "@/lib/utils/currency";
@@ -81,14 +82,14 @@ export function GoalRow({ goal }: { goal: Goal }) {
       <div className="rounded-2xl group">
       <div className="bg-card border border-foreground/5 rounded-2xl p-5 space-y-4">
         <div className="flex items-start justify-between gap-3">
-          <div>
-            <p className="text-base font-medium text-foreground">
+          <Link href={`/goals/${goal.id}`} className="min-w-0 flex-1 group/link">
+            <p className="text-base font-medium text-foreground group-hover/link:opacity-70 transition-opacity">
               {goal.icon ?? "🎯"} {goal.name}
             </p>
             {goal.description && (
-              <p className="text-xs text-foreground/40 mt-0.5">{goal.description}</p>
+              <p className="text-xs text-foreground/40 mt-0.5 truncate">{goal.description}</p>
             )}
-          </div>
+          </Link>
           <RowActions
             label={`Acciones de ${goal.name}`}
             deleting={deleting}

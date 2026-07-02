@@ -17,9 +17,15 @@ export async function GET(request: Request) {
   const hourUTC = now.getUTCHours();
   const dayUTC = now.getUTCDay(); // 0 = Sunday
 
+  // Fecha/hora en Bogotá (UTC-5) para evaluar recordatorios personalizados
+  const bogotaNow = new Date(now.getTime() - 5 * 60 * 60 * 1000);
+  const bDayOfMonth = bogotaNow.getUTCDate();
+  const bDayOfWeek  = bogotaNow.getUTCDay();
+  const bDateStr    = bogotaNow.toISOString().split('T')[0];
+
   const { data: reminders } = await supabase
     .from('reminders')
-    .select('id, user_id, reminder_type, last_sent_at')
+    .select('id, user_id, reminder_type, last_sent_at, title, frequency, day_of_month, day_of_week, run_date')
     .eq('is_active', true);
 
   if (!reminders?.length) return Response.json({ sent: 0 });
@@ -33,12 +39,16 @@ export async function GET(request: Request) {
       if (hoursSince < 20) continue;
     }
 
-    // Check schedule
-    // Cron runs at 01:00 UTC = 8pm Bogota (UTC-5)
+    // Check schedule — cron corre a las 01:00 UTC = 8pm Bogotá (UTC-5)
     const isDailyTime  = reminder.reminder_type === 'daily_summary'  && hourUTC === 1;
     // dayUTC===1 (lunes UTC) = domingo 8pm Bogota — corrección de zona horaria
     const isWeeklyTime = reminder.reminder_type === 'weekly_summary' && dayUTC === 1 && hourUTC === 1;
-    if (!isDailyTime && !isWeeklyTime) continue;
+    const isCustomTime = reminder.reminder_type === 'custom' && hourUTC === 1 && (
+      (reminder.frequency === 'monthly' && reminder.day_of_month === bDayOfMonth) ||
+      (reminder.frequency === 'weekly'  && reminder.day_of_week  === bDayOfWeek)  ||
+      (reminder.frequency === 'once'    && reminder.run_date     === bDateStr)
+    );
+    if (!isDailyTime && !isWeeklyTime && !isCustomTime) continue;
 
     // Get user phone
     const { data: user } = await supabase
@@ -54,18 +64,22 @@ export async function GET(request: Request) {
 
     if (reminder.reminder_type === 'daily_summary') {
       message = await buildDailySummary(reminder.user_id, supabase);
-    } else {
+    } else if (reminder.reminder_type === 'weekly_summary') {
       message = await buildWeeklySummary(reminder.user_id, supabase);
+    } else if (reminder.reminder_type === 'custom' && reminder.title) {
+      message = `🔔 *Recordatorio*\n\n${reminder.title}`;
     }
 
     if (!message) continue;
 
     try {
       await sendWhatsAppMessage(to, message);
-      await supabase
-        .from('reminders')
-        .update({ last_sent_at: now.toISOString() })
-        .eq('id', reminder.id);
+      const patch: { last_sent_at: string; is_active?: boolean } = { last_sent_at: now.toISOString() };
+      // Un recordatorio "una vez" se desactiva tras enviarse
+      if (reminder.reminder_type === 'custom' && reminder.frequency === 'once') {
+        patch.is_active = false;
+      }
+      await supabase.from('reminders').update(patch).eq('id', reminder.id);
       sent++;
     } catch (err) {
       console.error(`[cron] Failed to send to ${to}:`, err);

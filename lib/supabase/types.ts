@@ -293,6 +293,12 @@ export interface Database {
           is_active: boolean;
           last_sent_at: string | null;
           created_at: string;
+          title: string | null;
+          frequency: string | null;
+          day_of_month: number | null;
+          day_of_week: number | null;
+          run_date: string | null;
+          hour_local: number | null;
         };
         Insert: {
           id?: string;
@@ -302,6 +308,12 @@ export interface Database {
           is_active?: boolean;
           last_sent_at?: string | null;
           created_at?: string;
+          title?: string | null;
+          frequency?: string | null;
+          day_of_month?: number | null;
+          day_of_week?: number | null;
+          run_date?: string | null;
+          hour_local?: number | null;
         };
         Update: {
           id?: string;
@@ -310,6 +322,39 @@ export interface Database {
           schedule_cron?: string | null;
           is_active?: boolean;
           last_sent_at?: string | null;
+          title?: string | null;
+          frequency?: string | null;
+          day_of_month?: number | null;
+          day_of_week?: number | null;
+          run_date?: string | null;
+          hour_local?: number | null;
+        };
+        Relationships: [];
+      };
+      goal_contributions: {
+        Row: {
+          id: string;
+          goal_id: string;
+          user_id: string;
+          amount: number;
+          note: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          goal_id: string;
+          user_id: string;
+          amount: number;
+          note?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          goal_id?: string;
+          user_id?: string;
+          amount?: number;
+          note?: string | null;
+          created_at?: string;
         };
         Relationships: [];
       };

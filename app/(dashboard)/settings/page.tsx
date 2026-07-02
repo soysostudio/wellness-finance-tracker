@@ -2,6 +2,7 @@ import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import { ProfileForm } from "@/components/dashboard/profile-form";
 import { RemindersForm } from "@/components/dashboard/reminders-form";
+import { CustomReminders } from "@/components/dashboard/custom-reminders";
 import { ThemeToggle } from "@/components/dashboard/theme-toggle";
 import { AnimateIn } from "@/components/ui/animate-in";
 import Link from "next/link";
@@ -28,6 +29,14 @@ export default async function SettingsPage() {
 
   const dailyReminder  = reminders?.find((r) => r.reminder_type === "daily_summary");
   const weeklyReminder = reminders?.find((r) => r.reminder_type === "weekly_summary");
+
+  const { data: customReminders } = await supabase
+    .from("reminders")
+    .select("id, title, frequency, day_of_month, day_of_week, run_date")
+    .eq("user_id", user.id)
+    .eq("reminder_type", "custom")
+    .eq("is_active", true)
+    .order("created_at", { ascending: false });
 
   return (
     <div className="p-6 md:p-8 max-w-2xl mx-auto space-y-8">
@@ -93,6 +102,11 @@ export default async function SettingsPage() {
             weekly: weeklyReminder?.id ?? null,
           }}
         />
+      </AnimateIn>
+
+      {/* Custom reminders */}
+      <AnimateIn delay={170}>
+        <CustomReminders reminders={customReminders ?? []} />
       </AnimateIn>
 
       {/* Account */}
