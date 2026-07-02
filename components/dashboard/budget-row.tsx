@@ -133,7 +133,7 @@ export function BudgetRow({ budget, spent }: { budget: Budget; spent: number }) 
       {/* Edit modal */}
       {editing && (
         <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
-          <div className="w-full max-w-md bg-card rounded-2xl p-6 space-y-4 shadow-xl">
+          <div role="dialog" aria-modal="true" aria-label="Editar presupuesto" className="w-full max-w-md bg-card rounded-2xl p-6 space-y-4 shadow-xl">
             <div className="flex items-center justify-between">
               <h2 className="font-display text-xl font-normal text-foreground">Editar presupuesto</h2>
               <button

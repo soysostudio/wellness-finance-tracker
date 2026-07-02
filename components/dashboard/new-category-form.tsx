@@ -5,7 +5,7 @@ import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useRouter } from "next/navigation";
-import { SYSTEM_CATEGORIES } from "@/lib/utils/categories";
+import { SYSTEM_CATEGORIES, readableTextOn } from "@/lib/utils/categories";
 
 const PRESET_COLORS = [
   "#F4A261", "#E9C46A", "#457B9D", "#6D6875",
@@ -126,6 +126,8 @@ export function NewCategoryForm({ userId }: Props) {
               key={c}
               type="button"
               onClick={() => setColor(c)}
+              aria-label={`Color ${c}`}
+              aria-pressed={color === c}
               className="w-7 h-7 rounded-full transition-transform hover:scale-110"
               style={{
                 backgroundColor: c,
@@ -154,8 +156,8 @@ export function NewCategoryForm({ userId }: Props) {
       {error && <p className="text-xs text-destructive">{error}</p>}
 
       <div
-        className="rounded-xl p-3 flex items-center gap-3 text-sm font-semibold text-black"
-        style={{ backgroundColor: color }}
+        className="rounded-xl p-3 flex items-center gap-3 text-sm font-semibold"
+        style={{ backgroundColor: color, color: readableTextOn(color) }}
       >
         <span className="text-xl">{icon}</span>
         <span>{name || "Vista previa"}</span>

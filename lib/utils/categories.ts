@@ -137,6 +137,17 @@ export function getCategoryTint(slug: string, pct = 16): string {
   return tintFromColor(getCategoryColor(slug), pct);
 }
 
+/** Texto legible (oscuro/claro) sobre un color de fondo sólido, según su luminancia. */
+export function readableTextOn(hex: string): string {
+  const m = /^#?([0-9a-f]{6})$/i.exec(hex.trim());
+  if (!m) return '#1A1D1C';
+  const n = parseInt(m[1], 16);
+  const r = (n >> 16) & 255, g = (n >> 8) & 255, b = n & 255;
+  // luminancia relativa aproximada
+  const lum = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+  return lum > 0.6 ? '#1A1D1C' : '#FFFFFF';
+}
+
 export function getCategoryIcon(slug: string): string {
   return getCategoryBySlug(slug)?.icon ?? '📦';
 }

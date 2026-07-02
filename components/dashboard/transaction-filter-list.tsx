@@ -46,6 +46,7 @@ export function TransactionFilterList({ initialTransactions, initialHasMore, cat
   const [transactions, setTransactions] = useState(initialTransactions);
   const [loading, setLoading]           = useState(false);
   const [hasMore, setHasMore]           = useState(initialHasMore);
+  const [error, setError]               = useState(false);
 
   const filtersActive = typeFilter !== "all" || catFilter !== "all";
 
@@ -67,13 +68,18 @@ export function TransactionFilterList({ initialTransactions, initialHasMore, cat
     }
     let cancelled = false;
     setLoading(true);
+    setError(false);
     fetch(buildUrl(0))
-      .then((res) => res.json() as Promise<{ transactions: Transaction[]; hasMore: boolean }>)
+      .then((res) => {
+        if (!res.ok) throw new Error("fetch failed");
+        return res.json() as Promise<{ transactions: Transaction[]; hasMore: boolean }>;
+      })
       .then((data) => {
         if (cancelled) return;
         setTransactions(data.transactions ?? []);
         setHasMore(data.hasMore);
       })
+      .catch(() => { if (!cancelled) setError(true); })
       .finally(() => { if (!cancelled) setLoading(false); });
     return () => { cancelled = true; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -101,6 +107,7 @@ export function TransactionFilterList({ initialTransactions, initialHasMore, cat
             <button
               key={f.value}
               onClick={() => setTypeFilter(f.value as "all" | "expense" | "income")}
+              aria-pressed={typeFilter === f.value}
               className={`px-3 h-8 rounded-lg text-xs font-medium transition-colors ${
                 typeFilter === f.value
                   ? "bg-foreground text-background"
@@ -137,7 +144,17 @@ export function TransactionFilterList({ initialTransactions, initialHasMore, cat
       </div>
 
       {/* List */}
-      {loading && transactions.length === 0 ? (
+      {error ? (
+        <div className="text-center py-10 space-y-2">
+          <p className="text-foreground/50 text-sm">No pudimos cargar las transacciones.</p>
+          <button
+            onClick={() => window.location.reload()}
+            className="text-xs text-foreground/50 hover:text-foreground underline underline-offset-4"
+          >
+            Reintentar
+          </button>
+        </div>
+      ) : loading && transactions.length === 0 ? (
         <div className="space-y-1.5" aria-busy="true" aria-label="Cargando transacciones">
           {Array.from({ length: 6 }).map((_, i) => (
             <Skeleton key={i} className="h-16 rounded-2xl" />

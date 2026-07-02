@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Pencil, Trash2, X } from "lucide-react";
 import { CategoryIcon } from "@/components/ui/category-icon";
-import { tintFromColor } from "@/lib/utils/categories";
+import { tintFromColor, readableTextOn } from "@/lib/utils/categories";
 
 const PRESET_COLORS = [
   "#F4A261", "#E9C46A", "#457B9D", "#6D6875",
@@ -108,7 +108,7 @@ export function CategoryCard({ cat }: { cat: Category }) {
       {/* Edit modal */}
       {editing && (
         <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
-          <div className="w-full max-w-md bg-card rounded-2xl p-6 space-y-4 shadow-xl">
+          <div role="dialog" aria-modal="true" aria-label="Editar categoría" className="w-full max-w-md bg-card rounded-2xl p-6 space-y-4 shadow-xl">
             {/* Header */}
             <div className="flex items-center justify-between">
               <h2 className="font-display text-xl font-normal text-foreground">Editar categoría</h2>
@@ -155,6 +155,8 @@ export function CategoryCard({ cat }: { cat: Category }) {
                       key={c}
                       type="button"
                       onClick={() => setEditColor(c)}
+                      aria-label={`Color ${c}`}
+                      aria-pressed={editColor === c}
                       className="w-7 h-7 rounded-full transition-transform hover:scale-110 shrink-0"
                       style={{
                         backgroundColor: c,
@@ -179,8 +181,8 @@ export function CategoryCard({ cat }: { cat: Category }) {
 
               {/* Preview */}
               <div
-                className="rounded-xl p-3 flex items-center gap-3 text-sm font-medium text-[#1A1A1A]"
-                style={{ backgroundColor: editColor }}
+                className="rounded-xl p-3 flex items-center gap-3 text-sm font-medium"
+                style={{ backgroundColor: editColor, color: readableTextOn(editColor) }}
               >
                 <span className="text-xl">{icon}</span>
                 <span>{name || "Vista previa"}</span>

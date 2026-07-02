@@ -56,7 +56,6 @@ export function RowActions({ onEdit, onDelete, deleting = false, label = "Accion
 
       {open && (
         <div
-          role="menu"
           className="absolute right-0 top-full mt-1 z-20 min-w-[9rem] rounded-xl border border-border bg-popover shadow-lg p-1"
         >
           {confirming ? (
@@ -84,7 +83,6 @@ export function RowActions({ onEdit, onDelete, deleting = false, label = "Accion
             <>
               <button
                 type="button"
-                role="menuitem"
                 onClick={() => { close(); onEdit(); }}
                 className="flex items-center gap-2.5 w-full px-3 py-2 rounded-lg text-sm text-foreground hover:bg-foreground/6 transition-colors"
               >
@@ -93,7 +91,6 @@ export function RowActions({ onEdit, onDelete, deleting = false, label = "Accion
               </button>
               <button
                 type="button"
-                role="menuitem"
                 onClick={() => setConfirming(true)}
                 className="flex items-center gap-2.5 w-full px-3 py-2 rounded-lg text-sm text-destructive hover:bg-destructive/8 transition-colors"
               >

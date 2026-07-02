@@ -14,11 +14,14 @@ export function formatCOPColoquial(amount: number): string {
   if (abs >= 1_000_000) {
     const millones = abs / 1_000_000;
     const str = millones % 1 === 0 ? millones.toString() : millones.toFixed(1);
-    return `${sign}${str} millones`;
+    return `${sign}${str} ${str === '1' ? 'millón' : 'millones'}`;
   }
 
   if (abs >= 1_000) {
-    return `${sign}${Math.round(abs / 1_000)} mil pesos`;
+    const miles = Math.round(abs / 1_000);
+    // 999.999 redondea a 1000 mil → decilo como "1 millón"
+    if (miles >= 1_000) return `${sign}1 millón`;
+    return `${sign}${miles} mil pesos`;
   }
 
   return `${sign}${abs} pesos`;
