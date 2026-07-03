@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
-import { sendWhatsAppMessage } from '@/lib/twilio/send-message';
+import { sendWhatsAppProactive } from '@/lib/twilio/send-message';
 import { normalizePhone } from '@/lib/utils/phone';
 
 const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL ?? 'https://finance-tracker.xyz';
@@ -71,7 +71,8 @@ export async function POST(
       await supabase.from('group_members').insert({ group_id: groupId, user_id: targetUser.id, role: 'member' });
       const memberName = targetUser.full_name?.split(' ')[0] ?? 'tú';
       if (targetUser.phone_number) {
-        sendWhatsAppMessage(
+        // Invitación proactiva — requiere plantilla aprobada por WhatsApp
+        sendWhatsAppProactive(
           `whatsapp:${targetUser.phone_number}`,
           `👋 ¡Hola, ${memberName}! *${ownerName}* te agregó al grupo *${group.icon} ${group.name}* en Luca.\n\n` +
           `Para registrar gastos del grupo, solo mencionalo:\n` +

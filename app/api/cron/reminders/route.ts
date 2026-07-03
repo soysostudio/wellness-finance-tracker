@@ -1,5 +1,5 @@
 import { createAdminClient } from '@/lib/supabase/admin';
-import { sendWhatsAppMessage } from '@/lib/twilio/send-message';
+import { sendWhatsAppProactive } from '@/lib/twilio/send-message';
 import { formatCOPColoquial } from '@/lib/utils/currency';
 import { getCurrentWeekRange } from '@/lib/utils/dates';
 
@@ -91,13 +91,15 @@ export async function GET(request: Request) {
     } else if (reminder.reminder_type === 'weekly_summary') {
       message = await buildWeeklySummary(reminder.user_id, supabase);
     } else if (reminder.reminder_type === 'custom' && reminder.title) {
-      message = `🔔 *Recordatorio*\n\n${reminder.title}`;
+      message = reminder.title;
     }
 
     if (!message) continue;
 
     try {
-      await sendWhatsAppMessage(to, message);
+      // Mensaje iniciado por Luca (no es respuesta a algo que el usuario
+      // escribió recientemente) — requiere la plantilla aprobada por WhatsApp.
+      await sendWhatsAppProactive(to, message);
       const patch: { last_sent_at: string; is_active?: boolean } = { last_sent_at: now.toISOString() };
       // Un recordatorio "una vez" se desactiva tras enviarse
       if (reminder.reminder_type === 'custom' && reminder.frequency === 'once') {

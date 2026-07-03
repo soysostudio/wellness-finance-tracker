@@ -2,7 +2,7 @@ import { createAdminClient } from '@/lib/supabase/admin';
 import { extractFromMessage } from '@/lib/openai/extract-transaction';
 import { buildContextWindow, compressConversationIfNeeded } from '@/lib/openai/conversation-memory';
 import { transcribeAudio } from '@/lib/openai/transcribe-audio';
-import { sendWhatsAppMessage } from '@/lib/twilio/send-message';
+import { sendWhatsAppMessage, sendWhatsAppProactive } from '@/lib/twilio/send-message';
 import { formatCOPColoquial } from '@/lib/utils/currency';
 import { getCurrentMonthRange } from '@/lib/utils/dates';
 import { SYSTEM_CATEGORIES } from '@/lib/utils/categories';
@@ -577,7 +577,8 @@ export async function processIncomingMessage(payload: TwilioWebhookPayload): Pro
             if (!memErr) {
               membersAdded++;
               const memberName = memberUser.full_name?.split(' ')[0] ?? 'tú';
-              sendWhatsAppMessage(
+              // Invitación proactiva — el miembro no le escribió a Luca, requiere plantilla
+              sendWhatsAppProactive(
                 `whatsapp:${phone}`,
                 `👋 ¡Hola, ${memberName}! *${ownerName}* te agregó al grupo *${newGroup.icon} ${newGroup.name}* en Luca.\n\nPara registrar gastos del grupo, solo mencionalo:\n_"40 mil en mercado para ${newGroup.name}"_\n\nVer el grupo: ${BASE_URL}/groups/${newGroup.id}`
               ).catch(console.error);
@@ -594,7 +595,8 @@ export async function processIncomingMessage(payload: TwilioWebhookPayload): Pro
               .catch(console.error);
 
             membersPending++;
-            sendWhatsAppMessage(
+            // Invitación proactiva a alguien que nunca le ha escrito a Luca — requiere plantilla
+            sendWhatsAppProactive(
               `whatsapp:${phone}`,
               `👋 ¡Hola! *${ownerName}* te invitó al grupo *${newGroup.icon} ${newGroup.name}* en Luca, su asistente de finanzas por WhatsApp.\n\n` +
               `Crea tu cuenta gratis (solo 2 minutos) y te unirás automáticamente al grupo:\n${BASE_URL}/signup\n\n` +
