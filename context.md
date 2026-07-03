@@ -133,3 +133,52 @@ Los 2 bloques (6 fases + 7 tandas) commiteados y desplegados en `main` → Verce
 - Probar en producción el flujo de verificación de teléfono end-to-end.
 - Si Sofia pasa a Vercel Pro: subir los recordatorios personalizados de "8pm fijo" a hora exacta (`hour_local` ya existe en el esquema, falta el cron horario).
 - Conectar GitHub al repo si se quiere usar revisiones/agentes programados en la nube.
+
+---
+
+## Bloque 3 — Pantalla en blanco + Luca sin responder por WhatsApp (2 jul, continuación)
+
+Sofia reportó dos problemas nuevos al probar lo desplegado: (1) pantalla en blanco al entrar a Overview, (2) Luca registra el gasto en la base de datos pero no contesta con el "¡Registrado!" por WhatsApp.
+
+### Pantalla en blanco al navegar — arreglado ✅
+**Causa:** `app/(dashboard)/layout.tsx` hacía hasta 3 consultas seguidas (perfil, presupuestos, y una tercera para la alerta de presupuesto) **antes** de renderizar cualquier página. Next.js NO cubre el layout con el `loading.tsx` del mismo segmento (solo cubre `page.tsx`) — así que todo ese trabajo bloqueaba sin mostrar ningún esqueleto, más notorio en Overview por ser la pantalla de aterrizaje tras login.
+
+**Arreglo:**
+- El layout ahora solo espera `auth.getUser()` (lo mínimo indispensable).
+- El nombre en el sidebar/menú móvil sale de `user.user_metadata.full_name` (viene gratis con `getUser()`, sin consulta extra a la tabla `users`).
+- La alerta de presupuesto (el puntito naranja en "Presupuestos") se resuelve del lado del cliente: nuevo `GET /api/budgets/alert-status` + hook `lib/hooks/use-budget-alert.ts`, usado internamente por `SidebarNav` y `MobileNav` (ya no reciben `budgetAlert` como prop). Aparece un instante después de cargar la página, nunca bloquea la navegación.
+- `components/dashboard/profile-form.tsx` ahora también actualiza `auth.updateUser({ data: { full_name } })` al guardar el perfil (además de la tabla `users`), para que el nombre mostrado en el sidebar no se quede desactualizado tras editarlo en Ajustes.
+
+### Luca no responde por WhatsApp — diagnosticado y arreglado (pendiente aprobación de Meta) 🟡
+Se investigó directo en la API de Twilio (con las credenciales de `.env.local`) en vez de adivinar.
+
+**Primer diagnóstico (parcialmente corregido después):** al ver los primeros ~15 mensajes salientes, todos fallaban con error **63112** ("Meta desactivó la cuenta de WhatsApp Business"). Al ampliar la muestra a 100 mensajes, la foto cambió: 37 entregados, 7 leídos, solo 9 con 63112 (mezclados en el tiempo con entregas exitosas — no es un corte definitivo) y **5 con error 63016** ("Outside messaging window — usa un Message Template"). Se confirmó vía `GET /v2/Channels/Senders` que el número de producción (`+15559613540`, "Luca Finance") está **ONLINE con calidad HIGH** — la cuenta está sana. El 63112 parece intermitente/menor, no una desactivación real; el 63016 es el problema real y sistemático.
+
+**Causa raíz real (63016):** WhatsApp Business exige que cualquier mensaje que Luca *inicia* (no como respuesta a algo que el usuario le escribió en las últimas 24h) use una plantilla pre-aprobada por Meta. Los 5 mensajes que fallaron eran exactamente los resúmenes automáticos del cron (`buildDailySummary`/`buildWeeklySummary`). Se confirmó que la cuenta **no tenía ninguna plantilla aprobada** (las 5 que existían en Twilio Content API eran las de ejemplo por defecto, nunca sometidas a revisión).
+
+**Arreglo (con aprobación explícita de Sofia antes de tocar Twilio/Meta):**
+- Se creó una plantilla genérica de WhatsApp vía Twilio Content API: `"🔔 Mensaje de Luca:\n\n{{1}}\n\n💬 Escríbeme si necesitas algo más."` — una sola plantilla flexible que sirve para recordatorios, invitaciones, etc. sin necesitar una por tipo de mensaje.
+  - **v1** (`HXae660455e903b7e12b1934d18b5db863`, sin el cierre fijo) fue **rechazada por Meta**: "Variables can't be at the start or end of the template" — la plantilla terminaba justo en `{{1}}`.
+  - **v2** (`HX9ea0c190a4ffb28067ed05d3f7259753`, con el cierre "💬 Escríbeme...") se envió a revisión — **estado pendiente** al cerrar la sesión. Verificar en Twilio Console o pedirme que consulte de nuevo el estado.
+- Código: nueva función `sendWhatsAppProactive()` en `lib/twilio/send-message.ts` que envía por Content API (`contentSid` + `contentVariables`) en vez de texto libre. Se migraron a esta función los únicos puntos que son verdaderamente proactivos (no respuestas dentro de sesión):
+  - El cron de recordatorios (`app/api/cron/reminders/route.ts`) — daily/weekly/custom.
+  - Las 2 invitaciones a grupo por WhatsApp en `lib/queue/message-processor.ts` (miembro ya registrado / miembro nuevo).
+  - La invitación a grupo disparada desde la web en `app/api/groups/[id]/members/route.ts`.
+  - Se revisó CADA llamada restante a `sendWhatsAppMessage` en el proyecto: todas las demás responden a `payload.From` (quien acaba de escribirle a Luca, dentro de la ventana de 24h) — incluida la alerta de presupuesto (`checkBudgetAlert`), que se dispara sincrónicamente justo después del mensaje del usuario. Esas correctamente se quedan con texto libre.
+
+**Pendiente:** confirmar que Meta aprobó la plantilla v2 (puede tardar de minutos a ~24-48h) — sin eso, los recordatorios e invitaciones seguirán fallando. Una vez aprobada, no hace falta ningún cambio de código adicional: `sendWhatsAppProactive()` ya apunta al SID correcto.
+
+### Notas técnicas nuevas (2 jul, bloque 3)
+- Credenciales de Twilio disponibles en `.env.local` (`TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, `TWILIO_WHATSAPP_FROM`) — útiles para diagnosticar directo contra la API REST de Twilio (`Messages.json`, `Content API`, `Messaging Senders API`) en vez de adivinar por los logs de la app.
+- El `TWILIO_WHATSAPP_FROM` de `.env.local` (`+14155238886`, sandbox) **no coincide** con el número real de producción (`+15559613540`, "Luca Finance") — Vercel tiene su propia env var distinta. Tenerlo en cuenta si se vuelve a diagnosticar algo de Twilio localmente: usar el Account SID para consultar todos los mensajes de la cuenta, no filtrar por el `From` local.
+- El SID de la plantilla activa vive con un valor por defecto hardcodeado en `lib/twilio/send-message.ts` (`GENERIC_TEMPLATE_SID`), pero se puede sobreescribir con la env var `TWILIO_GENERIC_TEMPLATE_SID` si se necesita cambiarla sin tocar código.
+
+## Estado (2 jul, bloque 3)
+
+Código desplegado en `main` → Vercel. `tsc`/`next build` limpios. **Bloqueante externo:** los recordatorios y invitaciones seguirán sin llegar hasta que Meta apruebe la plantilla v2 — no es algo que se resuelva con más código, hay que esperar/revisar el estado en Twilio.
+
+## Posibles siguientes pasos (2 jul, bloque 3)
+
+- Revisar si Meta ya aprobó `HX9ea0c190a4ffb28067ed05d3f7259753` (consultar `GET /v1/Content/{sid}/ApprovalRequests` o la consola de Twilio) y probar un recordatorio real una vez aprobada.
+- Si Meta rechaza la v2 por otro motivo, ajustar el texto y volver a someter (cada intento requiere crear un Content nuevo — no se puede editar uno ya creado).
+- Investigar el origen puntual de las fallas 63112 (minoritarias) si vuelven a aparecer con frecuencia — abrir ticket a soporte de Twilio con los SIDs específicos si persiste.
