@@ -5,13 +5,7 @@ import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useRouter } from "next/navigation";
-import { SYSTEM_CATEGORIES, readableTextOn } from "@/lib/utils/categories";
-
-const PRESET_COLORS = [
-  "#F4A261", "#E9C46A", "#457B9D", "#6D6875",
-  "#A8DADC", "#E76F51", "#81B29A", "#264653",
-  "#CDB4DB", "#2A9D8F", "#BDC3C7", "#E63946",
-];
+import { SYSTEM_CATEGORIES, CUSTOM_CATEGORY_COLORS, guessCategoryEmoji } from "@/lib/utils/categories";
 
 interface Props {
   userId: string;
@@ -20,8 +14,7 @@ interface Props {
 export function NewCategoryForm({ userId }: Props) {
   const [open, setOpen] = useState(false);
   const [name, setName] = useState("");
-  const [icon, setIcon] = useState("📦");
-  const [color, setColor] = useState("#BDC3C7");
+  const [color, setColor] = useState(CUSTOM_CATEGORY_COLORS[0]);
   const [isIncome, setIsIncome] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -56,7 +49,7 @@ export function NewCategoryForm({ userId }: Props) {
       user_id: userId,
       name: name.trim(),
       slug,
-      icon,
+      icon: guessCategoryEmoji(name),
       color,
       is_income: isIncome,
     });
@@ -68,8 +61,7 @@ export function NewCategoryForm({ userId }: Props) {
     }
 
     setName("");
-    setIcon("📦");
-    setColor("#BDC3C7");
+    setColor(CUSTOM_CATEGORY_COLORS[0]);
     setIsIncome(false);
     setOpen(false);
     router.refresh();
@@ -100,28 +92,24 @@ export function NewCategoryForm({ userId }: Props) {
         </button>
       </div>
 
-      <div className="flex gap-3">
-        <Input
-          placeholder="Emoji (ej: 🎮)"
-          value={icon}
-          onChange={(e) => setIcon(e.target.value)}
-          className="w-24 text-center text-xl h-11"
-          maxLength={4}
-        />
+      <div className="space-y-1">
         <Input
           placeholder="Nombre de la categoría"
           value={name}
           onChange={(e) => setName(e.target.value)}
-          className="flex-1 h-11"
+          className="h-11"
           required
           autoFocus
         />
+        <p className="text-xs text-muted-foreground px-1">
+          Luca le busca un ícono relacionado automáticamente
+        </p>
       </div>
 
       <div className="space-y-2">
         <p className="text-xs text-muted-foreground font-medium">Color</p>
         <div className="flex flex-wrap gap-2">
-          {PRESET_COLORS.map((c) => (
+          {CUSTOM_CATEGORY_COLORS.map((c) => (
             <button
               key={c}
               type="button"
@@ -154,14 +142,6 @@ export function NewCategoryForm({ userId }: Props) {
       </div>
 
       {error && <p className="text-xs text-destructive">{error}</p>}
-
-      <div
-        className="rounded-xl p-3 flex items-center gap-3 text-sm font-semibold"
-        style={{ backgroundColor: color, color: readableTextOn(color) }}
-      >
-        <span className="text-xl">{icon}</span>
-        <span>{name || "Vista previa"}</span>
-      </div>
 
       <Button type="submit" className="w-full h-11" disabled={loading || !name.trim()}>
         {loading ? "Guardando..." : "Crear categoría"}

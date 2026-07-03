@@ -239,12 +239,14 @@ a[x-apple-data-detectors] {
 /* Highlighter swipe — a felt-tip mark over the one number that matters.
    Painted as a band behind the glyphs so it always renders above the card. */
 .receipt-mark {
-  /* Highlighter is always brand yellow with dark ink on top, in both themes */
+  /* Highlighter is always brand yellow with dark ink on top, in both themes.
+     Band covers full glyph height (ascender to descender) so dark ink never
+     sits directly on a dark card background in dark mode. */
   background-image: linear-gradient(#FEFF6E, #FEFF6E);
   background-repeat: no-repeat;
-  background-size: 100% 0.62em;
-  background-position: 0 78%;
-  padding: 0 0.12em;
+  background-size: 100% 1.08em;
+  background-position: 0 52%;
+  padding: 0.05em 0.12em;
   border-radius: 1px;
   color: #1A1D1C;
 }

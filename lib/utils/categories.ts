@@ -118,6 +118,56 @@ export function getCategoryBySlug(slug: string): CategoryConfig | undefined {
   return SYSTEM_CATEGORIES.find((c) => c.slug === slug);
 }
 
+/** Mismos 11 tonos de las categorías del sistema, para que los swatches de
+ * categorías personalizadas se vean coherentes con las tarjetas actuales. */
+export const CUSTOM_CATEGORY_COLORS: string[] = SYSTEM_CATEGORIES.map((c) => c.color);
+
+interface KeywordIconGroup {
+  id: string;
+  keywords: string[];
+  emoji: string;
+}
+
+// Grupos de palabras clave para categorías personalizadas — el ícono (Lucide,
+// ver components/ui/category-icon.tsx) y el emoji se adivinan a partir del
+// nombre que el usuario escribe, sin tener que elegirlo a mano.
+export const KEYWORD_ICON_GROUPS: KeywordIconGroup[] = [
+  { id: 'mascotas',      keywords: ['mascota', 'perro', 'gato', 'veterinaria', 'vet'], emoji: '🐾' },
+  { id: 'viajes',        keywords: ['viaje', 'vacacion', 'turismo', 'hotel', 'vuelo', 'tiquete'], emoji: '✈️' },
+  { id: 'regalos',       keywords: ['regalo', 'cumpleaños', 'cumple'], emoji: '🎁' },
+  { id: 'tecnologia',    keywords: ['tecnolog', 'gadget', 'computador', 'celular', 'laptop', 'electronic'], emoji: '💻' },
+  { id: 'deporte',       keywords: ['deporte', 'gimnasio', 'gym', 'ejercicio', 'futbol'], emoji: '⚽' },
+  { id: 'ninos',         keywords: ['niño', 'nino', 'bebe', 'bebé', 'hijo', 'hija'], emoji: '🧸' },
+  { id: 'belleza',       keywords: ['belleza', 'spa', 'peluqueria', 'peluquería', 'manicure', 'salon', 'salón'], emoji: '💅' },
+  { id: 'seguros',       keywords: ['seguro', 'poliza', 'póliza'], emoji: '🛡️' },
+  { id: 'ahorro',        keywords: ['ahorro', 'inversion', 'inversión', 'cdt'], emoji: '🐷' },
+  { id: 'suscripciones', keywords: ['suscripcion', 'suscripción', 'membresia', 'membresía'], emoji: '🔁' },
+  { id: 'carro',         keywords: ['carro', 'auto', 'moto', 'taller'], emoji: '🚙' },
+  { id: 'deuda',         keywords: ['deuda', 'prestamo', 'préstamo', 'credito', 'crédito', 'tarjeta'], emoji: '💳' },
+  { id: 'familia',       keywords: ['familia', 'familiar'], emoji: '👨‍👩‍👧' },
+  { id: 'licores',       keywords: ['licor', 'alcohol', 'cerveza', 'trago', 'bar'], emoji: '🍷' },
+  { id: 'impuestos',     keywords: ['impuesto', 'dian', 'declaracion', 'declaración'], emoji: '🧾' },
+  { id: 'mejoras-hogar', keywords: ['adecuacion', 'adecuación', 'remodelacion', 'remodelación', 'reforma'], emoji: '🔨' },
+];
+
+function normalizeForMatch(s: string): string {
+  return s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
+}
+
+/** Busca el primer grupo de palabras clave cuyo término aparece en el nombre. */
+export function matchKeywordGroup(name: string): KeywordIconGroup | null {
+  const normalized = normalizeForMatch(name);
+  for (const group of KEYWORD_ICON_GROUPS) {
+    if (group.keywords.some((k) => normalized.includes(normalizeForMatch(k)))) return group;
+  }
+  return null;
+}
+
+/** Emoji sugerido a partir del nombre de una categoría personalizada. */
+export function guessCategoryEmoji(name: string): string {
+  return matchKeywordGroup(name)?.emoji ?? '📦';
+}
+
 export function getCategoryColor(slug: string): string {
   return getCategoryBySlug(slug)?.color ?? '#98A0A8';
 }

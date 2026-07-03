@@ -15,7 +15,7 @@ interface Transaction {
   description: string | null;
   merchant: string | null;
   occurred_at: string;
-  categories: { name: string; slug: string } | { name: string; slug: string }[] | null;
+  categories: { name: string; slug: string; color?: string | null } | { name: string; slug: string; color?: string | null }[] | null;
 }
 
 export function TransactionRow({ t }: { t: Transaction }) {
@@ -26,7 +26,7 @@ export function TransactionRow({ t }: { t: Transaction }) {
 
   const cat      = Array.isArray(t.categories) ? t.categories[0] : t.categories;
   const slug     = cat?.slug ?? "otros";
-  const color    = getCategoryColor(slug);
+  const color    = cat?.color ?? getCategoryColor(slug);
   const label    = t.merchant || t.description || cat?.name || "Movimiento";
   const isExpense = t.transaction_type === "expense";
   const date     = new Date(t.occurred_at).toLocaleDateString("es-CO", {
@@ -82,7 +82,7 @@ export function TransactionRow({ t }: { t: Transaction }) {
           className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0"
           style={{ backgroundColor: color + "26" }}
         >
-          <CategoryIcon slug={slug} size={16} strokeWidth={1.5} style={{ color }} />
+          <CategoryIcon slug={slug} name={cat?.name} size={16} strokeWidth={1.5} style={{ color }} />
         </div>
 
         <div className="flex-1 min-w-0">

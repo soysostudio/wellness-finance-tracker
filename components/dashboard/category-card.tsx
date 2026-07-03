@@ -4,13 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Pencil, Trash2, X } from "lucide-react";
 import { CategoryIcon } from "@/components/ui/category-icon";
-import { tintFromColor, readableTextOn } from "@/lib/utils/categories";
-
-const PRESET_COLORS = [
-  "#F4A261", "#E9C46A", "#457B9D", "#6D6875",
-  "#A8DADC", "#E76F51", "#81B29A", "#264653",
-  "#CDB4DB", "#2A9D8F", "#BDC3C7", "#E63946",
-];
+import { tintFromColor, CUSTOM_CATEGORY_COLORS, guessCategoryEmoji } from "@/lib/utils/categories";
 
 interface Category {
   id: string;
@@ -32,7 +26,6 @@ export function CategoryCard({ cat }: { cat: Category }) {
 
   // Edit form state
   const [name,     setName]     = useState(cat.name);
-  const [icon,     setIcon]     = useState(cat.icon ?? "📦");
   const [editColor, setEditColor] = useState(color);
   const [isIncome, setIsIncome] = useState(cat.is_income ?? false);
 
@@ -53,7 +46,7 @@ export function CategoryCard({ cat }: { cat: Category }) {
       const res = await fetch(`/api/categories/${cat.id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name: name.trim(), icon, color: editColor, is_income: isIncome }),
+        body: JSON.stringify({ name: name.trim(), icon: guessCategoryEmoji(name), color: editColor, is_income: isIncome }),
       });
       if (res.ok) {
         setEditing(false);
@@ -71,7 +64,7 @@ export function CategoryCard({ cat }: { cat: Category }) {
         className="group relative rounded-2xl p-4 flex flex-col gap-2 h-full border"
         style={{ backgroundColor: tintFromColor(color), borderColor: tintFromColor(color, 34) }}
       >
-        <CategoryIcon slug={cat.slug} size={18} strokeWidth={1.5} style={{ color }} />
+        <CategoryIcon slug={cat.slug} name={cat.name} size={18} strokeWidth={1.5} style={{ color }} />
         <p className="font-display text-[11px] font-medium text-foreground/70 uppercase tracking-widest truncate">
           {cat.name}
         </p>
@@ -123,34 +116,25 @@ export function CategoryCard({ cat }: { cat: Category }) {
 
             {/* Form */}
             <div className="space-y-4">
-              {/* Name + Icon */}
-              <div className="flex gap-3">
-                <div className="space-y-1">
-                  <label className="text-[10px] uppercase tracking-widest text-foreground/40">Emoji</label>
-                  <input
-                    type="text"
-                    value={icon}
-                    onChange={(e) => setIcon(e.target.value)}
-                    maxLength={4}
-                    className="w-16 h-11 px-2 text-center text-xl rounded-xl bg-background border border-foreground/8 outline-none focus:border-foreground/30 transition-colors"
-                  />
-                </div>
-                <div className="flex-1 space-y-1">
-                  <label className="text-[10px] uppercase tracking-widest text-foreground/40">Nombre</label>
-                  <input
-                    type="text"
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    className="w-full h-11 px-4 rounded-xl bg-background border border-foreground/8 text-sm text-foreground outline-none focus:border-foreground/30 transition-colors"
-                  />
-                </div>
+              {/* Name */}
+              <div className="space-y-1">
+                <label className="text-[10px] uppercase tracking-widest text-foreground/40">Nombre</label>
+                <input
+                  type="text"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  className="w-full h-11 px-4 rounded-xl bg-background border border-foreground/8 text-sm text-foreground outline-none focus:border-foreground/30 transition-colors"
+                />
+                <p className="text-xs text-muted-foreground px-1">
+                  Luca le busca un ícono relacionado automáticamente
+                </p>
               </div>
 
               {/* Color */}
               <div className="space-y-2">
                 <label className="text-[10px] uppercase tracking-widest text-foreground/40">Color</label>
                 <div className="flex flex-wrap gap-2">
-                  {PRESET_COLORS.map((c) => (
+                  {CUSTOM_CATEGORY_COLORS.map((c) => (
                     <button
                       key={c}
                       type="button"
@@ -178,15 +162,6 @@ export function CategoryCard({ cat }: { cat: Category }) {
               >
                 {isIncome ? "✓ Es un ingreso" : "Marcar como ingreso"}
               </button>
-
-              {/* Preview */}
-              <div
-                className="rounded-xl p-3 flex items-center gap-3 text-sm font-medium"
-                style={{ backgroundColor: editColor, color: readableTextOn(editColor) }}
-              >
-                <span className="text-xl">{icon}</span>
-                <span>{name || "Vista previa"}</span>
-              </div>
             </div>
 
             {/* Actions */}

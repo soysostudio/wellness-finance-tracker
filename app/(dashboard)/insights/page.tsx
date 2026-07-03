@@ -74,7 +74,7 @@ export default async function InsightsPage() {
       byCat[slug] = {
         name:  cat?.name  ?? "Otros",
         slug,
-        color: getCategoryColor(slug),
+        color: cat?.color ?? getCategoryColor(slug),
         icon:  "",
         total: 0,
       };
@@ -216,7 +216,7 @@ export default async function InsightsPage() {
                       <div className="space-y-1.5">
                         <div className="flex items-center justify-between">
                           <span className="flex items-center gap-2 text-sm font-medium text-foreground">
-                            <CategoryIcon slug={cat.slug} size={15} strokeWidth={1.5} style={{ color: cat.color }} />
+                            <CategoryIcon slug={cat.slug} name={cat.name} size={15} strokeWidth={1.5} style={{ color: cat.color }} />
                             <span>{cat.name}</span>
                           </span>
                           <span className="font-display text-sm font-normal text-foreground">

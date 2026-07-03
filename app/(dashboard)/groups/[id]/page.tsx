@@ -2,7 +2,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import { formatCOP } from "@/lib/utils/currency";
 import { getMonthRange } from "@/lib/utils/dates";
-import { getCategoryColor, getCategoryIcon, getCategoryTint, tintFromColor } from "@/lib/utils/categories";
+import { getCategoryColor, getCategoryIcon, tintFromColor } from "@/lib/utils/categories";
 import { redirect, notFound } from "next/navigation";
 import { TransactionRow } from "@/components/dashboard/transaction-row";
 import { AnimateIn } from "@/components/ui/animate-in";
@@ -105,7 +105,7 @@ export default async function GroupDeepDivePage({
     const cat  = Array.isArray(t.categories) ? t.categories[0] : t.categories;
     const slug = cat?.slug ?? "otros";
     if (!byCat[slug]) {
-      byCat[slug] = { name: cat?.name ?? "Otros", slug, color: getCategoryColor(slug), icon: getCategoryIcon(slug), total: 0 };
+      byCat[slug] = { name: cat?.name ?? "Otros", slug, color: cat?.color ?? getCategoryColor(slug), icon: getCategoryIcon(slug), total: 0 };
     }
     byCat[slug].total += t.amount;
   }
@@ -260,9 +260,9 @@ export default async function GroupDeepDivePage({
               <AnimateIn key={cat.slug} delay={i * 60}>
                 <div
                   className="rounded-2xl p-4 flex flex-col gap-2 border"
-                  style={{ backgroundColor: getCategoryTint(cat.slug), borderColor: tintFromColor(cat.color, 34) }}
+                  style={{ backgroundColor: tintFromColor(cat.color), borderColor: tintFromColor(cat.color, 34) }}
                 >
-                  <CategoryIcon slug={cat.slug} size={18} strokeWidth={1.5} style={{ color: cat.color }} />
+                  <CategoryIcon slug={cat.slug} name={cat.name} size={18} strokeWidth={1.5} style={{ color: cat.color }} />
                   <p className="font-display text-[11px] font-medium text-foreground/70 uppercase tracking-widest leading-none">{cat.name}</p>
                   <p className="font-amount text-lg font-semibold text-foreground">{formatCOP(cat.total)}</p>
                 </div>

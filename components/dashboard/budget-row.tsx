@@ -30,7 +30,7 @@ export function BudgetRow({ budget, spent }: { budget: Budget; spent: number }) 
 
   const cat      = Array.isArray(budget.categories) ? budget.categories[0] : budget.categories;
   const slug     = cat?.slug ?? "otros";
-  const color    = getCategoryColor(slug);
+  const color    = cat?.color ?? getCategoryColor(slug);
   const pct      = Math.min(Math.round((spent / budget.amount_limit) * 100), 100);
   const remaining = budget.amount_limit - spent;
   const alertPct = Math.round((budget.alert_at ?? 0.8) * 100);
@@ -82,7 +82,7 @@ export function BudgetRow({ budget, spent }: { budget: Budget; spent: number }) 
             className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0"
             style={{ backgroundColor: color + "26" }}
           >
-            <CategoryIcon slug={slug} size={16} strokeWidth={1.5} style={{ color }} />
+            <CategoryIcon slug={slug} name={cat?.name} size={16} strokeWidth={1.5} style={{ color }} />
           </div>
           <div className="flex-1 min-w-0">
             <p className="text-sm font-medium text-foreground">{cat?.name ?? "Categoría"}</p>

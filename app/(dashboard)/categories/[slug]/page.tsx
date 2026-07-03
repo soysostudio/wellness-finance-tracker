@@ -1,7 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { formatCOP } from "@/lib/utils/currency";
 import { getMonthRange } from "@/lib/utils/dates";
-import { getCategoryColor, getCategoryIcon, SYSTEM_CATEGORIES, tintFromColor } from "@/lib/utils/categories";
+import { getCategoryColor, SYSTEM_CATEGORIES, tintFromColor } from "@/lib/utils/categories";
 import { redirect } from "next/navigation";
 import { TransactionRow } from "@/components/dashboard/transaction-row";
 import { AnimateIn } from "@/components/ui/animate-in";
@@ -120,6 +120,7 @@ export default async function CategoryDeepDivePage({
             >
               <CategoryIcon
                 slug={slug}
+                name={catName}
                 size={24}
                 strokeWidth={1.5}
                 style={{ color: catColor }}

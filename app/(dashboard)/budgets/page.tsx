@@ -32,7 +32,7 @@ export default async function BudgetsPage() {
 
     supabase
       .from("categories")
-      .select("id, name, slug")
+      .select("id, name, slug, color")
       .eq("user_id", user.id),
   ]);
 
@@ -53,10 +53,10 @@ export default async function BudgetsPage() {
   );
 
   const systemCats = SYSTEM_CATEGORIES
-    .map((c) => ({ slug: c.slug, name: c.name }))
+    .map((c) => ({ slug: c.slug, name: c.name, color: c.color }))
     .filter((c) => !usedSlugs.has(c.slug));
   const customCats = (customCategories ?? [])
-    .map((c) => ({ id: c.id, slug: c.slug, name: c.name }))
+    .map((c) => ({ slug: c.slug, name: c.name, color: c.color ?? undefined }))
     .filter((c) => !usedSlugs.has(c.slug));
 
   // Compute alert summary for banner

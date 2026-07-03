@@ -2,15 +2,12 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { SYSTEM_CATEGORIES } from "@/lib/utils/categories";
 import { formatAmountInput, parseAmountInput } from "@/lib/utils/currency";
-
-interface SystemCat { slug: string; name: string }
-interface CustomCat  { id: string; slug: string; name: string }
+import { CategorySelect, type CategoryOption } from "@/components/ui/category-select";
 
 interface Props {
-  systemCategories: SystemCat[];
-  customCategories: CustomCat[];
+  systemCategories: CategoryOption[];
+  customCategories: CategoryOption[];
 }
 
 const ALERT_OPTIONS = [
@@ -22,10 +19,7 @@ const ALERT_OPTIONS = [
 export function NewBudgetForm({ systemCategories, customCategories }: Props) {
   const router = useRouter();
 
-  const allCategories = [
-    ...systemCategories.map((c) => ({ slug: c.slug, name: c.name })),
-    ...customCategories.map((c) => ({ slug: c.slug, name: `${c.name} (personal)` })),
-  ];
+  const allCategories = [...systemCategories, ...customCategories];
 
   const [open, setOpen]               = useState(false);
   const [categorySlug, setCategorySlug] = useState(allCategories[0]?.slug ?? "");
@@ -99,15 +93,12 @@ export function NewBudgetForm({ systemCategories, customCategories }: Props) {
       {/* Category */}
       <div className="space-y-1">
         <label className="text-[10px] uppercase tracking-widest text-foreground/40">Categoría</label>
-        <select
+        <CategorySelect
+          systemCategories={systemCategories}
+          customCategories={customCategories}
           value={categorySlug}
-          onChange={(e) => setCategorySlug(e.target.value)}
-          className="w-full h-11 px-4 rounded-xl bg-background border border-foreground/8 text-sm text-foreground outline-none focus:border-foreground/30 transition-colors"
-        >
-          {allCategories.map((c) => (
-            <option key={c.slug} value={c.slug}>{c.name}</option>
-          ))}
-        </select>
+          onChange={setCategorySlug}
+        />
       </div>
 
       {/* Amount */}
