@@ -182,3 +182,50 @@ Código desplegado en `main` → Vercel. `tsc`/`next build` limpios. **Bloqueant
 - Revisar si Meta ya aprobó `HX9ea0c190a4ffb28067ed05d3f7259753` (consultar `GET /v1/Content/{sid}/ApprovalRequests` o la consola de Twilio) y probar un recordatorio real una vez aprobada.
 - Si Meta rechaza la v2 por otro motivo, ajustar el texto y volver a someter (cada intento requiere crear un Content nuevo — no se puede editar uno ya creado).
 - Investigar el origen puntual de las fallas 63112 (minoritarias) si vuelven a aparecer con frecuencia — abrir ticket a soporte de Twilio con los SIDs específicos si persiste.
+
+---
+
+## Bloque 4 — Íconos automáticos, selector de presupuesto, dark mode del balance (2 jul, continuación)
+
+Sofia reportó 3 puntos puntuales de UX usando la app ya desplegada. Se investigó cada uno a fondo (código + datos reales en Supabase + reproducción visual con Chrome headless) antes de tocar nada, y se armó un plan formal (aprobado) antes de ejecutar.
+
+### 1. Categorías — ícono automático por nombre, en vez de emoji manual
+**Diagnóstico:** el emoji que el usuario elegía a mano en el formulario **nunca se usaba** para el ícono real. El ícono que se ve en toda la app (`CategoryIcon`, `components/ui/category-icon.tsx`) es un set fijo de íconos Lucide mapeado solo por los 11 slugs del sistema; cualquier categoría personalizada siempre caía al ícono genérico de caja (`Package`). El emoji solo se veía en un "Vista previa" que además se confundía visualmente con el botón de guardar (mismo ancho, apilado justo encima).
+
+**Arreglo:**
+- Nuevo diccionario de 16 grupos de palabras clave en `lib/utils/categories.ts` (`KEYWORD_ICON_GROUPS` + `matchKeywordGroup()` + `guessCategoryEmoji()`): mascotas, viajes, regalos, tecnología, deporte, niños, belleza, seguros, ahorro, suscripciones, carro, deuda, familia, licores, impuestos, mejoras-hogar.
+- `CategoryIcon` gana un prop opcional `name`: si el slug no es de sistema, adivina el ícono Lucide por palabra clave en el nombre. Esto arregló automáticamente (sin migración de datos) categorías que Sofia ya tenía creadas — "Mascotas", "Deportes", "Licores", "Familia", "Adecuaciones Casa", etc. — que antes mostraban la cajita genérica.
+- Se pasó `name={cat.name}` en los 9 sitios donde se usa `<CategoryIcon>`.
+- `new-category-form.tsx` y el modal de `category-card.tsx`: se quitó el input de emoji y el bloque "Vista previa"; los swatches de color pasaron de 12 colores sueltos (`PRESET_COLORS`) a los mismos 11 tonos que ya usan las categorías del sistema (`CUSTOM_CATEGORY_COLORS`, reexportado desde `lib/utils/categories.ts`).
+- **Bug de paso encontrado y arreglado:** en Overview, Insights y el detalle de Grupos, las tarjetas de resumen por categoría (`byCat`) calculaban el color con `getCategoryColor(slug)` (solo conoce los 11 slugs de sistema) en vez de usar `cat.color` real que ya venía en el join de Supabase — las categorías personalizadas SIEMPRE salían grises en esas 3 vistas sin importar qué color hubiera elegido el usuario. Ahora usan `cat?.color ?? getCategoryColor(slug)`.
+
+### 2. Selector de categoría en "Nuevo presupuesto" — categorías personalizadas "no aparecían"
+**Diagnóstico:** se verificó con una consulta directa a Supabase que las categorías personalizadas SÍ existían, con los permisos (RLS) correctos, y que la consulta de la página las traía bien — no había ningún bug de datos. El problema real: era un `<select>` nativo de texto plano, y las categorías personalizadas iban al final de una lista larga sin ningún ícono ni separación visual — fácil de no ver y fácil de reportar como "no aparecen".
+
+**Arreglo:** nuevo componente reutilizable `components/ui/category-select.tsx` — un dropdown propio (no `<select>` nativo) que agrupa "Categorías" (sistema) y "Tus categorías" (personalizadas), cada opción con su ícono `CategoryIcon` en un chip de color tintado. Usado en `new-budget-form.tsx`. Se mantuvo intacta la lógica de "ocultar categorías que ya tienen presupuesto activo" (`usedSlugs` en `app/(dashboard)/budgets/page.tsx`).
+
+**Nota importante (ya resuelta con Sofia después):** más tarde Sofia reportó que su categoría "Deportes" seguía sin aparecer — se verificó de nuevo en la base de datos y **no era un bug**: "Deportes" ya tenía un presupuesto activo de $300.000 (`budget_id 84cfec99...`), así que correctamente se excluye de la lista de "nuevo presupuesto" (la app impide crear un segundo presupuesto para la misma categoría, a propósito, desde el fix de presupuestos duplicados). Para cambiar el monto de una categoría que ya tiene presupuesto, se edita desde el menú "⋯" de esa fila, no se vuelve a crear.
+
+### 3. Balance del Overview ilegible en dark mode
+**Diagnóstico confirmado con captura real (Chrome headless, dark mode, zoom):** el resaltador amarillo (`.receipt-mark` en `app/globals.css`) solo cubría ~62% de la altura del texto (`background-size: 100% 0.62em; background-position: 0 78%`), dejando la parte de arriba de los dígitos en tinta oscura fija (`#1A1D1C`) directamente sobre la tarjeta oscura del modo noche — casi invisible. En modo claro no se notaba porque la tarjeta es clara.
+
+**Arreglo:** la banda del resaltador ahora cubre toda la altura del glifo (`background-size: 100% 1.08em; background-position: 0 52%; padding: 0.05em 0.12em`) — el texto en tinta oscura siempre queda sobre amarillo, nunca directo sobre la tarjeta.
+
+### Aclaración de comportamiento (pregunta de Sofia, no bug): ¿los presupuestos se borran cada mes?
+Se confirmó revisando el código (`app/(dashboard)/budgets/page.tsx`, tabla `budgets`) que los presupuestos **quedan guardados indefinidamente** una vez creados — no hay ningún cron ni lógica que los borre o desactive al cambiar de mes. Solo el **gasto acumulado** se recalcula cada mes (vía `getCurrentMonthRange()`, comparado contra el mismo `amount_limit` guardado). Las columnas `period_start`/`period_end` de la tabla se llenan al crear/editar pero no controlan ninguna expiración — son metadata, no un mecanismo de reinicio.
+
+### Incidente de despliegue: el auto-deploy de GitHub→Vercel no se disparó
+Después de subir el commit de este bloque (`f07d83c`), Sofia reportó que no veía los cambios. Se verificó con `vercel ls`/`vercel inspect` que el commit SÍ estaba en `origin/main` (confirmado con `git log origin/main`) pero Vercel nunca generó un build nuevo para él — el último deploy real correspondía al commit anterior. Causa exacta no determinada (posible falla puntual del webhook de GitHub). **Arreglo aplicado:** se disparó un despliegue manual con `vercel --prod` desde el checkout local (que coincidía exactamente con `origin/main`), confirmado con alias correcto a `finance-tracker.xyz` y verificación de contenido fresco vía `curl`. **Pendiente:** si esto se repite, revisar en el dashboard de Vercel → Settings → Git que la integración con GitHub siga conectada correctamente.
+
+### Notas técnicas nuevas (2 jul, bloque 4)
+- Vercel CLI está instalada y el proyecto ya está enlazado localmente (`.vercel/project.json` existe) — `vercel --prod` funciona directo sin reconfigurar nada, útil como respaldo si el auto-deploy falla de nuevo.
+- Para diagnosticar "¿está mi categoría X usada en un presupuesto?" sin adivinar, la consulta directa más rápida es un `LEFT JOIN` de `categories` con `budgets` filtrando `is_active = true` — evita confundir "no aparece por bug" con "no aparece porque ya tiene presupuesto" (que es el comportamiento correcto).
+
+## Estado (2 jul, bloque 4)
+
+Los 3 puntos commiteados (`f07d83c`) y desplegados manualmente a producción tras el fallo del auto-deploy. `tsc --noEmit` y `next build` limpios. Verificación visual hecha con Chrome headless en claro y oscuro para: íconos auto-generados por nombre, swatches nuevos, el dropdown de categoría agrupado (abierto), y el balance ya legible en dark mode — captura enviada a Sofia antes de desplegar, aprobada.
+
+## Posibles siguientes pasos (2 jul, bloque 4)
+
+- Vigilar que el auto-deploy de Vercel vuelva a dispararse solo en el próximo push; si no, revisar la integración de Git en el dashboard.
+- Mismos pendientes del bloque 3 (aprobación de la plantilla de WhatsApp de Meta) siguen abiertos.
