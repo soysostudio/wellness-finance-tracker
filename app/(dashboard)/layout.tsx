@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { SidebarNav } from "@/components/dashboard/sidebar-nav";
 import { MobileNav } from "@/components/dashboard/mobile-nav";
+import { RealtimeRefresh } from "@/components/dashboard/realtime-refresh";
 
 // El layout solo espera la verificación de sesión (rápida, ya validada también
 // en proxy.ts). El nombre viene de user_metadata (sin consulta extra a `users`)
@@ -38,6 +39,7 @@ export default async function DashboardLayout({
 
       {/* Main */}
       <main className="flex-1 overflow-auto">
+        <RealtimeRefresh />
         <MobileNav userName={displayName} />
         {children}
       </main>

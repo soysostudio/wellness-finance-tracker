@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
+import { GoogleButton, AuthDivider } from "@/components/auth/google-button";
 
 type State = "idle" | "loading" | "sent" | "error";
 
@@ -59,8 +60,12 @@ export default function LoginPage() {
       <div>
         <p className="text-[10px] uppercase tracking-widest text-foreground/40 mb-1">Bienvenido</p>
         <h1 className="font-display text-3xl font-bold text-foreground">Inicia sesión</h1>
-        <p className="text-sm text-foreground/50 mt-1">Te enviamos un enlace — sin contraseñas.</p>
+        <p className="text-sm text-foreground/50 mt-1">Sin contraseñas.</p>
       </div>
+
+      <GoogleButton label="Continuar con Google" />
+
+      <AuthDivider />
 
       <form onSubmit={handleSubmit} className="space-y-3">
         <input

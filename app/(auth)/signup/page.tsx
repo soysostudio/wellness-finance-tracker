@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
+import { GoogleButton, AuthDivider } from "@/components/auth/google-button";
 
 type Step = "form" | "sent";
 
@@ -86,6 +87,10 @@ export default function SignupPage() {
         <h1 className="font-display text-3xl font-bold text-foreground">Crea tu cuenta</h1>
         <p className="text-sm text-foreground/50 mt-1">Sin contraseñas, en 2 minutos.</p>
       </div>
+
+      <GoogleButton label="Registrarme con Google" />
+
+      <AuthDivider />
 
       <form onSubmit={handleSignup} className="space-y-3">
         <AuthInput

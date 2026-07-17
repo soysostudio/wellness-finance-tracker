@@ -23,6 +23,24 @@ export async function sendWhatsAppMessage(to: string, body: string): Promise<voi
 }
 
 /**
+ * WhatsApp rechaza variables de plantilla que contengan saltos de línea, tabs
+ * o 4+ espacios seguidos (Twilio error 21656) — por eso los resúmenes
+ * multilínea del cron fallaban todas las noches. Se aplana a una sola línea:
+ * párrafos (\n\n) → " — ", saltos simples → espacio.
+ */
+function toTemplateVariable(body: string): string {
+  const flat = body
+    .replace(/\s*\n{2,}\s*/g, ' — ')
+    .replace(/\s*\n\s*/g, ' ')
+    .replace(/\t/g, ' ')
+    .replace(/ {2,}/g, ' ')
+    .trim();
+  // La plantilla completa (encabezado + variable + cierre) no puede pasar de
+  // 1024 caracteres — margen para el texto fijo de la plantilla.
+  return flat.length > 950 ? `${flat.slice(0, 949)}…` : flat;
+}
+
+/**
  * Mensaje iniciado por Luca sin conversación activa reciente (recordatorios,
  * invitaciones a grupo). Usa la plantilla genérica aprobada por Meta —
  * enviar texto libre aquí falla con el error 63016 de WhatsApp.
@@ -37,6 +55,6 @@ export async function sendWhatsAppProactive(to: string, body: string): Promise<v
     from: fromNumber,
     to: toNumber,
     contentSid: GENERIC_TEMPLATE_SID,
-    contentVariables: JSON.stringify({ '1': body }),
+    contentVariables: JSON.stringify({ '1': toTemplateVariable(body) }),
   });
 }
